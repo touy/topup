@@ -1,0 +1,128 @@
+{"pid":65004,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489902740204,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":65004,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489902740254,"msg":"Insert Failed","type":"Create","v":1}
+{"pid":65004,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489902740254,"msg":"Error Message: Database does not exist.","type":"Create","v":1}
+{"pid":65004,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489902740255,"msg":"Configuration: {\"url\":\"http://localhost:5984\",\"user\":\"*******\",\"pass\":\"*******\",\"db\":\"test\",\"view\":\"\",\"design\":\"\"}","type":"Create","v":1}
+{"pid":61864,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489902762404,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":61864,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489902762437,"msg":"Insert Failed","type":"Create","v":1}
+{"pid":61864,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489902762437,"msg":"Error Message: Database does not exist.","type":"Create","v":1}
+{"pid":61864,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489902762437,"msg":"Configuration: {\"url\":\"http://localhost:5984\",\"user\":\"*******\",\"pass\":\"*******\",\"db\":\"test\",\"view\":\"\",\"design\":\"\"}","type":"Create","v":1}
+{"pid":66488,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489902849526,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":66488,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489902849557,"msg":"Insert Failed","type":"Create","v":1}
+{"pid":66488,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489902849557,"msg":"Error Message: Database does not exist.","type":"Create","v":1}
+{"pid":66488,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489902849558,"msg":"Configuration: {\"url\":\"http://localhost:5984\",\"user\":\"*******\",\"pass\":\"*******\",\"db\":\"test\",\"view\":\"\",\"design\":\"\"}","type":"Create","v":1}
+{"pid":66448,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489902969825,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":66448,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489902969871,"msg":"Insert Failed","type":"Create","v":1}
+{"pid":66448,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489902969871,"msg":"Error Message: Database does not exist.","type":"Create","v":1}
+{"pid":66448,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489902969872,"msg":"Configuration: {\"url\":\"http://localhost:5984\",\"user\":\"*******\",\"pass\":\"*******\",\"db\":\"test\",\"view\":\"\",\"design\":\"\"}","type":"Create","v":1}
+{"pid":63308,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489903045101,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":63308,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489903045174,"msg":"Insert Failed","type":"Create","v":1}
+{"pid":63308,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489903045174,"msg":"Error Message: Database does not exist.","type":"Create","v":1}
+{"pid":63308,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489903045174,"msg":"Configuration: {\"url\":\"http://localhost:5984\",\"user\":\"*******\",\"pass\":\"*******\",\"db\":\"test\",\"view\":\"\",\"design\":\"\"}","type":"Create","v":1}
+{"pid":65516,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489903112040,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":65516,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489903112094,"msg":"Insert Failed","type":"Create","v":1}
+{"pid":65516,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489903112094,"msg":"Error Message: Database does not exist.","type":"Create","v":1}
+{"pid":65516,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489903112095,"msg":"Configuration: {\"url\":\"http://localhost:5984\",\"user\":\"*******\",\"pass\":\"*******\",\"db\":\"test\",\"view\":\"\",\"design\":\"\"}","type":"Create","v":1}
+{"pid":58836,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489903231126,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":58836,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489903231171,"msg":"Insert Failed","type":"Create","v":1}
+{"pid":58836,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489903231171,"msg":"Error Message: Database does not exist.","type":"Create","v":1}
+{"pid":58836,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489903231171,"msg":"Configuration: {\"url\":\"http://localhost:5984\",\"user\":\"*******\",\"pass\":\"*******\",\"db\":\"test\",\"view\":\"\",\"design\":\"\"}","type":"Create","v":1}
+{"pid":53064,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489903485636,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":53064,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489903485684,"msg":"Insert Failed","type":"Create","v":1}
+{"pid":53064,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489903485684,"msg":"Error Message: Database does not exist.","type":"Create","v":1}
+{"pid":53064,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489903485684,"msg":"Configuration: {\"url\":\"http://localhost:5984\",\"user\":\"*******\",\"pass\":\"*******\",\"db\":\"test\",\"view\":\"\",\"design\":\"\"}","type":"Create","v":1}
+{"pid":65752,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904147864,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":65752,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489904147912,"msg":"Insert Failed","type":"Create","v":1}
+{"pid":65752,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489904147912,"msg":"Error Message: Database does not exist.","type":"Create","v":1}
+{"pid":65752,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489904147913,"msg":"Configuration: {\"url\":\"http://localhost:5984\",\"user\":\"*******\",\"pass\":\"*******\",\"db\":\"test\",\"view\":\"\",\"design\":\"\"}","type":"Create","v":1}
+{"pid":54376,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904180173,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":54376,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489904180210,"msg":"Insert Failed","type":"Create","v":1}
+{"pid":54376,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489904180211,"msg":"Error Message: Database does not exist.","type":"Create","v":1}
+{"pid":54376,"hostname":"Huagathi","name":"couch_adapter","level":50,"time":1489904180211,"msg":"Configuration: {\"url\":\"http://localhost:5984\",\"user\":\"*******\",\"pass\":\"*******\",\"db\":\"test\",\"view\":\"\",\"design\":\"\"}","type":"Create","v":1}
+{"pid":60960,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904191387,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":63012,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904240638,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":60884,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904310739,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":45632,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904311865,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":47148,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904352614,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":54212,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904383380,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":56208,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904388558,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":57568,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904460608,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":54092,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904524091,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":63324,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904531031,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":61116,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904535755,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":65240,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904566266,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":65792,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904575416,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":62512,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904618990,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":50600,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904646550,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":67236,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904656447,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":49856,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904764818,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":54452,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904839647,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":66092,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904868794,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":57176,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904882187,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":64624,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904922537,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":58320,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489904991342,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":62148,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489905014621,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":54416,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489905046831,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":45524,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489905063245,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":50780,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489905070550,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":62104,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489905094929,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":64348,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489905167566,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":66664,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489905180180,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":63456,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489905205684,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":66584,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489905240570,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":64348,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489905294400,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":56300,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489905307946,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":6384,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489905317522,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":60148,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489905589342,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":62468,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489905603189,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":58212,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489905716062,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":59956,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489905730152,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":53620,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489905839345,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":67804,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489909131546,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":69412,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489909523775,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":70384,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489909703293,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":61432,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489910284660,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":62168,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489910364562,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":70612,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489910815796,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":52968,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489910825030,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":74036,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489911999680,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":71880,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489912311231,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":75644,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489912446227,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":65468,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489912813401,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":72696,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489912922059,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":71604,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489912928373,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":72528,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489912998250,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":75748,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489913068249,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":72756,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489913617921,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":76720,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489913641625,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":76136,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489913684412,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":69028,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489913692888,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":77628,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489913765471,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":76396,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489913769014,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":77652,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489914048152,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":74688,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489914069027,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":71100,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489914085453,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":70932,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489914090604,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":72088,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489914114522,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":75240,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489914124843,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":77384,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489914155796,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":73820,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489914182935,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":73340,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489916321710,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":71904,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489916336259,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":72640,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489916521858,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":70768,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489916614394,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":72604,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489916621622,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":74536,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489916628071,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":74088,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489916647316,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":68828,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489916655626,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":77772,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489916677136,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":77520,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489916681862,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":69076,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489916691182,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":54740,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489916757562,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":76920,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489917514588,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":72636,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489917518845,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":72848,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489917531024,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":67656,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489917561831,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":77136,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489918199818,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":72388,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489918250557,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":76144,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489918293613,"msg":"Couch Adapter Constructed for: test","v":1}
+{"pid":73408,"hostname":"Huagathi","name":"couch_adapter","level":30,"time":1489918330839,"msg":"Couch Adapter Constructed for: test","v":1}

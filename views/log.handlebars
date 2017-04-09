@@ -1,0 +1,82 @@
+<script src="/static/js/main.js" type="text/javascript" charset="utf-8">
+</script>
+
+<script type="text/javascript" charset="utf-8">
+app.controller('logCtrl', function($scope, $http) {
+	$scope.logs=[];
+	$scope.log={};
+	$scope.isnew=false;
+	$scope.isedit=false;
+	var loglist=[
+      {
+        logtime:dateFormat(new Date(),"dd/mm/yyyy hh:MM:ss"),
+        logname:"a",
+        log:"A log"
+      },
+      {
+        logtime:dateFormat(new Date(),"dd/mm/yyyy hh:MM:ss"),
+        logname:"b",
+        log:"b log"
+      },
+      {
+        logtime:dateFormat(new Date(),"dd/mm/yyyy hh:MM:ss"),
+        logname:"c",
+        log:"c log"
+      },
+      {
+        logtime:dateFormat(new Date(),"dd/mm/yyyy hh:MM:ss"),
+        logname:"d",
+        log:"d log"
+      }
+    ];
+    $scope.logs=loglist;
+    $scope.selectlog=function(lg){
+    	$scope.log=lg;
+    }
+    $scope.clearselect=function(){}
+    $scope.addnew=function(){}
+    $scope.update=function(){}
+    $scope.delete=function (){}
+});
+</script>
+
+{{{{raw}}}}
+
+<div ng-app="topup" ng-controller="logCtrl">
+<h1>Log</h1>
+<div>Details</div>
+<button>New</button>
+<label>time:</label>
+<input type="text" ng-bind="{{log.logtime}}"/>
+<label>name:</label>
+<input type="text" g-bind="{{log.logname}}"/>
+<label>contents:</label>
+<input type="text" g-bind="{{log.log}}"/>
+
+<button ng-if="isnew" ng-click="addnew()">Add</button><button ng-if="!isedit" ng-click="update()">Update</button> <button ng-click="clearselect()" ng-enable="true">Cancel</button>
+
+<div>View</div>
+<input type="text" id="search"/>
+<table>
+<tr>
+	<th>#</th>
+	<th>time</th>
+	<th>name</th>
+	<th>contents</th>
+	<th></th>
+</tr>
+
+  <tr ng-repeat="log in logs filter:search:log.log | orderBy:'log.logtime'" ng-init="$index=1" ng-click="selectlog(log)">
+  	<td>{{$index++}}</td>
+    <td>{{ log.logtime }}</td>
+    <td>{{ log.logname }}</td>
+    <td>{{ log.log }}</td>
+    <td>Delete</td>
+  </tr>
+ 
+</table>
+
+
+
+</div>
+{{{{/raw}}}}

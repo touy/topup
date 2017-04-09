@@ -1,0 +1,1 @@
+let adapter = require("couch_adapter")(options);

@@ -1,0 +1,341 @@
+<script src="/static/js/main.js" type="text/javascript" charset="utf-8">
+</script>
+
+<script charset="utf-8" >	
+var fullUrl = location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '');
+var fullHost=location.hostname+(location.port ? ':'+location.port: '');
+	app.run(function ($websocket) {
+        var ws = $websocket({
+        	"ws://" + document.location.host +document.location.pathname,
+        	reconnect: true}); // instance of ngWebsocket, handled by $websocket service
+    });
+	app.controller('homeCtrl', function($scope, $http) {
+    //$scope.WS=WS;	
+
+	//console.log(WS.datacollection);
+	$scope.client={{{client}}};
+	$scope.client.lastaccess=formatDate(new Date($scope.client.lastaccess),5);	
+	$scope.register={};	
+	$scope.isnew=false;
+	$scope.isedit=false;
+	$scope.isshakehands=false;
+	$scope.heartbeats=null;
+
+	var messege={
+                _isstring:false,
+                json:{},
+                updatetime:new Date(),
+                _iserror:true,
+                _isread:false,
+                actioncode:"error"};
+    
+    $scope.initMessege=function(data){
+    	data=JSON.parse(data);
+    	if(data._iserror||data._isread||data.actioncode=="error")
+    		return false;
+    	return true;
+    };
+	
+	ws.$emit('shakehands',$scope.client); // send a message to the websocket server
+
+	ws.$on('$open', function () {
+            console.log('socket open!');
+        });
+
+        ws.$on('shakehands', function (data) {
+            
+            var response;
+            try {
+                if (angular.isString(event.data)) {
+                    response=JSON.parse(event.data);
+                }
+                else if (angular.isObject(event.data)) {
+                    response=event.data;
+                }
+                if($scope.initMessege(response))
+                {
+                	$scope.client=response.json;	
+                }
+                else
+                {
+                	$scope.errors=response.json;
+                }
+                
+            } catch (e) {
+                $("#infomsg").html("Sorry, connection failed ...");
+                //console.log('error:'+ e);
+                response = {'error': e,updatetime:new Date(),_isstring:false,_iserror:true,_isread:false};
+            }
+            //ws.$close();
+        });
+
+        ws.$on('heartbeats',function (data){
+        	$scope.heartbeats=data;
+        	//ws.$close();
+        });
+
+        ws.$on('$error',function(data){
+        	console.log("error %s",data);
+        	//ws.$close();
+        });
+
+        ws.$on('$close', function () {
+            console.log('websocket closed');
+        });
+
+        $setTimeout(function() {
+        	if($scope.isshakehands)
+        		//ws.emit("heartbeats",$scope.client);
+        	$scope.sendHeartbeats();
+        }, 5000);
+
+
+
+
+
+	var client={
+    username:"",
+    logintoken:"",
+    logintime:null,
+    logintimeout:null,
+    clientuid:null,
+    registeruid:null,
+    confirmregisteruid:null,
+    browserinfo:"",
+    ip:"",
+    other:"",
+    lastaccess:null,
+    isexist:false,
+    clientjs:"",
+    fingerprint:"",
+    data:""
+    };
+	$scope.login={
+		username:"",
+		password:""
+	};
+
+	$scope.forgetorphone="";
+	
+
+
+	$scope.user={
+		 gui:"uuidV4()",
+		  username:"",
+		  password:"",
+		  confirmpassword:"",
+		  createddate:new Date(),
+		  parent:"",
+		  email:"",
+		  phone1:"",
+		  phone2:"",
+		  address:"",
+		  photo:"",
+		  memberlevel:"",
+		  twinusergui:"",
+		  binid:""
+		  };
+	
+	$scope.initVals=function(){
+		$scope.shakehands();
+	}
+	$scope.shakehands =function(){
+		$scope.error="";
+		//$scope.client="";
+		//send shakehands data to the server 
+		$scope.client.data={
+		sendtime:new Date(),
+		data:null,
+		actioncode:"shakehands",
+		};
+		ws.emit("shakehands",$scope.client);
+		//console.log(WS.datacollection[WS.datacollection.length-1]);
+	}
+
+
+	$scope.sendHeartbeats=function(){
+		$scope.client.data={
+		sendtime:new Date(),
+		data:null,
+		actioncode:"heartbeats",
+		};
+		ws.emit("emit",$scope.client);
+	}
+	
+	$scope.submitlogin=function (){
+		//validate login info
+		$scope.error="";
+		if($scope.login.username==""||$scope.login.password==""){
+			$scope.error="input username and password correctly or click forgot password";
+			return;
+		}
+		// check login data
+		$scope.client.data={
+		sendtime:new Date(),
+		data:$scope.login,
+		actioncode:"login",
+		};
+		WS.emit("login",$scope.client);
+		//console.log(WS.datacollection);
+		//redirect to user profile mainpage
+		
+	}
+	$scope.forget=function (){
+		//validate user 
+		if($scope.login.username==""||$scope.login.password==""){
+			$scope.error="input username and password correctly or click forgot password";
+			return;
+		}
+		// check login data
+		$scope.client.data={
+		sendtime:new Date(),
+		data:$scope.forgetorphone,
+		actioncode:"forget",
+		};
+		ws.emit("forget",$scope.client);
+		//console.log(WS.datacollection);
+		
+		//redirect to user profile mainpage
+		$scope.errors="Error forget";
+	}
+	$scope.showlogin=function (e){
+		$("#login-form").delay(100).fadeIn(100);
+ 		//$("#register-form").fadeOut(100);
+		$("#forget-form").fadeOut(100);
+		//$('#register-form-link').removeClass('active');
+		$(this).addClass('active');
+		//e.preventDefault();
+	};
+	// $scope.showregister=function(e){
+	// 	$("#register-form").delay(100).fadeIn(100);
+ // 		$("#login-form").fadeOut(100);
+ // 		$("#forget-form").fadeOut(100);
+	// 	$('#login-form-link').removeClass('active');
+	// 	$(this).addClass('active');
+	// 	//e.preventDefault();
+	// };
+	$scope.showforget=function(e){
+		$("#forget-form").delay(100).fadeIn(100);
+ 		$("#login-form").fadeOut(100);
+ 		//$("#register-form").fadeOut(100);
+		$('#login-form-link').removeClass('active');
+		//$('#register-form-link').removeClass('active');
+		$(this).addClass('active');
+		//e.preventDefault();
+	};
+});
+	
+ 
+</script>
+{{{{raw}}}}
+<div ng-app="topup" ng-controller="homeCtrl" ng-init="initVals()" class="form-group container" data>
+
+	<div class="container">
+        <div class="row">
+			<div class="col-md-6 col-md-offset-3">
+				<div class="panel panel-login">
+					<div class="panel-heading">
+						<!-- <div class="row">
+							<div class="col-xs-6">
+								<a href="#" class="active" id="login-form-link" ng-click="showlogin()">Login</a>
+							</div>
+							<div class="col-xs-6">
+								<a href="#" id="register-form-link" ng-click="showregister()">Register</a>
+							</div>
+						</div>
+						<hr> -->
+					</div>
+					<div class="panel-body">
+						<div class="row">
+							<div class="col-lg-12">
+								<form id="login-form" action="" method="post" role="form" style="display: block;">
+									<div class="form-group">
+										<input type="text" name="loginusername" id="loginusername" tabindex="1" class="form-control" placeholder="Username" ng-model="this.login.username" required>
+										<!-- <p class="alert-danger fade in" ng-show="this.login.username.$valid"></p> -->
+									</div>
+									<div class="form-group">
+										<input type="password" name="loginpassword" id="loginpassword" tabindex="2" class="form-control" placeholder="Password" ng-model="this.login.password" required>
+										<!-- <p class="alert-danger fade in" ng-show="this.login.password.$valid"></p> -->
+									</div>
+<!-- 
+									<div class="form-group text-center">
+										<input type="checkbox" tabindex="3" class="" name="remember" id="remember">
+										<label for="remember"> Remember Me</label>
+									</div> -->
+									<div class="form-group">
+										<div class="row">
+											<div class="col-sm-6 col-sm-offset-3">
+												<input type="button" name="login-submit" id="login-submit" tabindex="4" class="form-control btn btn-login" value="Log In" ng-click="submitlogin()">
+											</div>
+										</div>
+									</div>
+									<div class="form-group">
+										<div class="row">
+											<div class="col-lg-12">
+												<div class="text-center">
+													<a href="#"  ng-click ="showforget()"tabindex="5" class="forgot-password">Forgot Password?</a>
+												</div>
+											</div>
+										</div>
+									</div>
+								</form>
+
+								<form id="forget-form" action="" method="post" role="form" style="display: none;">
+									<div class="form-group">
+										<input type="text" name="forget" id="forget" tabindex="1" class="form-control" placeholder="Recover: email@gmail.com or phone:+8562012345678 " ng-model="this.forgetorphone">
+									</div>
+									
+									<div class="form-group">
+										<div class="row">
+											<div class="col-sm-6 col-sm-offset-3">
+												<input type="button" name="forget-submit" id="forget-submit" tabindex="4" class="form-control btn btn-login" value="Recover" ng-click="forget()">
+
+											</div>
+										</div>
+									</div>									
+								</form>	
+
+
+<!-- 
+								<form id="register-form" action="" method="post" role="form" style="display: none;">
+									<div class="form-group">
+										<input type="text" name="username" id="username" tabindex="1" class="form-control" placeholder="Username" ng-model="this.user.username">
+									</div>
+									<div class="form-group">
+										<input type="tel" name="phone1" id="phone1" tabindex="2" class="form-control" placeholder="Phone: +8562012345678" ng-model="this.user.phone1">
+									</div>
+									<div class="form-group">
+										<input type="email" name="email" id="email" tabindex="2" class="form-control" placeholder="Email: abc@gmail.com" ng-model="this.user.email">
+									</div>
+									<div class="form-group">
+										<input type="password" name="password" id="password" tabindex="3" class="form-control" placeholder="Password" ng-model="this.user.password">
+									</div>
+									<div class="form-group">
+										<input type="password" name="confirm-password" id="confirm-password" tabindex="3" class="form-control" placeholder="Confirm Password" ng-model="this.user.confirmpassword">
+									</div>
+									<div class="form-group">
+										<div class="row">
+											<div class="col-sm-6 col-sm-offset-3">
+												<input type="button" name="register-submit" id="register-submit" tabindex="4" class="form-control btn btn-register" value="Register Now" ng-click="register()">
+											</div>
+										</div>
+									</div>									
+								</form> -->
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="col-lg-12">
+		
+		<div class="alert-danger fade in" id="infomsg" ng-bind="this.error">			
+			
+		</div>
+		<div id="ip" class="form-control-static">IP:{{this.client.ip}}</div>
+		<div id="accesstime" class="form-control-static">Time:{{this.client.lastaccess}}</div>
+	</div>
+</div>
+{{{{/raw}}}}

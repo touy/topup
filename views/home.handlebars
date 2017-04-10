@@ -4,15 +4,72 @@
 <script charset="utf-8" >	
 var fullUrl = location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '');
 var fullHost=location.hostname+(location.port ? ':'+location.port: '');
-	app.run(function ($websocket) {
-        var ws = $websocket({
-        	"ws://" + document.location.host +document.location.pathname,
-        	reconnect: true}); // instance of ngWebsocket, handled by $websocket service
-    });
-	app.controller('homeCtrl', function($scope, $http) {
-    //$scope.WS=WS;	
+var ws=null;
+	app.factory('WS', function($websocket) {
+      					var ws = $websocket("ws://" + document.location.host +document.location.pathname );
+                        var datacollection = [];
+                        var heartbeatcollection=[];
+                        var errorcollection=[];
+                        var shakehandscollection=[];
+                        ws.onMessage(function (event) {
+                            //console.log('message: ', event.json);
+                            var response;
+                            try {
+                                if (angular.isString(event.data)) {
+                                    response=JSON.parse(event.data);
+                                }
+                                else if (angular.isObject(event.data)) {
+                                    response=event.data;
+                                }
 
+
+                            } catch (e) {
+                                $("#infomsg").html("Sorry, connection failed ...");
+                                //console.log('error:'+ e);
+                                response = {'error': e,updatetime:new Date(),_isstring:false,_iserror:true,_isread:false};
+                            }
+                            
+                            if(response.json.actioncode=="heartbeats")
+                            	heartbeatcollection.push(response);
+                            else if(response.actioncode=="data")
+                            	datacollection.push(response);
+                            else if(response.actioncode=="error")
+                            	errorcollection.push(response);
+                            else if(response.actioncode=="shakehands")
+                            	shakehandscollection.push(response);
+                        });
+                        ws.onError(function (event) {
+                            console.log('connection Error', event);
+                        });
+                        ws.onClose(function (event) {
+                            console.log('connection closed', event);
+                        });
+                        ws.onOpen(function () {
+                            console.log('connection open');
+                            ws.send('HELLO SERVER');
+                        });
+                        return {
+                            datacollection:datacollection,
+                            heartbeatcollection:heartbeatcollection,
+                            errorcollection:errorcollection,
+                            shakehandscollection:shakehandscollection,
+                            status: function () {
+                                return ws.readyState;
+                            },
+                            send: function (message) {
+                                if (angular.isString(message)) {
+                                    ws.send(message);
+                                }
+                                else if (angular.isObject(message)) {
+                                    ws.send(JSON.stringify(message));
+                                }
+                            }
+                        };
+
+    }).controller('homeCtrl', function($scope,$timeout, $http,WS) {
+    $scope.WS=WS;	
 	//console.log(WS.datacollection);
+	//console.log("ws %s",$scope.ws);
 	$scope.client={{{client}}};
 	$scope.client.lastaccess=formatDate(new Date($scope.client.lastaccess),5);	
 	$scope.register={};	
@@ -28,70 +85,6 @@ var fullHost=location.hostname+(location.port ? ':'+location.port: '');
                 _iserror:true,
                 _isread:false,
                 actioncode:"error"};
-    
-    $scope.initMessege=function(data){
-    	data=JSON.parse(data);
-    	if(data._iserror||data._isread||data.actioncode=="error")
-    		return false;
-    	return true;
-    };
-	
-	ws.$emit('shakehands',$scope.client); // send a message to the websocket server
-
-	ws.$on('$open', function () {
-            console.log('socket open!');
-        });
-
-        ws.$on('shakehands', function (data) {
-            
-            var response;
-            try {
-                if (angular.isString(event.data)) {
-                    response=JSON.parse(event.data);
-                }
-                else if (angular.isObject(event.data)) {
-                    response=event.data;
-                }
-                if($scope.initMessege(response))
-                {
-                	$scope.client=response.json;	
-                }
-                else
-                {
-                	$scope.errors=response.json;
-                }
-                
-            } catch (e) {
-                $("#infomsg").html("Sorry, connection failed ...");
-                //console.log('error:'+ e);
-                response = {'error': e,updatetime:new Date(),_isstring:false,_iserror:true,_isread:false};
-            }
-            //ws.$close();
-        });
-
-        ws.$on('heartbeats',function (data){
-        	$scope.heartbeats=data;
-        	//ws.$close();
-        });
-
-        ws.$on('$error',function(data){
-        	console.log("error %s",data);
-        	//ws.$close();
-        });
-
-        ws.$on('$close', function () {
-            console.log('websocket closed');
-        });
-
-        $setTimeout(function() {
-        	if($scope.isshakehands)
-        		//ws.emit("heartbeats",$scope.client);
-        	$scope.sendHeartbeats();
-        }, 5000);
-
-
-
-
 
 	var client={
     username:"",
@@ -136,9 +129,9 @@ var fullHost=location.hostname+(location.port ? ':'+location.port: '');
 		  binid:""
 		  };
 	
-	$scope.initVals=function(){
-		$scope.shakehands();
-	}
+	// $scope.initVals=function(){
+	// 	$scope.shakehands();
+	// }
 	$scope.shakehands =function(){
 		$scope.error="";
 		//$scope.client="";
@@ -148,7 +141,7 @@ var fullHost=location.hostname+(location.port ? ':'+location.port: '');
 		data:null,
 		actioncode:"shakehands",
 		};
-		ws.emit("shakehands",$scope.client);
+		$scope.WS.send($scope.client);
 		//console.log(WS.datacollection[WS.datacollection.length-1]);
 	}
 
@@ -159,7 +152,7 @@ var fullHost=location.hostname+(location.port ? ':'+location.port: '');
 		data:null,
 		actioncode:"heartbeats",
 		};
-		ws.emit("emit",$scope.client);
+		$scope.WS.send(scope.client);
 	}
 	
 	$scope.submitlogin=function (){
@@ -175,7 +168,7 @@ var fullHost=location.hostname+(location.port ? ':'+location.port: '');
 		data:$scope.login,
 		actioncode:"login",
 		};
-		WS.emit("login",$scope.client);
+		$scope.WS.send($scope.client);
 		//console.log(WS.datacollection);
 		//redirect to user profile mainpage
 		
@@ -192,7 +185,7 @@ var fullHost=location.hostname+(location.port ? ':'+location.port: '');
 		data:$scope.forgetorphone,
 		actioncode:"forget",
 		};
-		ws.emit("forget",$scope.client);
+		$scope.WS.send($scope.client);
 		//console.log(WS.datacollection);
 		
 		//redirect to user profile mainpage
@@ -223,6 +216,16 @@ var fullHost=location.hostname+(location.port ? ':'+location.port: '');
 		$(this).addClass('active');
 		//e.preventDefault();
 	};
+
+	// shakehands
+	$scope.isshakehands=$scope.shakehands();
+	
+    $timeout(function() {
+        	if($scope.isshakehands)
+        		//ws.emit("heartbeats",$scope.client);
+        	$scope.sendHeartbeats();
+        }, 5000);
+    
 });
 	
  

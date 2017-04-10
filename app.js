@@ -529,9 +529,46 @@ wss.on('connection', function connection(ws) {
   ws.on('open', function incoming(message) {
     console.log('received: %s', message);    
   });
-  ws.on('message', function incoming(message) {
+  function shakehands(data){
+      console.log('shakehands %s',data);
+    try {
+    var data=JSON.parse(data);
+    var c=data;//client
+      if (data.actioncode=="shakehands") {
+
+        c.data={data:"shake hands accepted"}
+         ws.send(JSON.stringify({
+                _isstring:false,
+                json:c,
+                updatetime:new Date(),
+                _iserror:true,
+                _isread:false,
+                actioncode:"error"
+          }));
+        }
+    } catch(e) {
+      ws.send(JSON.stringify({
+                _isstring:false,
+                json:{data:e},
+                updatetime:new Date(),
+                _iserror:true,
+                _isread:false,
+                actioncode:"error"
+          }));
+    }
+  };
+  function heartbeats(data){
     
-    //console.log(' message received: %s', message);
+  };
+  function login(data){
+    
+  };
+  function forget(data){
+    
+  };
+  ws.on('message',function(message) {
+    
+  console.log(' message received: %s', message);
     //  var client={
     // username:"",
     // logintoken:"",

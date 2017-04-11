@@ -170,7 +170,7 @@ var ws=null;
 		actioncode:"login",
 		};
 		$scope.WS.send($scope.client);
-		$window.location.href='http://127.0.0.1:88/user/{user:""}';
+		$window.location.href='/user/'+JSON.stringify($scope.client);
 		//console.log(WS.datacollection);
 		//redirect to user profile mainpage
 		

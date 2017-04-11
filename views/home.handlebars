@@ -66,7 +66,7 @@ var ws=null;
                             }
                         };
 
-    }).controller('homeCtrl', function($scope,$timeout, $http,WS) {
+    }).controller('homeCtrl', function($scope,$timeout,$window, $http,WS) {
     $scope.WS=WS;	
 	//console.log(WS.datacollection);
 	//console.log("ws %s",$scope.ws);
@@ -158,6 +158,7 @@ var ws=null;
 	$scope.submitlogin=function (){
 		//validate login info
 		$scope.error="";
+
 		if($scope.login.username==""||$scope.login.password==""){
 			$scope.error="input username and password correctly or click forgot password";
 			return;
@@ -169,6 +170,7 @@ var ws=null;
 		actioncode:"login",
 		};
 		$scope.WS.send($scope.client);
+		$window.location.href='http://127.0.0.1:88/user/{user:""}';
 		//console.log(WS.datacollection);
 		//redirect to user profile mainpage
 		

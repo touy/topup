@@ -170,8 +170,13 @@ var ws=null;
 		actioncode:"login",
 		};
 		$scope.WS.send($scope.client);
-		$window.location.href='/user/'+JSON.stringify($scope.client);
-		//console.log(WS.datacollection);
+		//$window.location='/user/'+JSON.stringify($scope.client);
+		$window.location='/user';
+		//$http.get('/user/'+JSON.stringify($scope.client)).then(function(data, status){
+		// $http.get('/user').then(function(data, status){
+	 //    	$window.location.href = data.redirect; 
+	 //    });
+		// //console.log(WS.datacollection);
 		//redirect to user profile mainpage
 		
 	}

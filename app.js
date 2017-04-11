@@ -292,8 +292,8 @@ app.get('/pre-register', function (req, res,next) {
     });
 });
 
-app.get('/user/:client', function (req, res,next) {
-  var client=JSON.parse(req.params.client);
+app.get('/user', function (req, res,next) {
+  //var client=JSON.parse(req.params.client);
   res.render('user',{
         helpers:{
           raw:function(options){return options.fn();

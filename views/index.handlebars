@@ -1,117 +1,64 @@
-<script>
-
-	var clientjs = new ClientJS();
-	//var generateclient={{generateclient}};
-	var client={{{client}}};
-	if(client==""||client==null||client=="undefined")
-		window.location="/error";
-	/*
-	var client={
-	    username:"",
-	    logintoken:"",
-	    logintime:null,
-	    logintimeout:null,
-	    clientuid:null,
-	    registeruid:null,
-	    confirmregisteruid:null,
-	    browserinfo:"",
-	    ip:"",
-	    other:"",
-	    lastaccess:null,
-	    isexist:false,
-	    clientjs:"",
-	    fingerprint:"",
-	    data:""
-	    };
-	*/
-	// if exist update the current one
-	var x_client="";
-	function isJson(str) {
-	    try {
-	        JSON.parse(str);
-	    } catch (e) {
-	        return false;
-	    }
-	    return true;
-	}
-	function sendPost(js) {
-	       $.post(
-	         js,
-	         function(js) {
-	           console.log(js);
-	         }
-	       );
-	     }
-
-	//try to get data from client local database
-	if (typeof(Storage) !== "undefined") {
-		
-		y_client=client;
-		console.log("x_client:"+x_client);
-	    x_client=localStorage.getItem("client");
-	    if(!isJson(x_client))
-	    	x_client=localStorage.setItem("client",client);
-		//if not exist create a new one 
-		console.log("x_client:"+x_client);
-		if(x_client==null || x_client=="undefined" || x_client=="")
-		{		
-			localStorage.setItem("client",client);
-		}
-		else 
-			client=x_client;
-
-		// var client={
-	 //    username:"",
-	 //    logintoken:"",
-	 //    logintime:null,
-	 //    logintimeout:null,
-	 //    clientuid:null,
-	 //    registeruid:null,
-	 //    confirmregisteruid:null,
-	 //    browserinfo:"",
-	 //    ip:"",
-	 //    other:"",
-	 //    lastaccess:null,
-	 //    isexist:false,
-	 //    clientjs:"",
-	 //    fingerprint:"",
-	 //    data:""
-	 //    };
-
-
-		
-
-		// when login exist
-		if(client.logintoken!="")
-		{
-			var d=new Date();
-			client.logintime=d;		
-			client.browserinfo=clientjs.getUserAgent(); 		
-			client.clientjs=clientjs;
-			client.isexist=true;
-			client.lastaccess=new Date();
-
-			d.setDate(d.getDate()+30);//timeout would be current time + 30days
-			client.logintimeout=d;
-			client.ip=y_client.ip;
-			client.fingerprint=clientjs.fingerprint;
-			//if(client.logintimeout<=d)
-				//window.location="/home/"+JSON.stringify(client); //redirect to login page login timeout
-		}
-		else
-		{
-			//need to login
-			client.clientjs=clientjs;
-			client.isexist=false;
-			client.lastaccess=new Date();
-			window.location="/home/"+JSON.stringify(client);
-		}
-	} 
-	else {
-	    alert("Sorry, your browser does not support Web Storage...");
-	}
-
-	//redirect to the home page to login or pre-register
-	if(client!=""&&client!=null)
-		window.location="/home/"+JSON.stringify(client);
+<script src="/static/js/main.js" type="text/javascript" charset="utf-8">
 </script>
+<script>
+app.controller('indexCtrl', function($scope,$timeout,$window, $http,WS,ST) {
+					//after open connection get the result to check if server response well and save to local database
+					//try to get data from client local database
+					var client={{{client}}};
+					var client2=ST.storage();
+					if(!isJson(client2))
+						ST.saveStorage(client);
+					client=ST.storage();
+					//var client ={};
+					//$scope.$storage = $localStorage.$default({client:client});
+					$scope.res_data={};
+					WS.subscribe(function (event){
+						$scope.$apply(function (){
+							//var response;
+                            try {
+                                if (angular.isString(event.data)) {
+                                    $scope.res_data=JSON.parse(event.data);
+                                }
+                                else if (angular.isObject(event.data)) {
+                                    $scope.res_data=event.data;
+                                }
+							//$scope.res_data=event.data;
+								console.log("res_data %s",JSON.stringify($scope.res_data));
+                            	if(isJson($scope.res_data)){
+	                        		if($scope.res_data.actioncode=="init")
+	                        			$scope.initData();
+	                        		else if($scope.res_data.actioncode=="error"&&$scope.res_data.json.data=="error need to login")
+	                        			$scope.needlogin();
+	                        		else
+	                        			throw new Error($scope.res_data.data);
+	                        	}
+
+                            } catch (e) {
+                                $("#infomsg").html("Sorry, connection failed ... %s",e);
+                                //console.log('error:'+ e);
+                                $scope.res_data = {'error': e,updatetime:new Date(),_isstring:false,_iserror:true,_isread:false};
+                            }
+						});
+					});					
+					$scope.initData=function(){						
+						console.log("Init data res_data: %s",JSON.stringify($scope.res_data.json));
+						client=$scope.res_data.json;
+						// when login exist
+						client=updateClient(client);
+						console.log("updated %s",JSON.stringify(client));
+						if(ST.saveStorage(client)>0)
+							$window.location="/home/";
+						else 
+							$window.location="/errors/failed local storage";
+					};
+					$scope.needlogin=function(){
+						$window.location="/home/";
+					}
+					WS.init();
+				});
+</script>
+{{{{raw}}}}
+<div ng-app="topup" ng-controller="indexCtrl" class="form-group container" data>
+<div id="infomsg"></div>
+</div>
+{{{{/raw}}}}

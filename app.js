@@ -33,7 +33,7 @@ var methodOverride = require('method-override')
 //    next();
 // });
 app.use(function (req,res,next){
-  console.log("before request %",req);
+  //console.log("before request %",req);
   next();
 });
 app.use(bodyParser.urlencoded({
@@ -189,12 +189,43 @@ app.get('/', function (req, res,next) {
         }
     });
 });
-// login page
-app.get('/home/:client', function (req, res,next) {    
-    try {
-      var client=JSON.parse(req.params.client);
 
-      console.log(client);
+// get new client info
+app.get('/newclientinfo', function (req, res,next) {
+   var client={
+    username:"",
+    logintoken:"",
+    logintime:new Date(),
+    logintimeout:null,
+    clientuid:new uuidV4(),
+    registeruid:null,
+    confirmregisteruid:null,
+    browserinfo:"",
+    ip:req.ip,
+    other:"",
+    lastaccess:new Date(),
+    isexist:false,
+    clientjs:"",
+    fingerprint:"",
+    data:""
+    };
+
+    res.render('newclientinfo',{
+        layout:false,
+        helpers:{
+         client:JSON.stringify(client)
+        }
+    });
+});
+
+// login page
+
+//
+app.get('/home', function (req, res,next) {    
+    try {
+      var client=Redis.createClient().get("client");
+
+      console.log('client: %s',client);
       if(client.isexist)// token exist need to check token validation
       {
         // check login token validation 
@@ -207,10 +238,12 @@ app.get('/home/:client', function (req, res,next) {
         //show login
       }
     } catch(e) {      
-      console.log(e);
+      console.log('ERROR: %s',e);
     }
     res.render('home',{
         helpers:{
+          raw:function(options){return options.fn();
+          },
          client:JSON.stringify(client)
         }
     });
@@ -302,6 +335,16 @@ app.get('/user', function (req, res,next) {
         }
     });
 });
+app.get('/chat', function (req, res,next) {
+  //var client=JSON.parse(req.params.client);
+  res.render('chat',{
+        helpers:{
+          raw:function(options){return options.fn();
+          },
+          client:JSON.stringify(client)
+        }
+    });
+});
 app.get('/user-profile', function (req, res,next) {
   res.render('user',{
         helpers:{
@@ -361,24 +404,6 @@ app.post('/packages', function (req, res,next) {
 });
 
 /*************************VIEW*************************/
-
-
-var client={
-    username:"",
-    logintoken:"",
-    logintime:null,
-    logintimeout:null,
-    clientuid:uuidV4(),
-    registeruid:uuidV4(),
-    confirmregisteruid:"",
-    browserinfo:"",
-    ip:"req.ip",
-    other:"",
-    lastaccess:null,
-    isexist:false,
-    clientjs:"",
-    fingerprint:"",
-    };
 var log={
   logtime:Date(),
   logname:"",
@@ -515,6 +540,88 @@ var actionlog={
 //user page
 
 
+
+
+
+
+
+
+
+var Redis = require("redis");
+
+function r_Update(key,newvalue, cb) {  
+  var replied = false;
+  var newValue=newvalue;
+
+  var redis = Redis.createClient();
+  redis.once('error', done);
+  redis.watch(key);
+
+  redis.get(key, function(err, value) {
+    if (err) {
+      return done(err);
+    }
+    //newValue =Number(value) + 1;
+    //newValue=value;
+    redis.multi().
+      set(key, newValue).
+      exec(done);
+  });
+
+  function done(err, result) {
+    redis.quit();
+
+    if (! replied) {
+      if (!err && !result) {
+        err = new Error('Conflict detected');
+      }
+
+      replied = true;
+      cb(err, newValue);
+    }
+  }
+}
+
+function update_by_key(key,newvalue, cb) {  
+  r_Update(key,newvalue, callback);
+
+  function callback(err, result) {
+    if (err && err.message == 'Conflict detected') {
+      r_Update(key, callback);
+    }
+    else {
+      cb(err, result);
+    }
+  }
+}
+
+
+// for(var i = 0 ; i < 10 ; i ++) {
+
+//   Redis.createClient().set("A",i);
+//   update_by_key('A',i, function(err, newValue) {
+//     if (err) {
+//       throw err;
+//     }
+//     console.log('successfully set new value to %j', newValue);
+//   });
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /***********************DATA*******************************/
 wss.on('connection', function connection(ws) {
   const location = url.parse(ws.upgradeReq.url, true);
@@ -527,48 +634,14 @@ wss.on('connection', function connection(ws) {
     console.log('close: %s', message);    
   });
   ws.on('open', function incoming(message) {
-    console.log('received: %s', message);    
+    console.log("Open!!!!!!!!!!!!!!!!!!!!!");
+        
   });
-  function shakehands(data){
-      console.log('shakehands %s',data);
-    try {
-    var data=JSON.parse(data);
-    var c=data;//client
-      if (data.actioncode=="shakehands") {
 
-        c.data={data:"shake hands accepted"}
-         ws.send(JSON.stringify({
-                _isstring:false,
-                json:c,
-                updatetime:new Date(),
-                _iserror:true,
-                _isread:false,
-                actioncode:"error"
-          }));
-        }
-    } catch(e) {
-      ws.send(JSON.stringify({
-                _isstring:false,
-                json:{data:e},
-                updatetime:new Date(),
-                _iserror:true,
-                _isread:false,
-                actioncode:"error"
-          }));
-    }
-  };
-  function heartbeats(data){
-    
-  };
-  function login(data){
-    
-  };
-  function forget(data){
-    
-  };
+  
   ws.on('message',function(message) {
     
-  console.log(' message received: %s', message);
+  //console.log(' message received %s',message);
     //  var client={
     // username:"",
     // logintoken:"",
@@ -588,53 +661,44 @@ wss.on('connection', function connection(ws) {
     // };
     try {
     var data=JSON.parse(message);
-    var c=data;//client
+    var c=data.json;//client
       switch (data.actioncode) {
+        case "init":
+          check_init(ws,c);
+       
+        break;
         case "shakehands":
-        
-        c.data={data:"shake hands accepted"}
+        //shakehands(ws,c);
+        c.data="shake hands accepted";
          ws.send(JSON.stringify({
-                _isstring:false,
+                _isstring:true,
                 json:c,
                 updatetime:new Date(),
-                _iserror:true,
+                _iserror:false,
                 _isread:false,
-                actioncode:"error"
+                actioncode:"shakehands"
           }));
         break;
-        
+        case "heartbeats":
+        heartbeats(ws,c);
+        break;
+
         case "login":
-        var c=data;//client
-        //CHECK LOGIN OK
-        c.data={data:"login successed"}
-         ws.send(JSON.stringify({
-                _isstring:false,
-                json:c,
-                updatetime:new Date(),
-                _iserror:true,
-                _isread:false,
-                actioncode:"error"
-          }));
-
-         //CHECK LOGIN FALIED
-
-        c.data={data:"login failed"}
-         ws.send(JSON.stringify({
-                _isstring:false,
-                json:c,
-                updatetime:new Date(),
-                _iserror:true,
-                _isread:false,
-                actioncode:"error"
-          }));
+          user_login(ws,c);
           break;
         case "register":
-          c.data=register_new_user(ws,c.data);
-
+          c.data=register_new_user(ws,c);
           break;
         case "forgetpassword":
-          rs=forgetpassword_process(ws,c.data);
+          rs=forgetpassword_process(ws,c);
           break;
+        case "userprofile":
+
+        break;
+        case "userprofile":
+
+        break;
+
         default:
           ws.send(JSON.stringify({
                 _isstring:false,
@@ -662,125 +726,283 @@ wss.on('connection', function connection(ws) {
   // END START
 });
 /***********************DATA*******************************/
+function check_init(ws,c){
+  // if not, need to relogin 
+        if(c.logintoken==null || c.logintoken=="" ||c.logintoken=="undified")
+        {
+          c.data="error need to login";
+          c.lastaccess=new Date();
+          ws.send(JSON.stringify({
+                _isstring:false,
+                json:c,
+                updatetime:new Date(),
+                _iserror:true,
+                _isread:false,
+                actioncode:"error"
+          }));
+          return ;
+        }
+        else
+        {
+          var r_client = Redis.createClient();
+          var cx=c;
+          var key=c.clientuid+c.fingerprint+c.registeruid;
+          var r=r_client.get(key,function(err,reply){
+                  cx=reply;
+                  // it's exist on system and used to online or not 
+                  return (reply== null)? false:true;});
+            if(!r)
+            {
+              cx.data={data:"error need to login"};
+              ws.send(JSON.stringify({
+                _isstring:false,
+                json:cx,
+                updatetime:new Date(),
+                _iserror:true,
+                _isread:false,
+                actioncode:"error"
+                }));
+                return ;
+            }
+            else
+            {
+               cx=c;
+               //same token but different IP 
+               if(cx.ip!=c.ip)
+               {
+                  c.ip=ws._socket.remoteAddress;
+                }
+                  
+              else if(x.logintoken!=c.logintoken)
+              {
+                  cx.logintoken=uuidV4();
+              }
+              else if(cx.logintoken==c.logintoken&&cx.ip==c.ip)
+               //same token same IP not more than 15 minutes , it's the saem session
+              {
+                cx.lastaccess=new Date();
+                var d=new Date();
+                d.setDate(d.getDate()+30);
+                cx.logintimeout=d;
+                cx.isonline=true;
+              }
 
-
-
+               // different token , need to generate new token 
+               
+                update_by_key(key,cx, function(err, newValue) {
+                    if (err) {
+                      throw err;
+                    }
+                    console.log('successfully set new value to %j', newValue);
+                  });
+                 ws.send(JSON.stringify({
+                           _isstring:false,
+                           json:cx,
+                           updatetime:new Date(),
+                           _iserror:false,
+                           _isread:false,
+                           actioncode:"init"
+                     }));
+            }
+        }
+}
 
 /*lgoin()*/
 function user_login(ws,message){
   
   var userdb=create_db("userdb");
+  var loginlogdb=create_db("loginlog");
   //var couchdb=require("couchdb_lib");
   try {
-    var v=JSON.parse(message);
-    var ip=ws.upgradeReq.connection.remoteAddress;    
-    var logindata={
-    username:"",
-    password:"",
-    logindata:new Date(),
-    loginstatus:"",
-    loginsuccessed:false
-    };
-    var loginlog={
-    username:"",
-    logtime:Date(),
-    log:""
-    };
-    var logintoken={
-    usergui:"",
-    tokendate:Date(),
-    token:"",
-    tokenenddate:"",
-    ip:""
-    };
-    var client={
-    username:"",
-    logintoken:"",
-    logintime:null,
-    logintimeout:null,
-    clientuid:null,
-    registeruid:null,
-    confirmregisteruid:null,
-    browserinfo:"",
-    ip:"",
-    other:"",
-    lastaccess:null,
-    isexist:false,
-    clientjs:"",
-    fingerprint:"",
-    data:""
-    };
-    //check username and password
-
-    if(!compareJson(v.data,logindata))
-    {
-      client.data={msg:"wrong json format: userdata"};
-        ws.send(JSON.stringify({
-          _isstring:false,
-                json:client,
-                updatetime:new Date(),
-                _iserror:true,
-                _isread:false,
-                actioncode:"error"
-        }));
-        return;
+      var v=JSON.parse(message);
+      var c=v.json;
+      var ip=ws.upgradeReq.connection.remoteAddress;    
+      
+      var logindata={
+      username:"",
+      password:"",
+      logindata:new Date(),
+      loginstatus:"",
+      loginsuccessed:false
+      };
+      
+      var loginlog={
+      username:"",
+      logtime:Date(),
+      log:""
+      };
+      var client={
+      username:"",
+      logintoken:"",
+      logintime:null,
+      logintimeout:null,
+      clientuid:null,
+      registeruid:null,
+      confirmregisteruid:null,
+      browserinfo:"",
+      ip:"",
+      other:"",
+      lastaccess:null,
+      isexist:false,
+      clientjs:"",
+      fingerprint:"",
+      isonline:false,
+      data:""
+      };
+      userdata=c.data;    
+      //delete v["data"];
+      v.json="";
+      if(!compareJson(v,client))
+      {
+         client.data={data:"wrong json format: userdata"};
+          ws.send(JSON.stringify({
+            _isstring:false,
+                  json:client,
+                  updatetime:new Date(),
+                  _iserror:true,
+                  _isread:false,
+                  actioncode:"error"
+          }));
+          return;
       }
-    userdata=v.userdata;    
-    delete v["data"];
-    if(!compareJson(v,client))
-    {
-       client.data={msg:"wrong json format: userdata"};
-        ws.send(JSON.stringify({
-          _isstring:false,
-                json:client,
-                updatetime:new Date(),
-                _iserror:true,
-                _isread:false,
-                actioncode:"error"
-        }));
-        return;
+      //check username and password
+      //client=v;
+      //v=null;
+      //delete v;
+      client=c;
+      if(!compareJson(client.data,logindata))
+      {
+        client.data={data:"wrong json format: userdata"};
+          ws.send(JSON.stringify({
+            _isstring:false,
+                  json:client,
+                  updatetime:new Date(),
+                  _iserror:true,
+                  _isread:false,
+                  actioncode:"error"
+          }));
+          return;
       }
-    client=v;
-    //check before insert    
+      //check here 
+      var login=userdb.view('users', 'findByUserLogin',[logindata.username,logindata.password], function(err, body) {
+      return (!err)?true:false;
+      });
 
-    userdb.insert(userdata, function(err, body, header) { 
-        if(err) { 
-            //response.writeHead(500, { "Content-Type": "text/plain" }); 
-            ws.send(JSON.stringify({
-          _isstring:false,
-                json:{msg:err},
-                updatetime:new Date(),
-                _iserror:true,
-                _isread:false,
-                actioncode:"error"
-        })); 
-        } else { 
-            ws.send(JSON.stringify({
-          _isstring:false,
-                json:{msg:"success"},
-                updatetime:new Date(),
-                _iserror:true,
-                _isread:false,
-                actioncode:"error"
-        })); 
-        } 
-    }); 
+      if(!login)
+      {
+        client.data={data:"wrong username or password"};
+          ws.send(JSON.stringify({
+            _isstring:false,
+                  json:client,
+                  updatetime:new Date(),
+                  _iserror:true,
+                  _isread:false,
+                  actioncode:"error"
+          }));
+          loginlog.username=logindata.username+","+logindata.password;
+          loginlog.logintime=new Date();
+          loginlog.log="Error wrong username and password";
+          loginlogdb.insert(loginlog,function(err,body,header){
+          });
+          return;
+      }
+      client.data={data:"wrong username or password"};
+          ws.send(JSON.stringify({
+            _isstring:false,
+                  json:JSON.stringify(client),
+                  updatetime:new Date(),
+                  _iserror:false,
+                  _isread:false,
+                  actioncode:"login"
+          }));
+          loginlog.username=logindata.username+","+logindata.password;
+          loginlog.logintime=new Date();
+          loginlog.log="Error wrong username and password";
+          loginlogdb.insert(loginlog,function(err,body,header){
+          });
+        c=client;
+        
+        update_by_key(c.clientuid+c.fingerprint+c.registeruid,c, function(err, newValue) {
+          if (err) {
+            throw err;
+          }
+          console.log('successfully set new value to %j', newValue);
+        });
     }
     catch(e)
-    {
-      ws.send(JSON.stringify(
-        {_isstring:false,
-          json:{msg:e},
-          updatetime:new Date(),
-          _iserror:true,
-          _isread:false,
-                actioncode:"error"
-              }
-        ));
-      return;
-    }
+    {throw e;}
+  }
+//shakehands
+// function shakehands(ws,c){
+
+// }
+//heartbeats
+function heartbeats(ws,c){
+
+}
+//forgot password
+function forgetpassword_process(ws,message)
+{
+  var userdb=create_db("userdb");
+  var v=JSON.parse(message);
+  var c=v.json;
+  var u=userdb.view("users","findByUserName",[c.username],function (err,body){
+    return body;
+  });
+  if(u==null)
+  {
+    ws.send(JSON.stringify({
+            _isstring:false,
+                  json:{data:"user not exist"},
+                  updatetime:new Date(),
+                  _iserror:true,
+                  _isread:false,
+                  actioncode:"error"
+          }));
+          return;
+  }
+  else 
+  {
+    if(u.email!="")
+    ws.send(JSON.stringify({
+            _isstring:false,
+                  json:{data:"sent password to your email"+u.email},
+                  updatetime:new Date(),
+                  _iserror:true,
+                  _isread:false,
+                  actioncode:"error"
+          }));
+    else if(u.phone1!="")
+      ws.send(JSON.stringify({
+            _isstring:false,
+                  json:{data:"sent password to your phone1"+u.phone1},
+                  updatetime:new Date(),
+                  _iserror:true,
+                  _isread:false,
+                  actioncode:"error"
+          }));
+    else if(u.phone2!="")
+      ws.send(JSON.stringify({
+            _isstring:false,
+                  json:{data:"sent password to your phone"+u.phone2},
+                  updatetime:new Date(),
+                  _iserror:true,
+                  _isread:false,
+                  actioncode:"error"
+          }));
+    else 
+      ws.send(JSON.stringify({
+            _isstring:false,
+                  json:{data:"please ask your upper level for help"},
+                  updatetime:new Date(),
+                  _iserror:true,
+                  _isread:false,
+                  actioncode:"error"
+          }));
+    return;
   }
 
+}
 
 /*Register()*/
 function register_new_user(ws,message){
@@ -803,10 +1025,11 @@ function register_new_user(ws,message){
     address:"",
     photo:"",
     memberlevel:"",
-    twinusergui:"",
-    binid:"",
-    userlevelid:"",//as a userid or parentid
-    userside:0 //0 : LEFT , 1: RIGHT
+    ispaired:false,
+    parentgui:"",//as a userid or parentid
+    isleft:false,
+    userleftgui:"" ,
+    userrightgui:""
     };
   var client={
     username:"",
@@ -830,7 +1053,7 @@ function register_new_user(ws,message){
     {
         ws.send(JSON.stringify({
           _isstring:false,
-                json:{msg:"wrong json format: userdata"},
+                json:{data:"wrong json format: userdata"},
                 updatetime:new Date(),
                 _iserror:true,
                 _isread:false,
@@ -844,7 +1067,7 @@ function register_new_user(ws,message){
     {
         ws.send(JSON.stringify({
           _isstring:false,
-                json:{msg:"wrong json format: userdata"},
+                json:{data:"wrong json format: userdata"},
                 updatetime:new Date(),
                 _iserror:true,
                 _isread:false,
@@ -854,13 +1077,63 @@ function register_new_user(ws,message){
       }
     client=v;
     //check before insert    
+    var u=userdb.view("users","findByUserName",[client.username],function(err,body){
+      return body;
+    });
+    if(u==null)
+      {
+        ws.send(JSON.stringify({
+          _isstring:false,
+                json:{data:"user not exist"},
+                updatetime:new Date(),
+                _iserror:true,
+                _isread:false,
+                actioncode:"error"
+        }));
+        return;
+      }
+    if((!userdata.isleft&&u.userright!="")||(userdata.isleft&&u.userleft!=""))
+    {
+      ws.send(JSON.stringify({
+          _isstring:false,
+                json:{data:"set wrong user' side"},
+                updatetime:new Date(),
+                _iserror:true,
+                _isread:false,
+                actioncode:"error"
+        }));
+        return;
+    }
 
+    userdata.parentgui=u.gui;
+    userdata.gui=new uuidV4();
+    userdata.memberlevel=u.memberlevel+1;
+    userdata.createddate=new Date();
+
+    if(userdata.isleft){
+      u.userleftgui=userdata.gui;
+    }
+    else{
+      u.userrightgui=userdata.gui;
+    }
+    if(u.userrightgui!=""&&u.userleftgui!="")
+      u.ispaired=true;
+
+    //update U ( parent)
+    userdb.insert(u,u.rev,function(err,res){
+      if(!error) {
+        console.log("Updated parent");
+      } else {
+        console.log("could not update parent");
+      }
+    });
+    //insert a child as a new user
     userdb.insert(userdata, function(err, body, header) { 
         if(err) { 
             //response.writeHead(500, { "Content-Type": "text/plain" }); 
             ws.send(JSON.stringify({
           _isstring:false,
-                json:{msg:err},
+                json:{data:err},
                 updatetime:new Date(),
                 _iserror:true,
                 _isread:false,
@@ -869,11 +1142,11 @@ function register_new_user(ws,message){
         } else { 
             ws.send(JSON.stringify({
           _isstring:false,
-                json:{msg:"success"},
+                json:{data:"success"},
                 updatetime:new Date(),
                 _iserror:false,
                 _isread:false,
-                actioncode:"error"
+                actioncode:"registerauser"
         })); 
         } 
     }); 
@@ -882,7 +1155,7 @@ function register_new_user(ws,message){
     {
       ws.send(JSON.stringify(
         {_isstring:false,
-          json:{msg:e},
+          json:{data:e},
           updatetime:new Date(),
           _iserror:true,
           _isread:false,
@@ -891,10 +1164,14 @@ function register_new_user(ws,message){
         ));
       return;
     }
+    return userdata;
   }
 
 
 /*customo function */
+function send_error_or_success(c,ws,err){
+
+}
 function compareJson(js1,js2){
   Object.keys(js1).array.forEach( function(element, index) {
     if(!(Object.keys(js2).indexOf(element)>-1))
@@ -937,7 +1214,100 @@ function create_db(dbname){
   //   }
   // });
 }
+function initdata(ws,message)
+  {
+    var c={
+    username:"",
+    logintoken:"",
+    logintime:null,
+    logintimeout:null,
+    clientuid:null,
+    registeruid:null,
+    confirmregisteruid:null,
+    browserinfo:"",
+    ip:"",
+    other:"",
+    lastaccess:null,
+    isexist:false,
+    clientjs:"",
+    fingerprint:"",
+    isonline:false,
+    data:""
+    };
+    try {
+      c=message;
+      var c_data=c.data;
+      c.data=null;
+      //check client if exist
 
+      if(!r_client.get(c.clientuid+c.fingerprint+c.registeruid,function(err,reply){
+        return (reply== null)? false:true;
+      })){
+        // c.clientuid=uuidV4();
+        // c.registeruid=uuidV4();
+        // c.isexist=false;
+        // c.isonline=true;
+        // r_client.set(c.clientuid+c.fingerprint+c.registeruid,c,redis.print);
+        //GO TO LOGIN PAGE
+      }
+      else
+      {
+        c.isexist=true;
+        c.isonline=true;
+        // r_client.set(c.clientuid+c.fingerprint+c.registeruid,c,redis.print);
+        //UPDATE WHEN IT EXIST ON server
+        update_by_key(c.clientuid+c.fingerprint+c.registeruid,c, function(err, newValue) {
+        if (err) {
+          throw err;
+        }
+        console.log('successfully set new value to %j', newValue);
+      });
+      }
+      //c.data=c_data;
+      //r_client.quit();
+      ws.send(JSON.stringify({
+                _isstring:false,
+                json:JSON.stringify(c),
+                updatetime:new Date(),
+                _iserror:true,
+                _isread:false,
+                actioncode:"error"
+          }));
+    } catch (e) {
+      console.log('Error: %s',e);
+      ws.close();
+    }
+    console.log('received: %s',c.data);
+  }
+
+function shakehands(ws,message){
+      console.log('shakehands %s',message);
+    try {
+    var c=message;
+    //var c=v.json;//client
+      if (c!=null) {
+        // TODO: check if client exist in redist and update it
+         ws.send(JSON.stringify({
+                _isstring:true,
+                json:c,
+                updatetime:new Date(),
+                _iserror:false,
+                _isread:false,
+                actioncode:"shakehands"
+          }));
+        }
+    } catch(e) {
+      c.data=e;
+      ws.send(JSON.stringify({
+                _isstring:true,
+                json:c,
+                updatetime:new Date(),
+                _iserror:true,
+                _isread:false,
+                actioncode:"error"
+          }));
+    }
+  };
 
 server.listen(88, function listening() {
   console.log('Listening on %d', server.address().port);

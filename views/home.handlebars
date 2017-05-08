@@ -2,116 +2,65 @@
 </script>
 
 <script charset="utf-8" >	
-var fullUrl = location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '');
-var fullHost=location.hostname+(location.port ? ':'+location.port: '');
-var ws=null;
-	app.factory('WS', function($websocket) {
-      					var ws = $websocket("ws://" + document.location.host +document.location.pathname );
-                        var datacollection = [];
-                        var heartbeatcollection=[];
-                        var errorcollection=[];
-                        var shakehandscollection=[];
-                        ws.onMessage(function (event) {
-                            //console.log('message: ', event.json);
-                            var response;
+app.controller('homeCtrl', function($scope,$timeout,$window, $http,WS,ST) {
+					//after open connection get the result to check if server response well and save to local database
+					//try to get data from client local database
+					//var client={{{client}}};
+					var client =ST.storage();
+					console.log("home storage: %s",JSON.stringify(client));
+					//$scope.$storage = $localStorage.$default({client:client});
+					$scope.res_data={};
+					WS.subscribe(function (event){
+						$scope.$apply(function (){
+							//var response;
                             try {
                                 if (angular.isString(event.data)) {
-                                    response=JSON.parse(event.data);
+                                    $scope.res_data=JSON.parse(event.data);
                                 }
                                 else if (angular.isObject(event.data)) {
-                                    response=event.data;
+                                    $scope.res_data=event.data;
                                 }
-
-
+							//$scope.res_data=event.data;
+								console.log(" home res_data %s",JSON.stringify($scope.res_data));
+	                        	if(isJson($scope.res_data)){
+	                        		if($scope.res_data.actioncode=="init")
+	                        			$scope.initData();
+	                        	}
                             } catch (e) {
+                            	$scope.res_data = {'error': e,updatetime:new Date(),_isstring:false,_iserror:true,_isread:false};
                                 $("#infomsg").html("Sorry, connection failed ...");
                                 //console.log('error:'+ e);
-                                response = {'error': e,updatetime:new Date(),_isstring:false,_iserror:true,_isread:false};
+                                
                             }
-                            
-                            if(response.json.actioncode=="heartbeats")
-                            	heartbeatcollection.push(response);
-                            else if(response.actioncode=="data")
-                            	datacollection.push(response);
-                            else if(response.actioncode=="error")
-                            	errorcollection.push(response);
-                            else if(response.actioncode=="shakehands")
-                            	shakehandscollection.push(response);
-                        });
-                        ws.onError(function (event) {
-                            console.log('connection Error', event);
-                        });
-                        ws.onClose(function (event) {
-                            console.log('connection closed', event);
-                        });
-                        ws.onOpen(function () {
-                            console.log('connection open');
-                            ws.send('HELLO SERVER');
-                        });
-                        return {
-                            datacollection:datacollection,
-                            heartbeatcollection:heartbeatcollection,
-                            errorcollection:errorcollection,
-                            shakehandscollection:shakehandscollection,
-                            status: function () {
-                                return ws.readyState;
-                            },
-                            send: function (message) {
-                                if (angular.isString(message)) {
-                                    ws.send(message);
-                                }
-                                else if (angular.isObject(message)) {
-                                    ws.send(JSON.stringify(message));
-                                }
-                            }
-                        };
-
-    }).controller('homeCtrl', function($scope,$timeout,$window, $http,WS) {
-    $scope.WS=WS;	
+						});
+					});					
+					$scope.initData=function(){						
+						console.log("Init data res_data: %s",JSON.stringify($scope.res_data.json));
+						client=$scope.res_data.json;
+						// when login exist
+						client=updateClient(client);
+						console.log("updated %s",JSON.stringify(client));
+						if(ST.saveStorage(client)>0)
+							return;
+					};
+	WS.init();
+    $scope.ws=WS;	
 	//console.log(WS.datacollection);
 	//console.log("ws %s",$scope.ws);
-	$scope.client={{{client}}};
+	$scope.client=client; 
 	$scope.client.lastaccess=formatDate(new Date($scope.client.lastaccess),5);	
-	$scope.register={};	
+	//$scope.register={};	
 	$scope.isnew=false;
 	$scope.isedit=false;
 	$scope.isshakehands=false;
 	$scope.heartbeats=null;
 
-	var messege={
-                _isstring:false,
-                json:{},
-                updatetime:new Date(),
-                _iserror:true,
-                _isread:false,
-                actioncode:"error"};
-
-	var client={
-    username:"",
-    logintoken:"",
-    logintime:null,
-    logintimeout:null,
-    clientuid:null,
-    registeruid:null,
-    confirmregisteruid:null,
-    browserinfo:"",
-    ip:"",
-    other:"",
-    lastaccess:null,
-    isexist:false,
-    clientjs:"",
-    fingerprint:"",
-    data:""
-    };
 	$scope.login={
-		username:"",
+		username:"",	
 		password:""
 	};
 
 	$scope.forgetorphone="";
-	
-
-
 	$scope.user={
 		 gui:"uuidV4()",
 		  username:"",
@@ -134,25 +83,31 @@ var ws=null;
 	// }
 	$scope.shakehands =function(){
 		$scope.error="";
-		//$scope.client="";
-		//send shakehands data to the server 
-		$scope.client.data={
-		sendtime:new Date(),
-		data:null,
-		actioncode:"shakehands",
-		};
-		$scope.WS.send($scope.client);
+		var c={
+            _isstring:true,
+            json:client,
+            updatetime:new Date(),
+            _iserror:false,
+            _isread:false,
+            actioncode:"shakehands"
+            };
+            $scope.ws.send(JSON.stringify(c));
 		//console.log(WS.datacollection[WS.datacollection.length-1]);
 	}
-
+	$scope.getshakehands=function(shaked){
+		$scope.isshakehands=shaked;
+	}
 
 	$scope.sendHeartbeats=function(){
-		$scope.client.data={
-		sendtime:new Date(),
-		data:null,
-		actioncode:"heartbeats",
-		};
-		$scope.WS.send(scope.client);
+		var c={
+            _isstring:true,
+            json:client,
+            updatetime:new Date(),
+            _iserror:false,
+            _isread:false,
+            actioncode:"heartbeats"
+            };
+            $scope.ws.send(JSON.stringify(c));
 	}
 	
 	$scope.submitlogin=function (){
@@ -164,20 +119,12 @@ var ws=null;
 			return;
 		}
 		// check login data
-		$scope.client.data={
-		sendtime:new Date(),
-		data:$scope.login,
-		actioncode:"login",
-		};
-		$scope.WS.send($scope.client);
-		//$window.location='/user/'+JSON.stringify($scope.client);
-		$window.location='/user';
-		//$http.get('/user/'+JSON.stringify($scope.client)).then(function(data, status){
-		// $http.get('/user').then(function(data, status){
-	 //    	$window.location.href = data.redirect; 
-	 //    });
-		// //console.log(WS.datacollection);
-		//redirect to user profile mainpage
+		var c={
+			sendtime:new Date(),
+			data:$scope.login,
+			actioncode:"login",
+			};
+		$scope.ws.send(JSON.stringify(c));
 		
 	}
 	$scope.forget=function (){
@@ -187,12 +134,12 @@ var ws=null;
 			return;
 		}
 		// check login data
-		$scope.client.data={
+		var c={
 		sendtime:new Date(),
 		data:$scope.forgetorphone,
 		actioncode:"forget",
 		};
-		$scope.WS.send($scope.client);
+		$scope.ws.send(JSON.stringify(c));
 		//console.log(WS.datacollection);
 		
 		//redirect to user profile mainpage

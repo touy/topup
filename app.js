@@ -209,7 +209,6 @@ app.get('/newclientinfo', function (req, res,next) {
     fingerprint:"",
     data:""
     };
-
     res.render('newclientinfo',{
         layout:false,
         helpers:{

@@ -93,6 +93,18 @@ app.controller('homeCtrl', function($scope,$timeout,$window, $http,WS,ST) {
             };
             $scope.ws.send(JSON.stringify(c));
 		//console.log(WS.datacollection[WS.datacollection.length-1]);
+	};
+	$scope.register-submit=function(){
+		
+		var c={
+            _isstring:true,
+            json:client,
+            updatetime:new Date(),
+            _iserror:false,
+            _isread:false,
+            actioncode:"register"
+            };
+            $scope.ws.send(JSON.stringify(c));
 	}
 	$scope.getshakehands=function(shaked){
 		$scope.isshakehands=shaked;
@@ -119,11 +131,17 @@ app.controller('homeCtrl', function($scope,$timeout,$window, $http,WS,ST) {
 			return;
 		}
 		// check login data
+		client.data=$scope.login;
 		var c={
-			sendtime:new Date(),
-			data:$scope.login,
-			actioncode:"login",
-			};
+            _isstring:true,
+            json:client,
+            updatetime:new Date(),
+            _iserror:false,
+            _isread:false,
+            actioncode:"login"
+            };
+         console.log("submit login");
+         console.log("client: %s"+JSON.stringify(c));
 		$scope.ws.send(JSON.stringify(c));
 		
 	}

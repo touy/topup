@@ -1,88 +1,194 @@
 <script src="/static/js/main.js" type="text/javascript" charset="utf-8">
 </script>
 <script type="text/javascript" charset="utf-8" >
-var fullUrl = location.protocol+'//'+location.hostname+(location.port ? ':'+location.port: '');
-var fullHost=location.hostname+(location.port ? ':'+location.port: '');
-	app.factory('WS', function($websocket) {
-      					var ws = $websocket("ws://" + document.location.host +document.location.pathname + "atpendpoint");
-                        var datacollection = [];
-                        var heartbeatcollection=[];
-                        var errorcollection=[];
-                        ws.onMessage(function (event) {
-                            //console.log('message: ', event.json);
-                            var response;
+app.controller('userCtrl', function($scope,$timeout,$window, $http,WS,ST) {
+					//after open connection get the result to check if server response well and save to local database
+					//try to get data from client local database
+					//var client={{{client}}};
+					var client =ST.storage();
+					console.log("home storage: %s",JSON.stringify(client));
+					//$scope.$storage = $localStorage.$default({client:client});
+					$scope.res_data={};
+					WS.subscribe(function (event){
+						$scope.$apply(function (){
+							//var response;
                             try {
                                 if (angular.isString(event.data)) {
-                                    response=JSON.parse(event.data);
+                                    $scope.res_data=JSON.parse(event.data);
                                 }
                                 else if (angular.isObject(event.data)) {
-                                    response=event.data;
+                                    $scope.res_data=event.data;
                                 }
-
-
+							//$scope.res_data=event.data;
+								console.log(" home res_data %s",JSON.stringify($scope.res_data));
+	                        	if(isJson($scope.res_data)){
+	                        		if($scope.res_data.actioncode=="init")
+	                        			$scope.initData();
+	                        	}
                             } catch (e) {
+                            	$scope.res_data = {'error': e,updatetime:new Date(),_isstring:false,_iserror:true,_isread:false};
                                 $("#infomsg").html("Sorry, connection failed ...");
                                 //console.log('error:'+ e);
-                                response = {'error': e,updatetime:new Date(),_isstring:false,_iserror:true,_isread:false};
+                                
                             }
-                            
-                            if(response.json.actioncode=="heartbeats")
-                            	heartbeatcollection.push(response);
-                            else if(response.actioncode=="data")
-                            	datacollection.push(response);
-                            else if(response.actioncode=="error")
-                            	errorcollection.push(response);
-                        });
-                        ws.onError(function (event) {
-                            console.log('connection Error', event);
-                        });
-                        ws.onClose(function (event) {
-                            console.log('connection closed', event);
-                        });
-                        ws.onOpen(function () {
-                            console.log('connection open');
-                            //ws.send('HELLO SERVER');
-                        });
-                        return {
-                            datacollection:datacollection,
-                            status: function () {
-                                return ws.readyState;
-                            },
-                            send: function (message) {
-                                if (angular.isString(message)) {
-                                    ws.send(message);
-                                }
-                                else if (angular.isObject(message)) {
-                                    ws.send(JSON.stringify(message));
-                                }
-                            }
-                        };
-
-    }).controller('userCtrl', function($scope, $http,WS) {
-    // Display the buttons
-    $scope.WS=WS;
-   	$scope.client={{{client}}};
-   	var userdata={ username:"AAAAAAAAAAAAAA", password:"", createddate:new Date(), gui:"uuidV4()", parent:"1111111", email:"", phone1:"55555555555555", phone2:"", address:"", photo:"", memberlevel:"", twinusergui:"", binid:"", userlevelid:""};//as a userid or parentid userside:0 //0 : LEFT , 1: RIGHT };
-   	$scope.client={};
+						});
+					});					
+					$scope.initData=function(){						
+						console.log("Init data res_data: %s",JSON.stringify($scope.res_data.json));
+						client=$scope.res_data.json;
+						// when login exist
+						client=updateClient(client);
+						console.log("updated %s",JSON.stringify(client));
+						if(ST.saveStorage(client)>0)
+							return;
+					};
+	WS.init();
+    $scope.ws=WS;	
+	//console.log(WS.datacollection);
+	//console.log("ws %s",$scope.ws);
+	$scope.client=client; 
 	$scope.client.lastaccess=formatDate(new Date($scope.client.lastaccess),5);	
-	$scope.data=$scope.client.data;
-	$scope.data=userdata;
-	$scope.loadChildren=function (){
-		//validate login info
+	//$scope.register={};	
+	$scope.isnew=false;
+	$scope.isedit=false;
+	$scope.isshakehands=false;
+	$scope.heartbeats=null;
 
+	$scope.login={
+		username:"",	
+		password:""
+	};
+
+	$scope.forgetorphone="";
+	$scope.user={
+		 gui:"uuidV4()",
+		  username:"",
+		  password:"",
+		  confirmpassword:"",
+		  createddate:new Date(),
+		  parent:"",
+		  email:"",
+		  phone1:"",
+		  phone2:"",
+		  address:"",
+		  photo:"",
+		  memberlevel:"",
+		  twinusergui:"",
+		  binid:""
+		  };
+	
+	// $scope.initVals=function(){
+	// 	$scope.shakehands();
+	// }
+	$scope.shakehands =function(){
+		$scope.error="";
+		var c={
+            _isstring:true,
+            json:client,
+            updatetime:new Date(),
+            _iserror:false,
+            _isread:false,
+            actioncode:"shakehands"
+            };
+            $scope.ws.send(JSON.stringify(c));
+		//console.log(WS.datacollection[WS.datacollection.length-1]);
+	}
+	$scope.getshakehands=function(shaked){
+		$scope.isshakehands=shaked;
+	}
+
+	$scope.sendHeartbeats=function(){
+		var c={
+            _isstring:true,
+            json:client,
+            updatetime:new Date(),
+            _iserror:false,
+            _isread:false,
+            actioncode:"heartbeats"
+            };
+            $scope.ws.send(JSON.stringify(c));
+	}
+	$scope.addmember=function(isleft){
+		if(isleft)
+		{
+
+		}
+		else
+		{
+
+		}
+	}
+	$scope.submitlogin=function (){
+		//validate login info
+		$scope.error="";
+
+		if($scope.login.username==""||$scope.login.password==""){
+			$scope.error="input username and password correctly or click forgot password";
+			return;
+		}
 		// check login data
-		WS.send({
-		sendtime:new Date(),
-		data:$scope.client,
-		actioncode:"login",
-		});
-		console.log(WS.datacollection);
-		//redirect to user profile mainpage
+		var c={
+			sendtime:new Date(),
+			data:$scope.login,
+			actioncode:"login",
+			};
+		$scope.ws.send(JSON.stringify(c));
 		
 	}
-	});
+	$scope.forget=function (){
+		//validate user 
+		if($scope.login.username==""||$scope.login.password==""){
+			$scope.error="input username and password correctly or click forgot password";
+			return;
+		}
+		// check login data
+		var c={
+		sendtime:new Date(),
+		data:$scope.forgetorphone,
+		actioncode:"forget",
+		};
+		$scope.ws.send(JSON.stringify(c));
+		//console.log(WS.datacollection);
+		
+		//redirect to user profile mainpage
+		$scope.errors="Error forget";
+	}
+	$scope.showlogin=function (e){
+		$("#login-form").delay(100).fadeIn(100);
+ 		//$("#register-form").fadeOut(100);
+		$("#forget-form").fadeOut(100);
+		//$('#register-form-link').removeClass('active');
+		$(this).addClass('active');
+		//e.preventDefault();
+	};
+	// $scope.showregister=function(e){
+	// 	$("#register-form").delay(100).fadeIn(100);
+ // 		$("#login-form").fadeOut(100);
+ // 		$("#forget-form").fadeOut(100);
+	// 	$('#login-form-link').removeClass('active');
+	// 	$(this).addClass('active');
+	// 	//e.preventDefault();
+	// };
+	$scope.showforget=function(e){
+		$("#forget-form").delay(100).fadeIn(100);
+ 		$("#login-form").fadeOut(100);
+ 		//$("#register-form").fadeOut(100);
+		$('#login-form-link').removeClass('active');
+		//$('#register-form-link').removeClass('active');
+		$(this).addClass('active');
+		//e.preventDefault();
+	};
 
-
+	// shakehands
+	$scope.isshakehands=$scope.shakehands();
+	
+    $timeout(function() {
+        	if($scope.isshakehands)
+        		//ws.emit("heartbeats",$scope.client);
+        	$scope.sendHeartbeats();
+        }, 5000);
+    
+});
 
 	var myTree;
 	$(function(){
@@ -104,7 +210,7 @@ var fullHost=location.hostname+(location.port ? ':'+location.port: '');
 </script>
 {{{{raw}}}}
 <div ng-app="topup" ng-controller="userCtrl" ng-init="initVals()" class="form-group container" data>
-	<h3>User</h3>
+	<h3>User profile</h3>
 	<div>
 		<img  src="{{this.data.photo}}"/>
 		<div ng-bind="this.data.username"></div>
@@ -116,23 +222,8 @@ var fullHost=location.hostname+(location.port ? ':'+location.port: '');
 	<div ng-bind="this.data.binid"></div>
 
 	<div></div>
-	var userdata={
-    username:"",
-    password:"",
-    createddate:new Date(),
-    gui:uuidV4(),
-    parent:"",
-    email:"",
-    phone1:"",
-    phone2:"",
-    address:"",
-    photo:"",
-    memberlevel:"",
-    twinusergui:"",
-    binid:"",
-    userlevelid:"",//as a userid or parentid
-    userside:0 //0 : LEFT , 1: RIGHT
-    };
+	<hr/>
+
 	<hr/>
 	<h3>Balance</h3>
 	<hr/>
@@ -185,7 +276,7 @@ var fullHost=location.hostname+(location.port ? ':'+location.port: '');
 	        <tr>
 	        	<td>
 	        	<h2>LEFT SCORE: xxxx.xxxx</h2>	        	
-	        	<button type="button">Add member</button>
+	        	<button type="button" ng-click="addmember(1)">Add member</button>
 					<table id="example" class="table table-striped table-bordered" cellspacing="0" width="50%">
 								        <thead>
 								            <tr>
@@ -235,7 +326,7 @@ var fullHost=location.hostname+(location.port ? ':'+location.port: '');
 	        	</td>
 	        	<td>
 	        	<h2>RIGHT SCORE: xxxx.xxxx</h2>	 
-	        	<button type="button">Add member</button>       	
+	        	<button type="button" ng-click="addmember(0)">Add member</button>       	
 					<table id="example" class="table table-striped table-bordered" cellspacing="0" width="50%">
 								        <thead>
 								            <tr>
@@ -285,7 +376,7 @@ var fullHost=location.hostname+(location.port ? ':'+location.port: '');
 	        	</td>
 	        </tr>
 	    </table>
-		
+
 		
 			
 	</div>	

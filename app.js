@@ -330,7 +330,7 @@ app.get('/user', function (req, res,next) {
         helpers:{
           raw:function(options){return options.fn();
           },
-          client:JSON.stringify(client)
+          //client:JSON.stringify(client)
         }
     });
 });
@@ -473,6 +473,13 @@ var payment={
   gui:uuidV4()
 
 }
+var gconfig={
+  balancetransferfee:"",
+  couplingvalue:0,
+  membercouplinglimitperday:0,//
+  maxphonenumberforpackage:2
+}
+
 var receive={
   usergui:"",
   receivedate:Date(),
@@ -664,11 +671,10 @@ wss.on('connection', function connection(ws) {
       switch (data.actioncode) {
         case "init":
           check_init(ws,c);
-       
         break;
         case "shakehands":
         //shakehands(ws,c);
-        c.data="shake hands accepted";
+          c.data="shake hands accepted";
          ws.send(JSON.stringify({
                 _isstring:true,
                 json:c,
@@ -694,7 +700,7 @@ wss.on('connection', function connection(ws) {
         case "userprofile":
 
         break;
-        case "userprofile":
+        case "userchildren":
 
         break;
 
@@ -813,8 +819,8 @@ function user_login(ws,message){
   var loginlogdb=create_db("loginlog");
   //var couchdb=require("couchdb_lib");
   try {
-      var v=JSON.parse(message);
-      var c=v.json;
+      var c=message;
+      //var c=v.json;
       var ip=ws.upgradeReq.connection.remoteAddress;    
       
       var logindata={
@@ -848,47 +854,59 @@ function user_login(ws,message){
       isonline:false,
       data:""
       };
-      userdata=c.data;    
+      //var cdata=c.data;    
       //delete v["data"];
-      v.json="";
-      if(!compareJson(v,client))
-      {
-         client.data={data:"wrong json format: userdata"};
-          ws.send(JSON.stringify({
-            _isstring:false,
-                  json:client,
-                  updatetime:new Date(),
-                  _iserror:true,
-                  _isread:false,
-                  actioncode:"error"
-          }));
-          return;
-      }
+      
+      //c.data="";
+      console.log("compare client %s",JSON.stringify(c));
+      
+      // if(!compareJson(client,c))
+      // {
+      //   console.log("compare login info");
+      //    client.data="wrong json format: userdata";
+
+      //     ws.send(JSON.stringify({
+      //       _isstring:false,
+      //             json:client,
+      //             updatetime:new Date(),
+      //             _iserror:true,
+      //             _isread:false,
+      //             actioncode:"error"
+      //     }));
+      //     console.log("response errors");
+
+      //     return;
+      // }
+       console.log("compare login info");
       //check username and password
       //client=v;
       //v=null;
       //delete v;
       client=c;
-      if(!compareJson(client.data,logindata))
-      {
-        client.data={data:"wrong json format: userdata"};
-          ws.send(JSON.stringify({
-            _isstring:false,
-                  json:client,
-                  updatetime:new Date(),
-                  _iserror:true,
-                  _isread:false,
-                  actioncode:"error"
-          }));
-          return;
-      }
+      //client.data=cdata;
+     
+      // if(!compareJson(logindata,client.data))
+      // {
+      //   client.data={data:"wrong json format: userdata"};
+      //     ws.send(JSON.stringify({
+      //       _isstring:false,
+      //             json:client,
+      //             updatetime:new Date(),
+      //             _iserror:true,
+      //             _isread:false,
+      //             actioncode:"error"
+      //     }));
+      //     return;
+      // }
       //check here 
+     console.log("check user login");
       var login=userdb.view('users', 'findByUserLogin',[logindata.username,logindata.password], function(err, body) {
-      return (!err)?true:false;
+      return (err!=null)?true:false;
       });
 
       if(!login)
       {
+        console.log("user not exist");
         client.data={data:"wrong username or password"};
           ws.send(JSON.stringify({
             _isstring:false,
@@ -905,10 +923,11 @@ function user_login(ws,message){
           });
           return;
       }
-      client.data={data:"wrong username or password"};
+      console.log("user exist");
+      client.data="success login";
           ws.send(JSON.stringify({
             _isstring:false,
-                  json:JSON.stringify(client),
+                  json:client,
                   updatetime:new Date(),
                   _iserror:false,
                   _isread:false,
@@ -921,7 +940,7 @@ function user_login(ws,message){
           });
         c=client;
         
-        update_by_key(c.clientuid+c.fingerprint+c.registeruid,c, function(err, newValue) {
+        update_by_key(c.clientuid+c.fingerprint+c.registeruid,JSON.stringify(c), function(err, newValue) {
           if (err) {
             throw err;
           }
@@ -1003,77 +1022,311 @@ function forgetpassword_process(ws,message)
 
 }
 
+/*PACKAGES*/
+
+
+
+
+
+/*END PACKAGES*/
+//response handler
+function resp_handle(r,actioncode,jsondata){
+  r.__resp.actioncode=actioncode;
+  r.__resp.updatedtime=new Date();
+  r.__resp.json=jsondata;
+  r.__glob._submit(r.__WS,r.__resp);
+}
+//
 /*Register()*/
 function register_new_user(ws,message){
   
-  var userdb=create_db("userdb");
+  //var userdb=create_db("userdb");
   //var couchdb=require("couchdb_lib");
+  var package_db=require("./db/packages")(uuidV4,nano,ws,"packages","objectList")._init();
+  var userbinary_db=require("./db/userbinary")(uuidV4,nano,ws,"userbinary","objectList")._init();
+  var packagedetails_db=require("./db/packagedetails")(uuidV4,nano,ws,"packagedetails","objectList")._init();
+  var coupling_db=require("./db/coupling")(uuidV4,nano,ws,"coupling","objectList")._init();
+  var couplingscore_db=require("./db/couplingscore")(uuidV4,nano,ws,"couplingscore","objectList")._init();
+  var balances_db=require("./db/balances")(uuidV4,nano,ws,"balances","objectList")._init();
+  var payment_db=require("./db/payment")(uuidV4,nano,ws,"payment","objectList")._init();
+  var userdata_db=require("./db/userdata")(uuidV4,nano,ws,"userdata","objectList")._init();
+  var client_db=require("./db/client")(uuidV4,nano,ws,"client","UserData")._init();
+  
   try {
-    var v=JSON.parse(message);
-    var ip=ws.upgradeReq.connection.remoteAddress;
-    
-    var userdata={
-    username:"",
-    password:"",
-    createddate:new Date(),
-    gui:uuidV4(),
-    parent:"",
-    email:"",
-    phone1:"",
-    phone2:"",
-    address:"",
-    photo:"",
-    memberlevel:"",
-    ispaired:false,
-    parentgui:"",//as a userid or parentid
-    isleft:false,
-    userleftgui:"" ,
-    userrightgui:""
-    };
-  var client={
-    username:"",
-    logintoken:"",
-    logintime:null,
-    logintimeout:null,
-    clientuid:null,
-    registeruid:null,
-    confirmregisteruid:null,
-    browserinfo:"",
-    ip:"",
-    other:"",
-    lastaccess:null,
-    isexist:false,
-    clientjs:"",
-    fingerprint:"",
-    data:""
-    };
-
-    if(!compareJson(v.data,userdata))
-    {
-        ws.send(JSON.stringify({
-          _isstring:false,
-                json:{data:"wrong json format: userdata"},
-                updatetime:new Date(),
-                _iserror:true,
-                _isread:false,
-                actioncode:"error"
-        }));
-        return;
+    var v=message;// v= client for register
+    //check client or v info first as always
+    var data=v.data;
+    /*
+      client={
+        data:{
+          package:"",
+          userbinary:"",
+          packagedetails:"",
+          coupling:"",
+          couplingscore:",
+          balances:"",
+          payment:"",
+          userdata
+        }
       }
+        
+    */
+
+    var ip=ws.upgradeReq.connection.remoteAddress;
+    //compare client ip and current IP 
+
+    //client
+    // var c={
+    // username:"",
+    // logintoken:"",
+    // logintime:null,
+    // logintimeout:null,
+    // clientuid:null,
+    // registeruid:null,
+    // confirmregisteruid:null,
+    // browserinfo:"",
+    // ip:"",
+    // other:"",
+    // lastaccess:null,
+    // isexist:false,
+    // clientjs:"",
+    // fingerprint:"",
+    // isonline:false,
+    // data:""
+    // };
+
+    
+    
+    // process client
+    // base on current user if , current user can register a new member
+    var clients=Redis.createClient().get("client");      
+
+    //check if current client is logging in the redis
+    //check if current client is logging in the database
+
+    client_db._exist(v,function(error,result){
+      if(result!=null){
+        if(result.rows[0]==null){  
+              resp__handler(client_db,"not exist",{data:("%s not exist",client_db.__dbname)});           
+        }
+        else{
+          var c=result.rows[0];
+              //resp__handler(client_db,"exist",{data:("%s exist",client_db.__dbname)}); 
+              //when client exist 
+                   //process userdata before insert
+                    userdata_db._exist(data.userdata,function(error1,result1){
+                    if(result1!=null){
+                      if(result1.rows[0]!=null){                        
+                            resp__handler(userdata_db,"exist",{data:("%s exist",userdata_db.__dbname)}); 
+                      }
+                      else{                            
+                        userbinary_db._newMember({username:c.username},function(error1_1,result1_1){
+                          if(result1_1!=null){
+                            if(result1_1.rows[0]!=null){
+                              var d=reustl1_1.rows[0];
+                              if(!d.luser&&data.userdata.luser){     
+                                d.luser=data.userdata.luser;
+                                userbinary_db._add(d,d.username,function(e,r){
+                                  if(e){
+                                    resp__handler(userbinary_db,"error",{data:("%s error",userbinary_db.__dbname)}); 
+                                  };
+                                });
+                                 resp__handler(userbinary_db,"success",{data:("%s success",userbinary_db.__dbname)}); 
+                              }
+                              else if(!d.ruser&&data.userdata.ruser){
+                                d.ruser=data.userdata.ruser;
+                                userbinary_db._add(d,d.username,function(e,r){
+                                  if(e){
+                                     resp__handler(userbinary_db,"error",{data:("%s error %s",userbinary_db.__dbname,JSON.stringify(e0))}); 
+                                  };
+                                });                               
+                                 resp__handler(userbinary_db,"success",{data:("%s success",userbinary_db.__dbname)}); 
+                              }
+                              else{
+                                 resp__handler(userbinary_db,"wrongside",{data:("%s choose otherside",userbinary_db.__dbname)}); 
+                              }
+                              
+                            }
+                            else{
+                              //insert new user
+                               // top user exist and can add a new member
+                              userdata_db._add(data.userdata,function(e0,r0){
+                                if(e0){
+                                  resp__handler(userdata_db,"error",{data:("%s error %s",userdata_db.__dbname,JSON.stringify(e0))}); 
+                                }
+                                else{
+                                  
+                                }
+                              });
+                             if(data.userdata.luser){     
+                                d=data.userdata;
+                                userbinary_db.insert(d,d.username,function(e,r){
+                                  if(e){
+                                     userbinary_db.__resp.actioncode="error";
+                                    userbinary_db.__resp.updatedtime=new Date();
+                                    userbinary_db.__resp.json={data:("%s error",userbinary_db.__dbname)};
+                                    userbinary_db.__glob.submit(userbinary_db.__WS,userbinary_db.__resp);
+                                  };
+                                });
+                                userbinary_db.__resp.actioncode="success";
+                                userbinary_db.__resp.updatedtime=new Date();
+                                userbinary_db.__resp.json={data:("%s success",userbinary_db.__dbname)};
+                                userbinary_db.__glob.submit(userbinary_db.__WS,userbinary_db.__resp);
+                              }
+                              else if(data.userdata.ruser){
+                                d=ata.userdata;
+                                userbinary_db.insert(d,d.username,function(e,r){
+                                  if(e){
+                                     userbinary_db.__resp.actioncode="error";
+                                    userbinary_db.__resp.updatedtime=new Date();
+                                    userbinary_db.__resp.json={data:("%s error",userbinary_db.__dbname)};
+                                    userbinary_db.__glob.submit(userbinary_db.__WS,userbinary_db.__resp);
+                                  };
+                                });
+                                userbinary_db.__resp.actioncode="success";
+                                userbinary_db.__resp.updatedtime=new Date();
+                                userbinary_db.__resp.json={data:("%s success",userbinary_db.__dbname)};
+                                userbinary_db.__glob.submit(userbinary_db.__WS,userbinary_db.__resp);
+                              }
+                              else{
+                                userbinary_db.__resp.actioncode="wrongside";
+                                userbinary_db.__resp.updatedtime=new Date();
+                                userbinary_db.__resp.json={data:("%s choose otherside",userbinary_db.__dbname)};
+                                userbinary_db.__glob.submit(userbinary_db.__WS,userbinary_db.__resp);
+                              }                              
+                            }
+                          }
+                          });
+                        
+                        
+                         // process packages
+                        // find given package exist ?
+                        //TODO: 05 JUNE 2017, process package first or process userbinary first
+                        package_db._exist(data.package,function(error2,result2){
+                          if(result2!=null){
+                                if(result2.rows[0]==null){                        
+                                  //not exist
+                                  package_db.__resp.actioncode="not exist";
+                                  package_db.__resp.updatedtime=new Date();
+                                  package_db.__resp.json={data:("%s not exist",package_db.__dbname)};
+                                  package_db.__glob.submit(package_db.__WS,package_db.__resp);
+                            }
+                              else{
+                                //exist
+                                  // process binaryuser
+                                  userbinary_db.exist(data.userdata,function(error3,result2){
+                                    if(result3!=null){
+                                      if(result3.rows[0]==null){
+                                        //not exist
+                                        package_db.__resp.actioncode="not exist";
+                                        package_db.__resp.updatedtime=new Date();
+                                        package_db.__resp.json={data:("%s not exist",userbinary_db.__dbname)};
+                                        package_db.__glob.submit(package_db.__WS,userbinary_db.__resp);
+                                      }
+                                    }
+                                    else{
+                                      // process packagedetails
+                                      //insert userdata and package to package details 
+                                      // calculate bonus per package and binary, level    
+                                      
+                                      // process coupling
+                                      
+                                      // process couplingscore
+                                          
+                                      // process balance
+                                      
+                                      // process payment 
+                                    }                                
+                                  });
+                                  
+
+
+                            }
+
+                          }
+                          else {
+                            package_db.__resp.actioncode="error";
+                            package_db.__resp.updatedtime=new Date();
+                            package_db.__resp.json={data:("%s error",JSON.stringify(error))};
+                            package_db.__glob.submit(package_db.__WS,package_db.__resp);
+                          }
+                        });
+                      }
+
+                    }
+                    else {
+                      userdata_db.__resp.actioncode="error";
+                      userdata_db.__resp.updatedtime=new Date();
+                      userdata_db.__resp.json={data:("%s error",JSON.stringify(error))};
+                      userdata_db.__glob.submit(userdata_db.__WS,userdata_db.__resp);
+                    }
+                  });
+        
+        }
+
+      }
+      else{
+        client_db.__resp.actioncode="error";
+        client_db.__resp.updatedtime=new Date();
+        client_db.__resp.json={data:("%s error",error)};
+        client_db.__glob.submit(client_db.__WS,client_db.__resp);
+      }
+    });
+
+   
+    
+    
+    
+    
+    
+
+    var received={};
+    var invoice={};
+
+    var gconfig={
+      balancetransferfee:"",
+      couplingvalue:0,
+      membercouplinglimitperday:0,//
+      maxphonenumberforpackage:2
+    }
+
+    
+    var topuppackage={};
+    var topupbalance={};
+    var transfer={};
+    var transferfee={};
+    var loaningpackage={}; // loan once per month per user with exact amount
+    var loaningbalance={}; 
+    var returnloan={};
+
+    
+
+    // if(!compareJson(userdata,v.data)
+    // {
+    //     ws.send(JSON.stringify({
+    //       _isstring:false,
+    //             json:{data:"wrong json format: userdata"},
+    //             updatetime:new Date(),
+    //             _iserror:true,
+    //             _isread:false,
+    //             actioncode:"error"
+    //     }));
+    //     return;
+    //   }
     userdata=v.userdata;    
     delete v["data"];
-    if(!compareJson(v,client))
-    {
-        ws.send(JSON.stringify({
-          _isstring:false,
-                json:{data:"wrong json format: userdata"},
-                updatetime:new Date(),
-                _iserror:true,
-                _isread:false,
-                actioncode:"error"
-        }));
-        return;
-      }
+    // if(!compareJson(client,v))
+    // {
+    //     ws.send(JSON.stringify({
+    //       _isstring:false,
+    //             json:{data:"wrong json format: userdata"},
+    //             updatetime:new Date(),
+    //             _iserror:true,
+    //             _isread:false,
+    //             actioncode:"error"
+    //     }));
+    //     return;
+    //   }
     client=v;
     //check before insert    
     var u=userdb.view("users","findByUserName",[client.username],function(err,body){
@@ -1118,7 +1371,12 @@ function register_new_user(ws,message){
     if(u.userrightgui!=""&&u.userleftgui!="")
       u.ispaired=true;
 
-    //update U ( parent)
+        
+    // calculate user score and bonus
+
+
+    ////update U ( parent)
+
     userdb.insert(u,u.rev,function(err,res){
       if(!error) {
         console.log("Updated parent");
@@ -1197,6 +1455,7 @@ function create_db(dbname){
     if (!err) {
       console.log(body);
     }
+
     });
   }
 

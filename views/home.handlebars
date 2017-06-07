@@ -94,7 +94,7 @@ app.controller('homeCtrl', function($scope,$timeout,$window, $http,WS,ST) {
             $scope.ws.send(JSON.stringify(c));
 		//console.log(WS.datacollection[WS.datacollection.length-1]);
 	};
-	$scope.register-submit=function(){
+	$scope.register=function(){
 		
 		var c={
             _isstring:true,

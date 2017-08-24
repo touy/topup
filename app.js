@@ -181,7 +181,6 @@ app.get('/', function (req, res,next) {
     fingerprint:"",
     data:""
     };
-
     res.render('index',{
         helpers:{
          // generateclient:true,
@@ -248,28 +247,75 @@ app.get('/home', function (req, res,next) {
     });
 });
 
-app.get('/register/:client', function (req, res,next) {
-  var client=JSON.parse(req.params.client);
-  res.render('register',{
-        helpers:{
-          raw:function(options){return options.fn();
-          },
-          showhelpers:function(){return "show helpers";
-          }
-        }
-    });
+app.get('/packages/:p', function (req, res,next) {
+  var p=JSON.parse(req.params.p);
+  var package={
+        gui:uuidV4(),
+        packagename:"P1",
+        packagevalue:"",
+        isactive:true,
+        createddate:new Date(), 
+        relationvalue:"",
+        bonusbalance:0, // new member get instantly balance after register
+        introductionscore:0, // only the introductor got balance instantly after got a new member
+        memberscorebonus:0, // all upline members got score but not yet the balance till coupling happen.
+        maxpaidperday:0
+      }; 
+      //ເງືອນໄຂການຈ່າຍ 350.000
+      //1. 40.000 ຄ່າແນະນຳ
+      //2. 25.000 ມູນຄ່າໂທ
+      //3. ບລສ  75.000
+      //4. ມູນຄ່າຈັບຄູ່ຕ້ອງໃຫ້ຜູ້ແນະນຳກ່ອນ: 20.000
+      //5. ມູນຄ່າຈັບຄູ່ 20.000 ໃຫ້ ແຕ່ລະຄົນ(ຊຶ່ງບໍ່ເກີນ 20.000) ຈາກ (350.000-40.000-25000-75000)
+      //6. ຖ້າເກີນ 20.000 ແມ່ນ ສ່ວນເກີນເຂົ້າບໍລິສັດ
+//ເງື່ອນໄຂ ຂອງ PACKAGE
+
+    p1=package;
+    p2=p1;
+    p3=p2;
+    p1.gui=uuidV4();
+    p1.packagename="P1";
+    p1.packagevalue=100000;
+    p1.relationvalue=0;
+    p1.bonusbalance=0;
+    p1.introductionscore=40000;
+    p1.memberscorebonus=25000;
+    p1.maxpaidperday=0;
+    
+    p2.gui=uuidV4();
+    p2.packagename="P2";
+    p2.packagevalue=350000;
+    p2.relationvalue=20000;
+    p2.bonusbalance=0;
+    p2.introductionscore=40000;
+    p2.memberscorebonus=25000;
+    p2.maxpaidperday=p2.packagevalue;
+
+    p3.gui=uuidV4();
+    p3.packagename="P1";
+    p3.packagevalue=1750000;
+    p3.relationvalue=100000;
+    p3.bonusbalance=0;
+    p3.introductionscore=200000;
+    p3.memberscorebonus=125000;
+    p3.maxpaidperday=p3.packagevalue;
+
+    packages=[];
+    packages.push([p1,p2,p3]);
+  if(!p){
+    res.send(packages);
+  }
+  else{
+    packages.forEach(function(element) {
+      if(element.packagename==p.packagename)
+        res.send(p);
+    }, this);
+  }
 });
 
-app.post('/login/:client', function (req, res,next) {
-  var client=JSON.parse(req.params.client);
-  res.render('login',{
-        helpers:{
-          raw:function(options){return options.fn();
-          },
-          showhelpers:function(){return "show helpers";
-          }
-        }
-    });
+app.post('/login/:p', function (req, res,next) {
+  var p=JSON.parse(req.params.p);
+  
 });
 
 app.get('/confirm-register', function (req, res,next) {
@@ -1037,6 +1083,10 @@ function resp_handle(r,actioncode,jsondata){
   r.__glob._submit(r.__WS,r.__resp);
 }
 //
+
+
+
+
 /*Register()*/
 function register_new_user(ws,message){
   
@@ -1051,11 +1101,29 @@ function register_new_user(ws,message){
   var payment_db=require("./db/payment")(uuidV4,nano,ws,"payment","objectList")._init();
   var userdata_db=require("./db/userdata")(uuidV4,nano,ws,"userdata","objectList")._init();
   var client_db=require("./db/client")(uuidV4,nano,ws,"client","UserData")._init();
+  var _all_d={};
+
   
+  _all_d.userbinary_db=userbinary_db;
+  _all_d.packagedetails_db=packagedetails_db;
+  _all_d.package_db=package_db;
+  _all_d.userbinary_db=userbinary_db;
+  _all_d.coupling_db=coupling_db;
+  _all_d.couplingscore_db=couplingscore_db;
+  _all_d.balances_db=balances_db;
+  _all_d.payment_db=payment_db;
+  _all_d.userdata_db=userdata_db;
+  _all_d.client_db=client_db;
+
+    //_all_d.d=d;
+    //_all_d.uin=uin;
+    //_all_d.parent_u=parent_u;
+
   try {
     var v=message;// v= client for register
     //check client or v info first as always
     var data=v.data;
+    _all_d.data=data;
     /*
       client={
         data:{
@@ -1095,7 +1163,26 @@ function register_new_user(ws,message){
     // data:""
     // };
 
-    
+      var package={
+        gui:uuidV4(),
+        packagename:"P1",
+        packagevalue:"",
+        isactive:true,
+        createddate:new Date(), 
+        relationvalue:"",
+        bonusbalance:0, // new member get instantly balance after register
+        introductionscore:0, // only the introductor got balance instantly after got a new member
+        memberscorebonus:0, // all upline members got score but not yet the balance till coupling happen.
+        maxpaidperday:0
+      }; 
+      //ເງືອນໄຂການຈ່າຍ 350.000
+      //1. 40.000 ຄ່າແນະນຳ
+      //2. 25.000 ມູນຄ່າໂທ
+      //3. ບລສ  75.000
+      //4. ມູນຄ່າຈັບຄູ່ຕ້ອງໃຫ້ຜູ້ແນະນຳກ່ອນ: 20.000
+      //5. ມູນຄ່າຈັບຄູ່ 20.000 ໃຫ້ ແຕ່ລະຄົນ(ຊຶ່ງບໍ່ເກີນ 20.000) ຈາກ (350.000-40.000-25000-75000)
+      //6. ຖ້າເກີນ 20.000 ແມ່ນ ສ່ວນເກີນເຂົ້າບໍລິສັດ
+//ເງື່ອນໄຂ ຂອງ PACKAGE
     
     // process client
     // base on current user if , current user can register a new member
@@ -1103,175 +1190,141 @@ function register_new_user(ws,message){
 
     //check if current client is logging in the redis
     //check if current client is logging in the database
+    
+    // process packages
+    // find given package exist ?
+    //TODO: 05 JUNE 2017, process package first or process userbinary first
+    _all_d.package_db._exist(_all_d.data.package,function(error2,result2){
+      if(result2!=null){
+            if(result2.rows[0]==null){                        
+              //not exist
+                resp__handler(_all_d.data.package_db,"not exist",{data:("%s not exist %s",_all_d.data.package_db.__dbname,JSON.stringify(e))}); 
+            }
+            else{
+            //exist
+            _all_d.data.data.package=resutl2.rows[0];
 
-    client_db._exist(v,function(error,result){
-      if(result!=null){
-        if(result.rows[0]==null){  
-              resp__handler(client_db,"not exist",{data:("%s not exist",client_db.__dbname)});           
-        }
-        else{
-          var c=result.rows[0];
-              //resp__handler(client_db,"exist",{data:("%s exist",client_db.__dbname)}); 
-              //when client exist 
-                   //process userdata before insert
-                    userdata_db._exist(data.userdata,function(error1,result1){
+            _all_d.client_db._exist(v,function(error,result){
+            if(result!=null){
+              if(result.rows[0]==null){  
+                    resp__handler(_all_d.client_db,"not exist",{data:("%s not exist",_all_d.client_db.__dbname)});           
+              }
+              else{
+                var c=result.rows[0];
+                    _all_d.data.data.userdata.gui=uuidV4();
+                    if(_all_d.data.data.package.packagevalue>100000)
+                      _all_d.data.data.userdata.isfreeuser=false;
+                    else 
+                      _all_d.data.data.userdata.isfreeuser=true;
+
+                    // TODO: introductor
+                    var uin=null;
+                    if(_all_d.data.data.userdata.introductorcode){
+                    }
+
+                    // set parent if  exist and set level value
+                    var u_parent=null;
+                    
+
+                    _all_d.data.userdata_db._exist(_all_d.data.data.userdata,function(error1,result1){
                     if(result1!=null){
                       if(result1.rows[0]!=null){                        
-                            resp__handler(userdata_db,"exist",{data:("%s exist",userdata_db.__dbname)}); 
+                            resp__handler(_all_d.data.userdata_db,"exist",{data:("%s exist",_all_d.data.userdata_db.__dbname)}); 
                       }
-                      else{                            
-                        userbinary_db._newMember({username:c.username},function(error1_1,result1_1){
-                          if(result1_1!=null){
+                      else{
+                        var u=result1.rows[0];
+                        _all_d.data.data.userdata.memberlevel=u_parent.memberlevel+1;
+                        _all_d.data.data.userdata.parentgui=u_parent.gui;
+                        _all_d.data.data.userdata.packagevalue=data.package.packagevalue;
+                        _all_d.data.data.userdata.gui=data.package.gui;
+                        _all_d.data.data.userdata.usercode=m_code();
+
+                        _all_d.data.userbinary_db._newMember({username:_all_d.data.data.userdata.username},function(error1_1,result1_1){
+                          if(!error1_1){
                             if(result1_1.rows[0]!=null){
+                              //update user binary 
                               var d=reustl1_1.rows[0];
-                              if(!d.luser&&data.userdata.luser){     
-                                d.luser=data.userdata.luser;
-                                userbinary_db._add(d,d.username,function(e,r){
+                              if(!d.luser&&_all_d.data.data.userdata.luser){     
+                                d.luser=_all_d.data.data.userdata.luser;
+                                // check if coupling with the right user
+                                if(!d.ruser){
+                                  // not coupling yet
+                                } 
+                                else{
+                                  // coupling need to push bonus
+                                }
+                              }
+                              else if(!d.ruser&&_all_d.data.data.userdata.ruser){
+                                d.ruser=_all_d.data.data.userdata.ruser;
+                                _all_d.data.userbinary_db._add(d,d.username,function(e,r){
                                   if(e){
-                                    resp__handler(userbinary_db,"error",{data:("%s error",userbinary_db.__dbname)}); 
+                                    resp__handler(_all_d.data.userbinary_db,"error",{data:("%s error %s",_all_d.data.userbinary_db.__dbname,JSON.stringify(e0))}); 
                                   };
                                 });
-                                 resp__handler(userbinary_db,"success",{data:("%s success",userbinary_db.__dbname)}); 
-                              }
-                              else if(!d.ruser&&data.userdata.ruser){
-                                d.ruser=data.userdata.ruser;
-                                userbinary_db._add(d,d.username,function(e,r){
-                                  if(e){
-                                     resp__handler(userbinary_db,"error",{data:("%s error %s",userbinary_db.__dbname,JSON.stringify(e0))}); 
-                                  };
-                                });                               
-                                 resp__handler(userbinary_db,"success",{data:("%s success",userbinary_db.__dbname)}); 
+
+                                resp__handler(_all_d.data.userbinary_db,"success",{data:("%s success",_all_d.data.userbinary_db.__dbname)}); 
                               }
                               else{
-                                 resp__handler(userbinary_db,"wrongside",{data:("%s choose otherside",userbinary_db.__dbname)}); 
-                              }
-                              
+                                resp__handler(_all_d.data.userbinary_db,"wrongside",{data:("%s choose otherside",_all_d.data.userbinary_db.__dbname)}); 
+                              }                              
                             }
                             else{
                               //insert new user
-                               // top user exist and can add a new member
-                              userdata_db._add(data.userdata,function(e0,r0){
+                              // top user exist and can add a new member
+                              _all_d.data.userdata_db._add(_all_d.data.data.userdata,function(e0,r0){
                                 if(e0){
-                                  resp__handler(userdata_db,"error",{data:("%s error %s",userdata_db.__dbname,JSON.stringify(e0))}); 
+                                  resp__handler(_all_d.data.userdata_db,"error",{data:("%s error %s",_all_d.data.userdata_db.__dbname,JSON.stringify(e0))}); 
                                 }
                                 else{
-                                  
+                                 ///TODO 
                                 }
                               });
-                             if(data.userdata.luser){     
+                              // insert a new userbinary
+                            if(_all_d.data.data.userdata.luser){     
                                 d=data.userdata;
-                                userbinary_db.insert(d,d.username,function(e,r){
-                                  if(e){
-                                     userbinary_db.__resp.actioncode="error";
-                                    userbinary_db.__resp.updatedtime=new Date();
-                                    userbinary_db.__resp.json={data:("%s error",userbinary_db.__dbname)};
-                                    userbinary_db.__glob.submit(userbinary_db.__WS,userbinary_db.__resp);
+                                _all_d.data.userbinary_db.insert(d,d.username,function(e,r){
+                                  if(e){                                     
+                                    resp__handler(_all_d.data.userbinary_db,"error",{data:("%s error %s",_all_d.data.userbinary_db.__dbname,JSON.stringify(e))}); 
                                   };
                                 });
-                                userbinary_db.__resp.actioncode="success";
-                                userbinary_db.__resp.updatedtime=new Date();
-                                userbinary_db.__resp.json={data:("%s success",userbinary_db.__dbname)};
-                                userbinary_db.__glob.submit(userbinary_db.__WS,userbinary_db.__resp);
+                                resp__handler(_all_d.data.userbinary_db,"success",{data:("%s success %s",_all_d.data.userbinary_db.__dbname,JSON.stringify(e))}); 
                               }
-                              else if(data.userdata.ruser){
+                              else if(_all_d.data.data.userdata.ruser){
                                 d=ata.userdata;
-                                userbinary_db.insert(d,d.username,function(e,r){
+                                _all_d.data.userbinary_db.insert(d,d.username,function(e,r){
                                   if(e){
-                                     userbinary_db.__resp.actioncode="error";
-                                    userbinary_db.__resp.updatedtime=new Date();
-                                    userbinary_db.__resp.json={data:("%s error",userbinary_db.__dbname)};
-                                    userbinary_db.__glob.submit(userbinary_db.__WS,userbinary_db.__resp);
+                                      resp__handler(_all_d.data.userbinary_db,"error",{data:("%s error %s",_all_d.data.userbinary_db.__dbname,JSON.stringify(e))});                                     
                                   };
                                 });
-                                userbinary_db.__resp.actioncode="success";
-                                userbinary_db.__resp.updatedtime=new Date();
-                                userbinary_db.__resp.json={data:("%s success",userbinary_db.__dbname)};
-                                userbinary_db.__glob.submit(userbinary_db.__WS,userbinary_db.__resp);
+                                resp__handler(_all_d.userbinary_db,"success",{data:("%s success %s",_all_d.userbinary_db.__dbname,JSON.stringify(e))}); 
+
                               }
                               else{
-                                userbinary_db.__resp.actioncode="wrongside";
-                                userbinary_db.__resp.updatedtime=new Date();
-                                userbinary_db.__resp.json={data:("%s choose otherside",userbinary_db.__dbname)};
-                                userbinary_db.__glob.submit(userbinary_db.__WS,userbinary_db.__resp);
+                                resp__handler(_all_d.userbinary_db,"wrongside",{data:("%s choose otherside %s",_all_d.userbinary_db.__dbname,JSON.stringify(e))}); 
                               }                              
                             }
                           }
-                          });
-                        
-                        
-                         // process packages
-                        // find given package exist ?
-                        //TODO: 05 JUNE 2017, process package first or process userbinary first
-                        package_db._exist(data.package,function(error2,result2){
-                          if(result2!=null){
-                                if(result2.rows[0]==null){                        
-                                  //not exist
-                                  package_db.__resp.actioncode="not exist";
-                                  package_db.__resp.updatedtime=new Date();
-                                  package_db.__resp.json={data:("%s not exist",package_db.__dbname)};
-                                  package_db.__glob.submit(package_db.__WS,package_db.__resp);
-                            }
-                              else{
-                                //exist
-                                  // process binaryuser
-                                  userbinary_db.exist(data.userdata,function(error3,result2){
-                                    if(result3!=null){
-                                      if(result3.rows[0]==null){
-                                        //not exist
-                                        package_db.__resp.actioncode="not exist";
-                                        package_db.__resp.updatedtime=new Date();
-                                        package_db.__resp.json={data:("%s not exist",userbinary_db.__dbname)};
-                                        package_db.__glob.submit(package_db.__WS,userbinary_db.__resp);
-                                      }
-                                    }
-                                    else{
-                                      // process packagedetails
-                                      //insert userdata and package to package details 
-                                      // calculate bonus per package and binary, level    
-                                      
-                                      // process coupling
-                                      
-                                      // process couplingscore
-                                          
-                                      // process balance
-                                      
-                                      // process payment 
-                                    }                                
-                                  });
-                                  
-
-
-                            }
-
-                          }
-                          else {
-                            package_db.__resp.actioncode="error";
-                            package_db.__resp.updatedtime=new Date();
-                            package_db.__resp.json={data:("%s error",JSON.stringify(error))};
-                            package_db.__glob.submit(package_db.__WS,package_db.__resp);
-                          }
-                        });
+                          }); 
                       }
-
                     }
                     else {
-                      userdata_db.__resp.actioncode="error";
-                      userdata_db.__resp.updatedtime=new Date();
-                      userdata_db.__resp.json={data:("%s error",JSON.stringify(error))};
-                      userdata_db.__glob.submit(userdata_db.__WS,userdata_db.__resp);
+                      resp__handler(_all_d.userdata_db,"error",{data:("%s error %s",_all_d.userdata_db.__dbname,JSON.stringify(e))});
                     }
-                  });
-        
+                    });
+              }
+            }
+            else{
+              resp__handler(_all_d.client_db,"error",{data:("%s error %s",_all_d.client_db.__dbname,JSON.stringify(e))});
+            }
+          });
         }
 
       }
-      else{
-        client_db.__resp.actioncode="error";
-        client_db.__resp.updatedtime=new Date();
-        client_db.__resp.json={data:("%s error",error)};
-        client_db.__glob.submit(client_db.__WS,client_db.__resp);
+      else {                            
+        resp__handler(_all_d.package_db,"not exist",{data:("%s not exist %s",_all_d.package_db.__dbname,JSON.stringify(e))});
       }
     });
+    
 
    
     
@@ -1292,7 +1345,14 @@ function register_new_user(ws,message){
 
     
     var topuppackage={};
-    var topupbalance={};
+    var topupbalance={
+      username:"",
+      usergui:"",
+      gui:"",
+      balance:0,
+      updated:new Date(),
+      diffbalance:0
+    };
     var transfer={};
     var transferfee={};
     var loaningpackage={}; // loan once per month per user with exact amount
@@ -1566,6 +1626,13 @@ function shakehands(ws,message){
           }));
     }
   };
+
+function m_code(){
+  return randomIntInc(1000000,100000000);
+}
+function randomIntInc (low, high) {
+    return Math.floor(Math.random() * (high - low + 1) + low);
+}
 
 server.listen(88, function listening() {
   console.log('Listening on %d', server.address().port);

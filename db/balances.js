@@ -2,36 +2,151 @@
 // packages.js
 // ========
 module.exports=function (uuidV4,nano,WS,db_name,design_view,resp){
+var __doc={
+      username:"",
+      usergui:"",
+      gui:"",
+      balance:0,
+      updated:new Date(),
+      diffbalance:0
+    };
 var __uuidV4 = uuidV4;
 var __WS=WS;
 var __nano = nano;
 var __dbname=db_name;
 var __designview=design_view;
-var __glob=require("./client");
+var __glob=require("./global")();
 var __resp={};
-//response for WS
+var __design={
+  "_id": "_design/objectList",
+  "views": {
+    "findAll": {
+      "map": "function (doc) {\n  emit(null,doc);\n}"
+    },
+    "findCount": {
+      "reduce": "_count",
+      "map": "function (doc) {\n  emit(null);\n}"
+    },
+    "findExist": {
+      "reduce": "_count",
+      "map": "function (doc) {\n  emit(doc.username,1);\n}"
+    },
+    "findByUsername": {
+      "map": "function (doc) {\n  emit(doc.username, doc);\n}"
+    }
+  },
+  "language": "javascript"
+};
+function handle_result(error,result){
+   if(!error){
+            if(result.rows[0]==null){                        
+              __resp.actioncode="not exist";
+              __resp.updatedtime=new Date();
+              __resp.json={data:("%s not exist",__dbname)};
+              __glob.submit(__WS,__resp);
+          }
+            else{
+              __resp.actioncode="exist";
+              __resp.updatedtime=new Date();
+              __resp.json={data:result.rows[0]};
+              __glob.submit(__WS,__resp);
+            }
+      }
+      else {
+        __resp.actioncode="error";
+        __resp.updatedtime=new Date();
+        __resp.json={data:("%s error",error)};
+        __glob.submit(__WS,__resp);
+      }
+}
+function handle_list(error,result){
+    if(!error){
+        var max_row=result.total_rows;
+        var off_set=result.offset;         
+        p_array=[];
+        result.rows.forEach( function(element, index) {
+          var doc=element.value;
+          var _rev=doc._rev;
+          var _id=doc._id;
+          var id=doc.id;
+          if(isdetails=1){
+            delete doc.id;
+            delete doc._id;
+            delete doc._rev;
+          }
+          p_array.push(doc);
+        });
+        __resp.actioncode="success";
+        __resp.updatedtime=new Date();
+        __resp.json={data:p_array};
+        __glob.submit(__WS,__resp);
+      }
+      else{
+        __resp.actioncode="error";
+        __resp.updatedtime=new Date();
+        __resp.json={data:("error %s",JSON.stringify(error))};
+        __glob.submit(__WS,__resp);
+      } 
+  }
+function handle_edit(error,result){
+  
+    if(!error){
+          if(result.rows[0]==null){            
+            db.insert(p,p.gui,function(err,res){
+                if(!err){                       
+                      __resp.actioncode="success";
+                      __resp.updatedtime=new Date();
+                      __resp.json={data:("%s edit successfully",__dbname)};
+                      __glob.submit(__WS,__resp);
+                }
+                else {
+                  __resp.actioncode="error";
+                  __resp.updatedtime=new Date();
+                  __resp.json={data:("%s error",err)};
+                  __glob.submit(__WS,__resp);
+                }
+              });
+            }
+            else{
+              __resp.actioncode="error";
+              __resp.updatedtime=new Date();
+              __resp.json={data:("add %s failed, exist! %s",__dbname,err)};
+              __glob.submit(__WS,__resp);
+            }              
+    }
+    else {
+      __resp.actioncode="error";
+      __resp.updatedtime=new Date();
+      __resp.json={data:("add %s failed, exist! %s",__dbname,error)};
+      __glob.submit(__WS,__resp);
+    }
+}
 
-// JSON.stringify({
-//           _isstring:true,
-//                 json:{data:"wrong json format: userdata"},
-//                 updatetime:new Date(),
-//                 _iserror:false,
-//                 _isread:false,
-//                 actioncode:"error"
-//         });
+function handle_delete(error,result){
+  if(result.rows[0]!=null){
+      p=result.rows[0].doc;
+      p._delete=true;
+      //p._rev=result.rows[0].doc._rev;
+      if(p.id.indexOf("_design")==-1){
+        db.destroy(p.gui,p._rev,edit_handler(err,res));
+      }
+    }
+    else {
+      console.log("%s delete error",__dbname);
+    }
+}
+
 module._init=function(){
-  __resp=__glob._json(false);
+  //console.log("%s",__glob);
+  __resp=__glob._json();
+  
+  var db=this.create_db(__dbname);
+  //this._delA();
+  db.insert(__design,handle_edit);
   return this;
 }
 module._json=function (){
-    return {
-    usergui:"",
-    username:"",
-    createddate:new Date(),
-    balancevalue:0,
-    description:"",
-    gui:uuidV4()
-    };
+    return __doc;
 }
 module.create_db=function(dbname){
     var db;
@@ -87,17 +202,7 @@ module._changes=function(page, maxPerPage){
 module._count=function(){
   var db=this.create_db(db_name);
   var count=0;
-  db.view(__designview,"findCount",function(error,result){
-    //console.log("count: "+result);
-    if(result!=null){
-      if(result.rows[0]!=null)
-        count=result.rows[0].value;
-      console.log("%s count1 %s",__dbname,count);
-      }
-      else 
-        console.log("%s error %s",__dbname, error);
-      console.log("%s count2 %s",__dbname,count);
-  });
+  db.view(__designview,"findCount",handle_result);
   console.log("%s count3 %s",__dbname,count);
 },
 
@@ -109,77 +214,14 @@ module._list=function( page, maxPerPage,WS,isdetails){
        //include_docs: true,
       limit: maxPerPage,
       skip: page * maxPerPage
-    },function(error,result){
-    if(!error){
-        var max_row=result.total_rows;
-        var off_set=result.offset;
-             
-        p_array=[];
-
-        result.rows.forEach( function(element, index) {
-          
-          var doc=element.value;
-          var _rev=doc._rev;
-          var _id=doc._id;
-          var id=doc.id;
-          if(isdetails==1){
-            delete doc.id;
-            delete doc._id;
-            delete doc._rev;
-            }
-          console.log("--%s",doc.username);
-        //   if(doc.username!="")
-        //     db.destroy(doc.username,doc._rev,function(error,result){
-        //       if(error)
-        //         console.log("%s",JSON.stringify(error));
-        //     });
-            //this._add(doc);
-            //p_array.push(doc);
-            
-            //TEST ONLY
-
-            // doc.packagename="P updated : "+(new Date());
-            module._ed(doc);
-        });
-        return p_array;
-        // console.log("TEST ADD");
-        // console.log(JSON.stringify(p_array));  
-        // WS.send(JSON.stringify({
-        //   _isstring:false,
-        //         json:p_array,
-        //         updatetime:new Date(),
-        //         _iserror:true,
-        //         _isread:false,
-        //         actioncode:"packagedetails"
-        // }));
-      }
-      else 
-        console.log(" error %s %s",__dbname, error);
-  });
+    },handle_list);
 },
 module._add=function(p){
   
   var db=this.create_db(db_name);
   db.view(__designview,"findExist",{
       key: p.gui     
-    },function(error,result){
-    if(result!=null){
-          if(result.rows[0]==null){            
-            db.insert(p,p.gui,function(err,res){
-                if (!err){
-                    console.log("add %s doc successfully! ",__dbname);        
-                }
-                else 
-                  console.log("%s %s -",__dbname,err);
-                });
-            }
-            else
-              console.log("add %s failed, exist! %s",__dbname,p);        
-    }
-    else {
-      console.log("exist %s %s-",__dbname,error);
-    }
-  }); 
+    },handle_edit); 
 },
 module._ed=function(p){
   var db=this.create_db(db_name);
@@ -187,21 +229,7 @@ module._ed=function(p){
     db.view(__designview,"findByUsername",{
       key: p.gui,
       include_docs: true
-    },function(error,result){
-      if(result.rows[0]!=null){
-        p._rev=result.rows[0].doc._rev;        
-        db.insert(p,p.gui,function(err,res){
-          if (!err){
-            console.log("%s update successfully uid:%s",__dbname,p);
-          }
-          else 
-            console.log("update error %s  %s-",__dbname,err);
-        });
-      }
-      else {
-        console.log("%s not exist %s -",__dbname,error);
-      }
-      }); 
+    },handle_edit); 
   }  
   },
 
@@ -210,28 +238,7 @@ module._del=function(p){
   db.view(__designview,"findByUsername",{
       key: p.gui,
       include_docs: true
-    },function(error,result){      
-    if(result.rows[0]!=null){
-      
-      p=result.rows[0].doc;
-      p._delete=true;
-      p._rev=result.rows[0].doc._rev;
-      db.destroy(p.gui,p._rev,function(error,result){
-      if (!error){
-          console.log("delete %s doc successfully! : %s",__dbname,p);        
-      }
-      });
-
-      // db.insert(p,p.packagegui,function(error,result){
-      // if (!error){
-      //     console.log("delete package doc successfully! : %s",p.packagegui);        
-      // }
-      // });
-    }
-    else {
-      console.log("%s delete error",__dbname);
-    }
-  });
+    },handle_delete);
 },
 
 
@@ -253,45 +260,3 @@ module._validate=function(p){
     };
 return module;
 }
-
-// package details
-// function package_details( page, maxPerPage,WS){
-//   var db=create_db(db_name);
-//   var p_array=[];
-//   db.view(__designview,"findAll",{
-//       descending: true,
-//        //include_docs: true,
-//       limit: maxPerPage,
-//       skip: page * maxPerPage
-//     },function(error,result){
-//     if(!error){
-//         var max_row=result.total_rows;
-//         var off_set=result.offset;
-//         result.rows.forEach( function(element, index) {
-//           var doc=element.value;
-//           var _rev=doc._rev;
-//           var _id=doc._id;
-//           var id=doc.id;          
-//           p_array.push(doc);
-         
-//          //TEST ONLY
-
-//          // doc.packagename="P updated : "+(new Date());
-//          // package_ed(doc);
-//         });
-//         // console.log("TEST ADD");
-//         // console.log(JSON.stringify(p_array));  
-//         WS.send(JSON.stringify({
-//           _isstring:false,
-//                 json:p_array,
-//                 updatetime:new Date(),
-//                 _iserror:true,
-//                 _isread:false,
-//                 actioncode:"packagedetails"
-//         }));
-//       }
-//       else 
-//         console.log("Pakcage_list error %s", error);
-//   });
-// }
-

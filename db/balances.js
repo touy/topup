@@ -8,7 +8,8 @@ var __doc={
       gui:"",
       balance:0,
       updated:new Date(),
-      diffbalance:0
+      diffbalance:0,
+      remark:""
     };
 var __uuidV4 = uuidV4;
 var __WS=WS;

@@ -174,20 +174,20 @@ app.post('/get_coupling_score',function (req,res){
   get_coupling_score(js,page,maxpage);
 });
 app.post('get_topup_balance',function(req,res){
-  var user=req.body,
+  var user=req.body;
   var client=user;
   client.resp;
   showTopupBalance(user,client);
 });
 app.post('get_main_balance',function(req,res){
-  var user=req.body,
+  var user=req.body;
   var client=user;
   client.resp;
   showMainBalance(user,client);
 });
 
 app.post('check_main_balance',function(req,res){
-  var user=req.body,
+  var user=req.body;
   var client=user;
   client.resp;
   var package=client.package;
@@ -195,19 +195,19 @@ app.post('check_main_balance',function(req,res){
 });
 
 app.post('get_bonus_balance',function(req,res){
-  var user=req.body,
+  var user=req.body;
   var client=user;
   client.resp;
   showBonusBalance(user,client);
 });
 app.post('get_bonus_topup_balance',function(req,res){
-  var user=req.body,
+  var user=req.body;
   var client=user;
   client.resp;
   showBonusTopupBalance(user,client);
 });
 app.post('upgrade',function(req,res){
-  var user=req.body,
+  var user=req.body;
   var client=user;
   client.resp;
   upgradePackage(user,package,resp);

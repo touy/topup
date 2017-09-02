@@ -96,9 +96,17 @@ app.get('/initclient',function(req,res){
 });
 
 app.post('/get_balance', function (req, res) {
- get_balance(req.body,res);
-});
+  var client=req.body;
+  var user=client;
+  var page =client.page;
+  var maxpage=client.page;
 
+  get_balance(user,page,maxpage,resp);
+});
+app.post('/get_count_balance',function(req,res){
+  var user=req.body;
+  get_count_balance(user,res)
+});
 app.post('/register', function (req, res) {
  register(req.body,res);
 });
@@ -117,32 +125,94 @@ app.post('/heartbeat', function (req, res) {
 
 
 app.post('/get_userdata', function (req, res) {
- res.send(get_userdata(req.body));
+  var client=req.body;
+  var user=client;
+ showUserInfo(user,res);
 });
 
 app.post('/get_package', function (req, res) {
- res.send(get_package(req.body));
+  var js={};
+  js.resp=res;
+  get_package(js);
 });
 
 app.post('/get_package_details', function (req, res) {
- res.send(get_package_details(req.body));
+  var js={};
+  js.user=req.body;
+  js.resp=res;
+  get_package_details(js);
+
 });
 
 app.post('/get_payment_list',function (req,res){
-  res.send(get_payment_list(req.body));
+  var js={};
+  js.user=req.body;
+  js.res=res;
+  get_payment_list(js,page,maxpage);
 });
 
 app.post('/get_user_binary',function (req,res){
-  res.send(get_user_binary(req.body));
+  var js={};
+  js.user=req.body;
+  js.resp=res
+  get_user_binary(js);
 });
 
-app.post('/get_coupling',function (req,res){
-  res.send(get_coupling(req.body));
+
+app.post('/show_user_binary_tree',function (req,res){
+  var user=req.body;
+  client=user;
+  showBinaryTree(user,client,res);
 });
 
 app.post('/get_coupling_score',function (req,res){
-  res.send(get_coupling_score(req.body));
+  var js={};
+  js.user=req.body;
+  js.resp=res;
+  var page=js.page;
+  var maxpage=js.maxpage;
+  get_coupling_score(js,page,maxpage);
 });
+app.post('get_topup_balance',function(req,res){
+  var user=req.body,
+  var client=user;
+  client.resp;
+  showTopupBalance(user,client);
+});
+app.post('get_main_balance',function(req,res){
+  var user=req.body,
+  var client=user;
+  client.resp;
+  showMainBalance(user,client);
+});
+
+app.post('check_main_balance',function(req,res){
+  var user=req.body,
+  var client=user;
+  client.resp;
+  var package=client.package;
+  checkMainBalance(user,package,client);
+});
+
+app.post('get_bonus_balance',function(req,res){
+  var user=req.body,
+  var client=user;
+  client.resp;
+  showBonusBalance(user,client);
+});
+app.post('get_bonus_topup_balance',function(req,res){
+  var user=req.body,
+  var client=user;
+  client.resp;
+  showBonusTopupBalance(user,client);
+});
+app.post('upgrade',function(req,res){
+  var user=req.body,
+  var client=user;
+  client.resp;
+  upgradePackage(user,package,resp);
+});
+
 
 function create_db(dbname){
     var db;
@@ -371,8 +441,8 @@ var __design_packagedetails={
 };
 
 
-console.log(createTodayRange());
-insertTest();
+//console.log(createTodayRange());
+//insertTest();
 //fetchTest();
 function createTodayRange(){
   var dateobj= new Date() ;
@@ -2205,6 +2275,45 @@ function showBonusBalance(user,client,resp,page,maxpage){
     }
   });  
 }
+
+function checkMainBalance(user,package,client){
+  var __balance_doc={
+    username:"",
+    usergui:"",
+    gui:uuidV4(),
+    balance:0,
+    updated:convertTZ(new Date()),
+    diffbalance:0
+  };
+  var db=create_db("mainBalance");
+  db.view(__design_view,"findCount",{key:user.username,reduce:true},function(err,res){
+    if(err) resp.send(err);
+    else{
+      if(res.rows.length){
+        var count=res.rows[0].value;
+        db.view(__design_view,"findByUsername",{key:user.username,descending:true,limi:1},function(err,res){
+          if(err) resp.send(err);
+          else{
+            if(res.rows.length){
+              var arr=[];
+              for(i=0;l=rows.length,i<l;i++){
+                arr.push(res.rows[i].value);          
+              }
+              if(arr.balance>package.packagevalue)
+                client.data.message="insufficient funds";
+              else{
+                client.data.balance={arr:arr,count:count};
+                client.data.message="OK";
+              }                
+              resp.send(client);  
+            }
+          }
+        });
+      }
+    }
+  });
+}
+
 function showMainBalance(user,client){
   var __balance_doc={
     username:"",

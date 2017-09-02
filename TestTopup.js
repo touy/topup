@@ -41,41 +41,47 @@ function convertTZ(fromTZ){
   return moment.tz(fromTZ,"Asia/Vientiane").format();
 }
 // Add headers
-// var __master_user={
-//   "_id": "d2dfb6ac-1abd-47c0-b1b5-ef0465b1592d",
-//   "_rev": "6-5aa11a075b88da5bd92aa4e5a0306bc9",
-//   "username": "souk@TheFriendd",
-//   "password": "123456",
-//   "usercode": "TheFriendd",
-//   "createddate": "2017-08-19T12:16:12.563Z",
-//   "gui": "d2dfb6ac-1abd-47c0-b1b5-ef0465b1592d",
-//   "email": "souk@TheFriendd.com",
-//   "phone1": "02059918889",
-//   "phone2": "",
-//   "address": "",
-//   "photo": "",
-//   "memberlevel": 0,
-//   "ispaired": false,
-//   "parentname": "souk@TheFriendd",
-//   "isleft": null,
-//   "aboveparents": "",
-//   "leftside": "",
-//   "rightside": "",
-//   "packagevalue": 0,
-//   "packagename": "",
-//   "packagegui": "",
-//   "balancevalue": 0,
-//   "Lcoupling": 0,
-//   "Rcoupling": 0,
-//   "couplingbalance": 0,
-//   "couplingtotalmoney": 0,
-//   "introductorgui": "d2dfb6ac-1abd-47c0-b1b5-ef0465b1592d",
-//   "introductorcode": "souk@TheFriendd",
-//   "isfreeuser": false,
-//   "registeredby": "master",
-//   "maxproduct": 100000,
-//   "maxpaid": -1
-// }
+var __master_user={
+  "_id": "d2dfb6ac-1abd-47c0-b1b5-ef0465b1592d",
+  "gui":"d2dfb6ac-1abd-47c0-b1b5-ef0465b1592d",
+  "username": "souk@TheFriendd",
+  "password": "123456",
+  "ID": "",
+  "fullname": "",
+  "birthdate": "",
+  "gender": "",
+  "address": "",
+  "bankaccount": "",
+  "bank": "",
+  "usercode": "TheFriendd",
+  "createddate": "2017-08-19T12:16:12.563Z",
+  "gui": "d2dfb6ac-1abd-47c0-b1b5-ef0465b1592d",
+  "email": "souk@TheFriendd.com",
+  "phone1": "02059918889",
+  "phone2": "",
+  "photo": "",
+  "memberlevel": 0,
+  "ispaired": false,
+  "parentgui": "d2dfb6ac-1abd-47c0-b1b5-ef0465b1592d",
+  "isleft": null,
+  "aboveparents": "",
+  "leftside": "",
+  "rightside": "",
+  "packagevalue": 0,
+  "packagename": "",
+  "packagegui": "",
+  "balancevalue": 0,
+  "Lcoupling": 0,
+  "Rcoupling": 0,
+  "couplingbalance": 0,
+  "couplingtotalmoney": 0,
+  "introductorgui": "d2dfb6ac-1abd-47c0-b1b5-ef0465b1592d",
+  "introductorcode": "souk@TheFriendd",
+  "isfreeuser": false,
+  "registeredby": "master",
+  "maxproduct": 100000,
+  "maxpaid": -1
+}
 // __master_user.parentname=__master_user.username;
 
 // create_db('user').insert(__master_user,__master_user.gui,function(err,res){
@@ -641,8 +647,23 @@ function init_master_user(){
       if(!body)
       db.view(__design_view,"findTopUser",function(err,res){
        // console.log("res"+JSON.stringify(res.rows[0].value));
-        if(err)
-          throw new Error(err);
+        if(err){
+          //insert a top user
+          db.insert(__master_user,__master_user.gui,function(err,res){
+            if(err){
+              throw new Error(err);
+            }
+            else{
+              r_client.setAsync("__Master",JSON.stringify(__master_user).then(function(body){
+
+              }).catch(function(err){
+                throw new Error("could not set master user for redis"+err);
+              }).done();
+              console.log("top user created!");
+            }
+          });
+        }
+          
         else if(res.rows.length){
           r_client.setAsync("__Master",JSON.stringify(res.rows[0].value)).then(function (body){
             console.log('setAsync');

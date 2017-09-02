@@ -654,7 +654,7 @@ function init_master_user(){
               throw new Error(err);
             }
             else{
-              r_client.setAsync("__Master",JSON.stringify(__master_user).then(function(body){
+              r_client.setAsync("__Master",JSON.stringify(__master_user)).then(function(body){
 
               }).catch(function(err){
                 throw new Error("could not set master user for redis"+err);

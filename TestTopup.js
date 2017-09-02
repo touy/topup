@@ -640,7 +640,7 @@ function init_master_user(){
       //console.log("body: "+body);
       if(!body)
       db.view(__design_view,"findTopUser",function(err,res){
-        console.log("res"+JSON.stringify(res.rows[0].value));
+       // console.log("res"+JSON.stringify(res.rows[0].value));
         if(err)
           throw new Error(err);
         else if(res.rows.length){

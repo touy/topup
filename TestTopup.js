@@ -2,8 +2,8 @@ const async= require('async');
 const express = require('express');
 const app = express();
 const uuidV4 = require('uuid/v4');
-//const nano = require('nano')('http://admin:admin@localhost:5984');
-const nano = require('nano')('http://localhost:5984');
+const nano = require('nano')('http://admin:admin@localhost:5984');
+//const nano = require('nano')('http://localhost:5984');
 const cors = require('cors');
 var redis = require("redis");
 var bluebird = require('bluebird');
@@ -42,7 +42,7 @@ function convertTZ(fromTZ){
   return moment.tz(fromTZ,"Asia/Vientiane").format();
 }
 // Add headers
-var __master_user={
+__master_user={
   "_id": "d2dfb6ac-1abd-47c0-b1b5-ef0465b1592d",
   "gui":"d2dfb6ac-1abd-47c0-b1b5-ef0465b1592d",
   "username": "souk@TheFriendd",
@@ -357,7 +357,7 @@ var __design_user={
       "map": "function(doc) {\r\n    if(doc.parent) {\r\n        emit(doc.parent,doc);\r\n    }\r\n}"
     },
     "findTopUser": {
-      "map": "function(doc) {\r\n    if(doc.memberlevel==0&&doc.parentgui==doc.gui) {\r\n        emit(doc);\r\n    }\r\n}"
+      "map": "function(doc) {\r\n    if(doc.memberlevel===0&&doc.parentgui===doc.gui) {\r\n        emit(doc.memberlevel,doc);\r\n    }\r\n}"
     },
     "authentication": {
       "map": "function(doc) {\r\n    if(doc.username&&doc.password) {\r\n        emit([doc.username,doc.password],doc);\r\n    }\r\n}"
@@ -811,7 +811,7 @@ function heartbeat(js){
 //       set_authentication(client);
 // }
 /** */
-
+init_redis();
 
 init_db('bonusbalance',__design_balance);
 init_db('mainbalance',__design_balance);
@@ -825,41 +825,52 @@ init_db('package',__design_package);
 init_master_user();
 init_default_package();
 
+function init_redis(){
+  r_client.flushdb( function (err, succeeded) {
+    console.log(succeeded); // will be true if successfull
+});
+} 
 function init_master_user(){
     var db=create_db("user");
     console.log("init master");
     r_client.getAsync("__Master").then(function(body){
       //console.log("body: "+body);
-      if(!body)
-      db.view(__design_view,"findTopUser",function(err,res){
-       // console.log("res"+JSON.stringify(res.rows[0].value));
-        if(err){
-          //insert a top user
-          db.insert(__master_user,__master_user.gui,function(err,res){
-            if(err){
-              throw new Error(err);
-            }
-            else{
-              r_client.setAsync("__Master",JSON.stringify(__master_user)).then(function(body){
-
-              }).catch(function(err){
-                throw new Error("could not set master user for redis"+err);
-              }).done();
-              console.log("top user created!");
-            }
-          });
-        }          
-        else if(res.rows.length){
-          r_client.setAsync("__Master",JSON.stringify(res.rows[0].value)).then(function (body){
-            console.log('setAsync');
-            console.log("Master has been set");
-          }).catch(function(err){
-            throw new Error("could not set master user for redis"+err);
-          }).done();
-        }
-        else
-          throw new Error("Sorry no master found");
-      });
+      if(!body){
+        
+        db.view(__design_view,"findTopUser",{key:0,include_docs:true},function(err,res){
+          // console.log("res"+JSON.stringify(res.rows[0].value));
+           if(err){
+             //insert a top user
+             console.log(err); 
+             db.insert(__master_user,__master_user.gui,function(err,res){
+              //console.log(err); 
+               if(err){
+                 throw new Error(err);
+               }
+               else{
+                 r_client.setAsync("__Master",JSON.stringify(__master_user)).then(function(body){
+   
+                 }).catch(function(err){
+                   throw new Error("could not set master user for redis"+err);
+                 }).done();
+                 console.log("top user created!");
+               }
+             });
+           }          
+           else if(res.rows.length){
+             console.log(res.rows);
+             r_client.setAsync("__Master",JSON.stringify(res.rows[0].value)).then(function (body){
+               console.log('setAsync');
+               console.log("Master has been set");
+             }).catch(function(err){
+               throw new Error("could not set master user for redis"+err);
+             }).done();
+           }
+           else
+             throw new Error("Sorry no master found");
+         });
+      }
+     
       else __master_user=JSON.parse(body);
     });
 }

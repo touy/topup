@@ -842,20 +842,20 @@ function init_master_user(){
            if(err){
              //insert a top user
              console.log(err); 
-             db.insert(__master_user,__master_user.gui,function(err,res){
-              //console.log(err); 
-               if(err){
-                 throw new Error(err);
-               }
-               else{
-                 r_client.setAsync("__Master",JSON.stringify(__master_user)).then(function(body){
+            //  db.insert(__master_user,__master_user.gui,function(err,res){
+            //   //console.log(err); 
+            //    if(err){
+            //      throw new Error(err);
+            //    }
+            //    else{
+            //      r_client.setAsync("__Master",JSON.stringify(__master_user)).then(function(body){
    
-                 }).catch(function(err){
-                   throw new Error("could not set master user for redis"+err);
-                 }).done();
-                 console.log("top user created!");
-               }
-             });
+            //      }).catch(function(err){
+            //        throw new Error("could not set master user for redis"+err);
+            //      }).done();
+            //      console.log("top user created!");
+            //    }
+            //  });
            }          
            else if(res.rows.length){
              console.log(res.rows);

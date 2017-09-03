@@ -751,7 +751,7 @@ function login(js){
       //set_client(client,resp);
       js.client.lastaccess=convertTZ(new Date());
       set_client(js.client);
-      resp.send(js.client);
+      js.resp.send(js.client);
     }
     else{  
       js.client.data={}; 

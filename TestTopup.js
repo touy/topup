@@ -2,8 +2,8 @@ const async= require('async');
 const express = require('express');
 const app = express();
 const uuidV4 = require('uuid/v4');
-//const nano = require('nano')('http://admin:admin@localhost:5984');
-const nano = require('nano')('http://localhost:5984');
+const nano = require('nano')('http://admin:admin@localhost:5984');
+//const nano = require('nano')('http://localhost:5984');
 const cors = require('cors');
 var redis = require("redis");
 var bluebird = require('bluebird');
@@ -357,7 +357,7 @@ var __design_user={
       "map": "function(doc) {\r\n    if(doc.parent) {\r\n        emit(doc.parent,doc);\r\n    }\r\n}"
     },
     "findTopUser": {
-      "map": "function(doc) {\r\n    if(doc.memberlevel===0&&doc.parentgui===doc.gui) {\r\n        emit(doc.memberlevel,doc);\r\n    }\r\n}"
+      "map": "function(doc) {\r\n    if(doc.memberlevel==0&&doc.parentgui==doc.gui) {\r\n        emit(null,doc);\r\n    }\r\n}"
     },
     "authentication": {
       "map": "function(doc) {\r\n    if(doc.username&&doc.password) {\r\n        emit([doc.username,doc.password],doc);\r\n    }\r\n}"
@@ -837,7 +837,7 @@ function init_master_user(){
       //console.log("body: "+body);
       if(!body){
         
-        db.view(__design_view,"findTopUser",{key:0,include_docs:true},function(err,res){
+        db.view(__design_view,"findTopUser",function(err,res){
           // console.log("res"+JSON.stringify(res.rows[0].value));
            if(err){
              //insert a top user

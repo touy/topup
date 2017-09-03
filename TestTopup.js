@@ -37,7 +37,7 @@ var __client_ip="";
 app.use(requestIp.mw());
 var __master_user={};
 var __cur_client={};
-
+var __default_package={};
 function convertTZ(fromTZ){
   return moment.tz(fromTZ,"Asia/Vientiane").format();
 }
@@ -117,16 +117,16 @@ app.get('/initclient',function(req,res){
 });
 
 app.post('/get_balance', function (req, res) {
-  var client=req.body;
-  var user=client;
-  var page =client.page;
-  var maxpage=client.page;
-
-  get_balance(user,page,maxpage,resp);
+  var js={};
+  js.client=req.body;
+  js.resp=res;
+  get_balance(js);
 });
 app.post('/get_count_balance',function(req,res){
-  var user=req.body;
-  get_count_balance(user,res)
+  var js={};
+  js.client=req.body;
+  js.resp=res;
+  get_count_balance(js)
 });
 app.post('/register', function (req, res) {
  register(req.body,res);
@@ -141,11 +141,17 @@ app.post('/login', function (req, res) {
   login(js);
 });
 app.post('/logout',function (req,res){
-  logout(req.body,res);
+  var js={};
+  js.client=req.body;
+  js.resp=res;
+  logout(js);
 });
 
 app.post('/heartbeat', function (req, res) {
- heartbeat(req.body,res);
+  var js={};
+  js.client=req;
+  js.resp=res;
+ heartbeat(js);
 });
 
 
@@ -185,9 +191,8 @@ app.post('/get_user_binary',function (req,res){
 
 
 app.post('/show_user_binary_tree',function (req,res){
-  var user=req.body;
-  client=user;
-  showBinaryTree(user,client,res);
+  var client=req.body
+  showBinaryTree(client.data.user,client,res);
 });
 
 app.post('/get_coupling_score',function (req,res){
@@ -238,6 +243,40 @@ app.post('upgrade',function(req,res){
   upgradePackage(user,package,resp);
 });
 
+app.all('*',function(req,res,next){
+  //common action
+  console.log("res"+res);
+  var client=req.body;
+  var keyword="Authen";
+  
+  if(authentication_path(req.path)){
+    r_client.getAsync(keyword+client.clientuid).then(function(res) {
+      if(res){
+        next();
+      }
+      else
+        res.send(new Error("not Allow"));
+    }).catch(function(err){
+      res.send(err);
+      //render error
+    }).done();
+
+  }
+  else if(req.path!='/init_client'){
+    r_client.getAsync(client.clientuid).then(function(res) {
+      if(res){
+        next();
+      }
+      else
+        res.send(new Error("not Allow"));
+    }).catch(function(err){
+      res.send(err);
+      //render error
+    }).done();    
+  }
+});
+
+
 
 function create_db(dbname){
     var db;
@@ -269,6 +308,9 @@ var __desing_system={
   "views": {
     "getCouchDBTime": {
       "map": "function (doc) {\n  emit(null,new Date());\n}"
+    },
+    "findBy_Id": {
+      "map": "function (doc) {\n if(doc._id) \n emit([doc._id], doc);\n}"
     }
   }, 
   "language": "javascript"
@@ -292,6 +334,9 @@ var __design_balance={
     },
     "findBalanceByDateAndUser": {
       "map": "function (doc) {\n   var d = new Date(doc.updated);\n                if (d != null) {\n                    var key = [d.getFullYear(),\n                               d.getMonth(),\n                               d.getDate(),\n                               doc.username];\n                        emit(key, doc);\n                }\n}"
+    },
+    "findBy_Id": {
+      "map": "function (doc) {\n if(doc._id) \n emit([doc._id], doc);\n}"
     }
   },
   "language": "javascript"
@@ -347,6 +392,9 @@ var __design_user={
     "changePassword":{
       "map": "function (doc) {\n  if(doc.username&&doc.password&&doc.phone1)\n  emit([doc.username,doc.password,doc.phone1], doc);\n}"
     },
+    "findBy_Id": {
+      "map": "function (doc) {\n if(doc._id) \n emit([doc._id], doc);\n}"
+    }
   },
   "language": "javascript"
 };
@@ -367,6 +415,9 @@ var __design_binary={
     "findByUsername": {
       "map": "function (doc) {\n  emit(doc.username, doc);\n}"
     },
+    "findBy_Id": {
+      "map": "function (doc) {\n if(doc._id) \n emit([doc._id], doc);\n}"
+    }
 
   },
   "language": "javascript"
@@ -387,6 +438,9 @@ var __design_package={
     },
     "findByGUI": {
       "map": "function (doc) {\n  emit(doc.gui, doc);\n}"
+    },
+    "findBy_Id": {
+      "map": "function (doc) {\n if(doc._id) \n emit([doc._id], doc);\n}"
     }
   },
   "language": "javascript"
@@ -410,6 +464,9 @@ var __design_package_details={
     },
     "findByGUI": {
       "map": "function (doc) {\n  emit(doc.packagegui, doc);\n}"
+    },
+    "findBy_Id": {
+      "map": "function (doc) {\n if(doc._id) \n emit([doc._id], doc);\n}"
     }
   },
   "language": "javascript"
@@ -434,6 +491,9 @@ var __design_coupling_score={
     ,
     "findByUserGui": {
       "map": "function (doc) {\n  emit(doc.usergui, doc);\n}"
+    },
+    "findBy_Id": {
+      "map": "function (doc) {\n if(doc._id) \n emit([doc._id], doc);\n}"
     }
   },
   "language": "javascript"
@@ -463,7 +523,11 @@ var __design_packagedetails={
     },
     "findByUsername": {
       "map": "function (doc) {\n  emit(doc.username, doc);\n}"
+    },
+    "findBy_Id": {
+      "map": "function (doc) {\n if(doc._id) \n emit([doc._id], doc);\n}"
     }
+    
   },
   "language": "javascript"
 };
@@ -541,8 +605,33 @@ function init_db(dbname,design){
     db=create_db(dbname),
     db=nano.use(dbname),
     db.insert(design,function (err,res){
-      if(err)
-        console.log('could not create design '+dbname+" "+err.message);
+      if(err){
+        db.get('_design/objectList',function(err,res){
+          if(err) console.log('could not find design '+err.message);
+          else{
+            if(res){
+              var d=res;
+              console.log(d._rev);
+              db.destroy('_design/objectList',d._rev,function(err,res){
+                if(err) console.log(err);
+                else{
+                  console.log(res);
+                  delete d._rev;
+                  db.insert(d,"_design/objectList",function(err,res){
+                    if(err) console.log('err insert new design '+dbname);
+                    else{
+                      console.log('insert completed '+dbname);
+                    }
+                  });
+                }
+              });
+            }
+            else{
+              console.log("could not find design");
+            }
+          }
+        });
+      }
       else 
         console.log('created design '+dbname);
     })
@@ -572,10 +661,11 @@ function get_init_client(client_ip){
     fingerprint:"",
     data:""
     };
+    __cur_client=c;
   return c;
 }
 
-function set_client(client,resp){
+function set_client(js){
    
   /*
     client.data={
@@ -590,27 +680,32 @@ function set_client(client,resp){
     client.message:"ERROR, OK, GOOD, SUCCESS";
   */
   var keyword="Authen";
-  console.log("client.clientuid"+client.clientuid)
+  console.log("client.clientuid"+js.client.clientuid)
   
-  if(client.clientuid==""){
-    client.clientuid="";
+  if(js.client.clientuid==""){
+    js.client.clientuid="";
     keyword="NOBODY";
     throw new Error("Client not init, please check");
   } 
 
-  r_client.getAsync(keyword+client.clientuid).then(function(res) {
+  r_client.getAsync(keyword+js.client.clientuid).then(function(res) {
     console.log("res"+JSON.stringify(res));
-    if(res!=null){
-      r_client.del(keyword+client.clientuid);
-      client.clientuid=uuidV4();
+    if(res){
+      r_client.del(keyword+js.client.clientuid);
+      js.client.clientuid=uuidV4();
       //client.logintoken=uuidV4();
     }
-    r_client.setAsync(keyword+client.clientuid, JSON.stringify(client)).then(function(res) {
-      __cur_client=JSON.stringify(res);
-      if(resp)
-        resp.send(res);     
+    delete js.client.data;
+    r_client.setAsync(keyword+js.client.clientuid, JSON.stringify(js.client)).then(function(res) {      
+      if(resp&&res){
+        __cur_client=js.client;
+        js.resp.send(res);     
+      }
+        
     });
-  }); 
+  }).catch(function(err){
+    js.resp.send(err);
+  }).done(); 
   
 }
 function change_password(js){
@@ -625,6 +720,7 @@ function change_password(js){
   }
 }
 function changePassword(js){
+
   var deferred=Q.defer();
   var db=create_db('user');
   var username=js.client.data.user.username;
@@ -651,30 +747,60 @@ function changePassword(js){
   });
   return deferred.promise;
 }
-/**HEARTBEAT */
-function heartbeat(client,resp){
-  // UPDATE HEARTBEAT
-  if(client.logintoken){
-    var js =client.data;
-    check_authentication(js).then(function(body){
-    if(body.user.username==client.data.user.username&&body.user.password==client.data.user.password){
 
-      client.data={};
-      client.username=body.user.username;
-      client.logintime=convertTZ(new Date());
-      client.logintoken=uuidV4();
-      client.lastaccess=convertTZ(new Date());
+function authentication_path(path){
+  switch (path) {
+    case '/':
+      
+      return true;
+      break;
+  
+    default:
+      break;
+  }
+  return false;
+}
+
+
+
+function logout(js,resp){
+  var keyword="Authen";
+  r_client.getAsync(keyword+js.client.clientuid).then(function(res) {
+    //console.log("res"+JSON.stringify(res));
+    if(res){
+      r_client.del(keyword+js.client.clientuid,function(err,res){
+        js.resp.send(res);
+      });
+    }
+  }).catch(function(err){
+    js.resp.send(err);
+  }).done();
+}
+/**HEARTBEAT */
+function heartbeat(js){
+  // UPDATE HEARTBEAT
+  if(js.client.logintoken==__cur_client.logintoken){
+    
+    check_authentication(js.client.data).then(function(body){
+    if(body.user.username==__cur_client.username){
+
+      js.client.data={};
+      js.client.username=body.user.username;
+      //js.client.logintime=convertTZ(new Date());
+      js.client.logintoken=uuidV4();
+      js.client.lastaccess=convertTZ(new Date());
       //set_client(client,resp);
-      set_client(client);
-      resp.send(client);
+      set_client(js.client);
+      js.resp.send(js.client);
     }
     else{
-      client.data={}; 
-      client.message="NO this Username and password";
-      resp.send(client);
+      js.client.data={}; 
+      js.client.message="NO this Username and password";
+      js.resp.send(js.client);
     }
     }).catch(function(err){
       console.log(err);
+      js.resp.send(err)
     }).done(); 
   }
 }
@@ -695,7 +821,9 @@ init_db('packagedetails',__design_packagedetails);
 //init_db("system",__desing_system); 
 init_db('user',__design_user);
 init_db('package',__design_package);
+
 init_master_user();
+init_default_package();
 
 function init_master_user(){
     var db=create_db("user");
@@ -720,8 +848,7 @@ function init_master_user(){
               console.log("top user created!");
             }
           });
-        }
-          
+        }          
         else if(res.rows.length){
           r_client.setAsync("__Master",JSON.stringify(res.rows[0].value)).then(function (body){
             console.log('setAsync');
@@ -733,8 +860,71 @@ function init_master_user(){
         else
           throw new Error("Sorry no master found");
       });
-      else __master_user=body;
+      else __master_user=JSON.parse(body);
     });
+}
+function init_default_package(){
+  var db=create_db("package");
+  console.log("init package");
+  r_client.getAsync("__Package").then(function(body){
+    if(!body){
+      db.view(__design_view,"findAll",function(err,res){     
+        if(err){        
+          console.log("error find default package")
+        }          
+        else if(res.rows.length){
+          var arr=[];
+          res.rows.forEach(function(element) {
+            arr.push(element.value);
+          }, this);
+          r_client.setAsync("__Package",JSON.stringify(arr)).then(function (body){          
+            console.log("default Package has been set");
+            __default_package=arr;
+          }).catch(function(err){
+            throw new Error("could not set default package for redis"+err);
+          }).done();
+        }
+        else{
+          var p=[];
+          p.push({
+            gui:uuidV4(),
+            packagename:"The Best friend",
+            packagevalue:1750000,
+            isactive:true,
+            createddate:new Date(),           
+          });
+          p.push({
+            gui:uuidV4(),
+            packagename:"Close friend",
+            packagevalue:350000,
+            isactive:true,
+            createddate:new Date(),           
+          });
+          p.push({
+            gui:uuidV4(),
+            packagename:"The friend",
+            packagevalue:100000,
+            isactive:true,
+            createddate:new Date(),           
+          });
+
+          db.bulk({docs:p},function(err,res){
+            if(err) console.log("package"+err);
+            else{
+              console.log("package"+res); 
+            }
+          });
+          r_client.setAsync("__Package",JSON.stringify(arr)).then(function (body){          
+            console.log("default Package has been set");
+            __default_package=p;
+          }).catch(function(err){
+            throw new Error("could not set default package for redis"+err);
+          }).done();
+        }
+      });  
+    }
+    //else __default_package=JSON.parse(body);
+  });
 }
 function login(js){
   console.log("HI LOGIN");
@@ -789,7 +979,7 @@ function check_authentication(js){
     });
     return deferred.promise;
 }
-function get_balance(user,page,maxpage,resp){
+function get_balance(js){
      var __doc={
       username:"",
       usergui:"",
@@ -798,21 +988,18 @@ function get_balance(user,page,maxpage,resp){
       updated:convertTZ(new Date()),
       diffbalance:0
     };    
-    var db=create_db("balance");
-    var js={db:db,user:user,resp:resp};
-    
-    findBalanceByUsername(js).then(function(arr){      
+    var db=create_db("balance");    
+    findBalanceByUsername(js.client.data,js.client.data.page,js.client.data.maxpage).then(function(arr){      
         js.resp.send(arr);
     }).catch(function(err){
       js.resp.send(JSON.stringify(err));
     }).done();
 
 }
-function get_count_balance(user,resp){
+function get_count_balance(js){
   var db=create_db("balance");
-  var js={db:db,user:user,resp:resp};
   
-  countBalanceByUsername(js).then(function(arr){      
+  countBalanceByUsername(js.client.data).then(function(arr){      
       js.resp.send(arr);
   }).catch(function(err){
     js.resp.send(JSON.stringify(err));
@@ -1794,13 +1981,19 @@ function findByUserGui(js){
 }
 /** */
 function get_package(js){
-  js.db=create_db('package')
-  getPackage().then(function(body){
-    if(body)
-      js.resp.send(body);
-  }).catch(function(err){
-    js.resp.send(err);
-  });
+  if(__default_package){
+    js.resp.send(__default_package);
+  }
+  else{
+    js.db=create_db('package')
+    getPackage().then(function(body){
+      if(body)
+        js.resp.send(body);
+    }).catch(function(err){
+      js.resp.send(err);
+    });
+  }
+  
   
 }
 function getPackage(){

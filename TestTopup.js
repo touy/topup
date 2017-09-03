@@ -866,8 +866,23 @@ function init_master_user(){
                throw new Error("could not set master user for redis"+err);
              }).done();
            }
-           else
-             throw new Error("Sorry no master found");
+           else{
+            db.insert(__master_user,__master_user.gui,function(err,res){
+              //console.log(err); 
+               if(err){
+                 throw new Error(err);
+               }
+               else{
+                 r_client.setAsync("__Master",JSON.stringify(__master_user)).then(function(body){
+   
+                 }).catch(function(err){
+                   throw new Error("could not set master user for redis"+err);
+                 }).done();
+                 console.log("top user created!");
+               }
+             });
+           }
+             
          });
       }
      

@@ -33,8 +33,8 @@ app.use(cors());
 
 const requestIp = require('request-ip');
 
-var client_ip="";
-app.use(requestIp.mw())
+var __client_ip="";
+app.use(requestIp.mw());
 var __master_user={};
 var __cur_client={};
 
@@ -97,6 +97,20 @@ app.get('/', function (req, res) {
 
   res.send("hello");
 });
+// CHANGE PASSWORD
+app.get('/change_password', function (req, res) {
+
+    res.send("hello");
+    var js={};
+    js.client=req.body;
+    js.resp=res;
+    //js.data.user.phone1=js.client.secret;
+    //js.client.oldpassword1==js.client.oldpassword2;
+    //js.client.data.user.password=js.client.oldpassword1;
+    change_password(js);
+ });
+
+
 app.get('/initclient',function(req,res){
   client_ip = req.clientIp;
   res.send(get_init_client(client_ip));
@@ -325,7 +339,10 @@ var __design_user={
     },
     "searchForQualifiedParents": {
       "map": "function (doc) {\n  if(doc.username&&doc.couplingbalance>0)\n  emit(doc.username, doc);\n}"
-    }
+    },
+    "changePassword":{
+      "map": "function (doc) {\n  if(doc.username&&doc.password&&doc.phone1)\n  emit([doc.username,doc.password,doc.phone1], doc);\n}"
+    },
   },
   "language": "javascript"
 };
@@ -592,8 +609,44 @@ function set_client(client,resp){
   }); 
   
 }
-
-
+function change_password(js){
+  if(js.client.data.user.oldpassword1==js.client.data.user.oldpassword2){
+    changePassword(js).then(function(body){
+      js.client.message=body;
+      resp.send(js.client);
+    }).catch(function(err){
+      if(err)
+        js.resp.send(err);
+    }).done();
+  }
+}
+function changePassword(js){
+  var deferred=Q.defer();
+  var db=create_db('user');
+  var username=js.client.data.user.username;
+  var phone1=js.client.data.user.phone1;
+  var password=js.client.data.user.oldpassword1;
+  db.view(__design_view,'changePassword',{key:[username,password,phone1],include_docs:true},function(err,res){
+    if(err) deferred.reject(err);
+    else{
+      if(res.rows.length){
+        u=res.rows[0].value;
+        //delete u._rev;
+        u.password=js.client.data.user.password;
+        db.insert(u,u._id,function(err,res){
+          if(err) deferred.reject(err);
+          else{
+            deferred.resolve({message:"OK"});
+          }
+        });      
+      }
+      else{
+        deferred.reject(new Error("User not found"));
+      }
+    }
+  });
+  return deferred.promise;
+}
 /**HEARTBEAT */
 function heartbeat(client,resp){
   // UPDATE HEARTBEAT

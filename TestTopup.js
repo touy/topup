@@ -2,8 +2,8 @@ const async= require('async');
 const express = require('express');
 const app = express();
 const uuidV4 = require('uuid/v4');
-//const nano = require('nano')('http://admin:admin@localhost:5984');
-const nano = require('nano')('http://localhost:5984');
+const nano = require('nano')('http://admin:admin@localhost:5984');
+//const nano = require('nano')('http://localhost:5984');
 const cors = require('cors');
 var redis = require("redis");
 var bluebird = require('bluebird');
@@ -245,26 +245,26 @@ app.post('upgrade',function(req,res){
 
 app.all('*',function(req,res,next){
   //common action
-  console.log("res"+res);
+  console.log(res);
   var client=req.body;
   var keyword="Authen";
   
   if(authentication_path(req.path)){
-    r_client.getAsync(keyword+client.clientuid).then(function(res) {
-      if(res){
+    r_client.getAsync(keyword+client.clientuid).then(function(body) {
+      if(body){
         next();
       }
       else
         res.send(new Error("not Allow"));
     }).catch(function(err){
-      res.send(err);
+      res.send("redis: "+err);
       //render error
     }).done();
 
   }
   else if(req.path!='/init_client'){
-    r_client.getAsync(client.clientuid).then(function(res) {
-      if(res){
+    r_client.getAsync(client.clientuid).then(function(body) {
+      if(body){
         next();
       }
       else

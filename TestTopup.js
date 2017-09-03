@@ -100,7 +100,7 @@ app.get('/', function (req, res) {
 // CHANGE PASSWORD
 app.post('/change_password', function (req, res) {
 
-    res.send("hello");
+    //res.send("hello");
     var js={};
     js.client=req.body;
     js.resp=res;

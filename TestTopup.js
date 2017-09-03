@@ -2,8 +2,8 @@ const async= require('async');
 const express = require('express');
 const app = express();
 const uuidV4 = require('uuid/v4');
-//const nano = require('nano')('http://admin:admin@localhost:5984');
-const nano = require('nano')('http://localhost:5984');
+const nano = require('nano')('http://admin:admin@localhost:5984');
+//const nano = require('nano')('http://admin:Laoyaghuuj@localhost:5984');
 const cors = require('cors');
 var redis = require("redis");
 var bluebird = require('bluebird');
@@ -134,7 +134,11 @@ app.post('/register', function (req, res) {
 
 app.post('/login', function (req, res) {
   console.log("LOGIN ");
-  login(req.body,res);
+  //var client=req.body;
+  var js={};
+  js.client=req.body;
+  js.resp=res;
+  login(js);
 });
 app.post('/logout',function (req,res){
   logout(req.body,res);
@@ -732,27 +736,27 @@ function init_master_user(){
       else __master_user=body;
     });
 }
-function login(client,resp){
+function login(js){
   console.log("HI LOGIN");
-  var js=client.data;
-   console.log(js);
-  check_authentication(js).then(function(body){
+  //var js=client.data;
+   console.log(js.client.data);
+  check_authentication(js.client.data).then(function(body){
     // console.log("body:"+JSON.stringify(body));
     // console.log("client.data:"+JSON.stringify(client.data));
-    if(body.user.username==client.data.user.username&&body.user.password==client.data.user.password){
-      client.data={};
-      client.username=body.user.username;
-      client.logintime=convertTZ(new Date());
-      client.logintoken=uuidV4();
+    if(body.user.username==js.client.data.user.username&&body.user.password==js.client.data.user.password){
+      js.client.data={};
+      js.client.username=body.user.username;
+      js.client.logintime=convertTZ(new Date());
+      js.client.logintoken=uuidV4();
       //set_client(client,resp);
-      client.lastaccess=convertTZ(new Date());
-      set_client(client);
-      resp.send(client);
+      js.client.lastaccess=convertTZ(new Date());
+      set_client(js.client);
+      resp.send(js.client);
     }
     else{  
-      client.data={}; 
-      client.message="NO this Username and password";
-      resp.send(client);
+      js.client.data={}; 
+      js.client.message="NO this Username and password";
+      resp.send(js.client);
     }
   }).catch(function(err){
     console.log(err);

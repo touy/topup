@@ -2,8 +2,8 @@ const async= require('async');
 const express = require('express');
 const app = express();
 const uuidV4 = require('uuid/v4');
-//const nano = require('nano')('http://admin:admin@localhost:5984');
-const nano = require('nano')('http://localhost:5984');
+const nano = require('nano')('http://admin:admin@localhost:5984');
+//const nano = require('nano')('http://localhost:5984');
 const cors = require('cors');
 var redis = require("redis");
 var bluebird = require('bluebird');
@@ -98,7 +98,7 @@ app.get('/', function (req, res) {
   res.send("hello");
 });
 // CHANGE PASSWORD
-app.get('/change_password', function (req, res) {
+app.post('/change_password', function (req, res) {
 
     res.send("hello");
     var js={};
@@ -111,7 +111,7 @@ app.get('/change_password', function (req, res) {
  });
 
 
-app.get('/initclient',function(req,res){
+app.post('/initclient',function(req,res){
   client_ip = req.clientIp;
   res.send(get_init_client(client_ip));
 });

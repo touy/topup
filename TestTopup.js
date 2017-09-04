@@ -259,18 +259,18 @@ app.all('*',function(req,res,next){
       //render error
     }).done();
   }
-  else if(req.path!='/init_client'){
-    r_client.getAsync(client.clientuid).then(function(body) {
-      if(body){
-        next();
-      }
-      else
-        res.send(new Error("not Allow"));
-    }).catch(function(err){
-      res.send(err);
-      //render error
-    }).done();    
-  }
+  // else if(req.path!='/init_client'){
+  //   r_client.getAsync(client.clientuid).then(function(body) {
+  //     if(body){
+  //       next();
+  //     }
+  //     else
+  //       res.send(new Error("not Allow"));
+  //   }).catch(function(err){
+  //     res.send(err);
+  //     //render error
+  //   }).done();    
+  // }
   else 
     next();
 });
@@ -862,7 +862,7 @@ function heartbeat(js){
       js.client.logintoken=uuidV4();
       js.client.lastaccess=convertTZ(new Date());
       //set_client(client,resp);
-      set_client(js.client);
+      set_client(js);
       js.resp.send(js.client);
     }
     else{
@@ -1038,7 +1038,7 @@ function login(js){
       js.client.logintoken=uuidV4();
       //set_client(client,resp);
       js.client.lastaccess=convertTZ(new Date());
-      set_client(js.client);
+      set_client(js);
       js.resp.send(js.client);
     }
     else{  
@@ -1407,7 +1407,7 @@ function addBinaryTree(js,parent){
 
   return deferred.promise;
 }
-function register(register,needbalance,resp){//needbalance={main:0.5,bunus:0.5}
+function register(register/*,needbalance*/,resp){//needbalance={main:0.5,bunus:0.5}
   var __doc={
     username:"",// show *
     password:"",//show*
@@ -1498,7 +1498,7 @@ function register(register,needbalance,resp){//needbalance={main:0.5,bunus:0.5}
       remark:""
     };
     var client=__cur_client;
-    var js={db:create_db("user"),client:client,resp:resp,user:register,needbalance:needbalance};
+    var js={db:create_db("user"),client:client,resp:resp,user:register/*,needbalance:needbalance*/};
     js.topuser=__master_user;
 
      // find client exist ==>
@@ -1541,15 +1541,15 @@ function register(register,needbalance,resp){//needbalance={main:0.5,bunus:0.5}
                   // TODO** IF BALANCE NOT ENOUGH COULD NOT MAKE A REGISTER  ==>OK
                   // need to check if bonus balance or main balance must be use not less than 50% of each, and sum of both must be enough for register
                   
-                  if(/*js.needbalance.main>registrabalance.main.balance||*/js.needbalance.bonus>registrabalance.bonus.balance)
-                    throw new Error('balance is abnormal please contact admin');
+                  // if(/*js.needbalance.main>registrabalance.main.balance||*/js.needbalance.bonus>registrabalance.bonus.balance)
+                  //   throw new Error('balance is abnormal please contact admin');
                   
-                  // if(js.needbalance.bonus.balance>package.packagevalue/2){
-                  //   throw new Error("max register amount is 50%");
-                  // }                  
-                  if((js.needbalance.main/*+js.needbalance.bonus*/)!=package.packagevalue){
-                    throw new Error("register value and package has not equal value");
-                  }
+                  // // if(js.needbalance.bonus.balance>package.packagevalue/2){
+                  // //   throw new Error("max register amount is 50%");
+                  // // }                  
+                  // if((js.needbalance.main/*+js.needbalance.bonus*/)!=package.packagevalue){
+                  //   throw new Error("register value and package has not equal value");
+                  // }
                   //completeRegistration(js,parent,package,introductor,client,maxproduct,maxpaid,firstbalance,introductionvalue,fee,theregistrabalance,score)
                   switch(registra.packagevalue){
                     case 1750000:
@@ -1844,7 +1844,7 @@ function deductBalance(js){
     gui:uuidV4(),
     balance:0,
     updated:convertTZ(new Date()),
-    diffbalance:-1*(js.needbalance.main),
+    diffbalance:-1*(js.package.packagevalue),
     type:"registermain"
   };
   console.log("update user couplingscore completed"+js.registra.username);
@@ -1852,23 +1852,23 @@ function deductBalance(js){
     if(body){
       // deduct money from registra user
       // bonus balance
-      if(js.needbalance.bonus>0){
-        js.db=create_db("bonusBalance");
-        js.balance={
-          username:js.registra.username,
-          usergui:js.registra.gui,
-          gui:uuidV4(),
-          balance:0,
-          updated:convertTZ(new Date()),
-          diffbalance:-1*(js.needbalance.bonus),
-          type:"registerbonus"
-        };
-        addBalanceByUser(js,js.registra).then(function(boy){
-          if(body){
-            console.log("deduct bonuse from registra completed "+registra.username);
-          }
-        });
-      }
+      // if(js.needbalance.bonus>0){
+      //   js.db=create_db("bonusBalance");
+      //   js.balance={
+      //     username:js.registra.username,
+      //     usergui:js.registra.gui,
+      //     gui:uuidV4(),
+      //     balance:0,
+      //     updated:convertTZ(new Date()),
+      //     diffbalance:-1*(js.needbalance.bonus),
+      //     type:"registerbonus"
+      //   };
+      //   addBalanceByUser(js,js.registra).then(function(boy){
+      //     if(body){
+      //       console.log("deduct bonuse from registra completed "+registra.username);
+      //     }
+      //   });
+      // }
       console.log("deduct main balance from registra completed "+registra.username);
       js.resp.send("registratrion was completed");
     }

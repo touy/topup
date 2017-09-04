@@ -711,6 +711,8 @@ function set_client(js){
 }
 function change_password(js){
   if(js.client.data.user.oldpassword1==js.client.data.user.oldpassword2){
+    delete js.client.data.user.oldpassword1;
+    delete js.client.data.user.oldpassword2;
     changePassword(js).then(function(body){
       js.client.message=body;
       resp.send(js.client);
@@ -726,7 +728,7 @@ function changePassword(js){
   var db=create_db('user');
   var username=js.client.data.user.username;
   var phone1=js.client.data.user.phone1;
-  var password=js.client.data.user.oldpassword1;
+  var password=js.client.data.user.password;
   db.view(__design_view,'changePassword',{key:[username,password,phone1],include_docs:true},function(err,res){
     if(err) deferred.reject(err);
     else{

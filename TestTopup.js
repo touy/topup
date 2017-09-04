@@ -844,7 +844,9 @@ function logout(js,resp){
         js.client.logintime="";
         js.client.username="";
         js.client.data={};
+        __cur_client=js.client;
         js.resp.send(js.client);
+        
       });
     }
   }).catch(function(err){

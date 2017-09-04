@@ -2,8 +2,8 @@ const async= require('async');
 const express = require('express');
 const app = express();
 const uuidV4 = require('uuid/v4');
-//const nano = require('nano')('http://admin:admin@localhost:5984');
-const nano = require('nano')('http://localhost:5984');
+const nano = require('nano')('http://admin:admin@localhost:5984');
+//const nano = require('nano')('http://localhost:5984');
 const cors = require('cors');
 var redis = require("redis");
 var bluebird = require('bluebird');
@@ -111,7 +111,7 @@ app.post('/change_password', function (req, res) {
  });
 
 
-app.post('/initclient',function(req,res){
+app.post('/init_client',function(req,res){
   client_ip = req.clientIp;
   res.send(get_init_client(client_ip));
 });
@@ -239,7 +239,6 @@ app.post('get_bonus_topup_balance',function(req,res){
 app.post('upgrade',function(req,res){
   var user=req.body;
   var client=user;
-  client.resp;
   upgradePackage(user,package,resp);
 });
 
@@ -247,8 +246,7 @@ app.all('*',function(req,res,next){
   //common action
   console.log(res);
   var client=req.body;
-  var keyword="Authen";
-  
+  var keyword="Authen";  
   if(authentication_path(req.path)){
     r_client.getAsync(keyword+client.clientuid).then(function(body) {
       if(body){
@@ -260,7 +258,6 @@ app.all('*',function(req,res,next){
       res.send("redis: "+err);
       //render error
     }).done();
-
   }
   else if(req.path!='/init_client'){
     r_client.getAsync(client.clientuid).then(function(body) {
@@ -274,6 +271,8 @@ app.all('*',function(req,res,next){
       //render error
     }).done();    
   }
+  else 
+    next();
 });
 
 

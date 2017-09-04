@@ -104,7 +104,7 @@ app.post('/change_password', function (req, res) {
     var js={};
     js.client=req.body;
     js.resp=res;
-    console.log(js.client.data);
+    //console.log(js.client.data);
     js.client.data.user.phone1=js.client.data.user.secret;
     delete js.client.data.user.secret;
     //js.client.oldpassword1==js.client.oldpassword2;
@@ -140,6 +140,7 @@ app.post('/login', function (req, res) {
   var js={};
   js.client=req.body;
   js.resp=res;
+  console.log(js);
   login(js);
 });
 app.post('/logout',function (req,res){
@@ -261,18 +262,10 @@ app.all('*',function(req,res,next){
       //render error
     }).done();
   }
-  // else if(req.path!='/init_client'){
-  //   r_client.getAsync(client.clientuid).then(function(body) {
-  //     if(body){
-  //       next();
-  //     }
-  //     else
-  //       res.send(new Error("not Allow"));
-  //   }).catch(function(err){
-  //     res.send(err);
-  //     //render error
-  //   }).done();    
-  // }
+  else if(req.path!='/init_client'){
+    if(client.clientuid!=__cur_client.clientuid)
+      res.send("invalid client"+__cur_client.clientuid);    
+  }
   else 
     next();
 });
@@ -344,7 +337,6 @@ var __design_balance={
 };
 var __design_user={
   "_id": "_design/objectList",
-  "_rev": "830-307770868b26bb69fb4b3a8f11f38f89",
   "views": {
     "containText": {
       "map": "function(doc) {\r\n  var txt = doc.username;\r\n  var words = txt.replace(/[!.,;]+/g,\"\").toLowerCase().split(\" \");\r\n    for(var word in words) {\r\n        emit(words[word],doc);\r\n    }\r\n}"
@@ -711,12 +703,13 @@ function set_client(js){
   
 }
 function change_password(js){
-  if(js.client.data.user.oldpassword1==js.client.data.user.oldpassword2){
-    delete js.client.data.user.oldpassword1;
-    delete js.client.data.user.oldpassword2;
+  if(js.client.data.user.password1==js.client.data.user.password2){ 
+    
+    //delete js.client.data.user.password1;
+    delete js.client.data.user.password2;
     changePassword(js).then(function(body){
       js.client.message=body;
-      resp.send(js.client);
+      js.resp.send(js.client);
     }).catch(function(err){
       if(err)
         js.resp.send(err);
@@ -729,14 +722,16 @@ function changePassword(js){
   var db=create_db('user');
   var username=js.client.data.user.username;
   var phone1=js.client.data.user.phone1;
-  var password=js.client.data.user.password;
+  var password=js.client.data.user.oldpassword;
+  delete js.client.data.user.oldpassword;
   db.view(__design_view,'changePassword',{key:[username,password,phone1],include_docs:true},function(err,res){
     if(err) deferred.reject(err);
     else{
       if(res.rows.length){
         u=res.rows[0].value;
         //delete u._rev;
-        u.password=js.client.data.user.password;
+        u.password=js.client.data.user.password1;
+        
         db.insert(u,u._id,function(err,res){
           if(err) deferred.reject(err);
           else{
@@ -1031,7 +1026,7 @@ function init_default_package(){
 function login(js){
   console.log("HI LOGIN");
   //var js=client.data;
-   console.log(js.client.data);
+  //console.log(js.client.data);
   check_authentication(js.client.data).then(function(body){
     // console.log("body:"+JSON.stringify(body));
     // console.log("client.data:"+JSON.stringify(client.data));
@@ -1040,13 +1035,19 @@ function login(js){
       js.client.username=body.user.username;
       js.client.logintime=convertTZ(new Date());
       js.client.logintoken=uuidV4();
+      js.client.isexist=true;
       //set_client(client,resp);
       js.client.lastaccess=convertTZ(new Date());
       set_client(js);
       js.resp.send(js.client);
     }
     else{  
+      js.client.username="";
+      js.client.logintime="";
+      js.client.logintoken="";
       js.client.data={}; 
+      js.client.lastaccess=convertTZ(new Date());
+      set_client(js);
       js.client.message="NO this Username and password";
       js.resp.send(js.client);
     }
@@ -1057,6 +1058,7 @@ function login(js){
 function check_authentication(js){
   var deferred=Q.defer();
   var db=create_db("user");
+  //console.log(js);
   db.view(__design_view,"authentication",{
       key: [js.user.username,js.user.password],
       include_docs: true

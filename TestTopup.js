@@ -698,7 +698,7 @@ function set_client(js){
     }
     delete js.client.data;
     r_client.setAsync(keyword+js.client.clientuid, JSON.stringify(js.client)).then(function(res) {      
-      if(resp&&res){
+      if(js.resp&&res){
         __cur_client=js.client;
         js.resp.send(res);     
       }

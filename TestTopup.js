@@ -840,7 +840,11 @@ function logout(js,resp){
     //console.log("res"+JSON.stringify(res));
     if(res){
       r_client.del(keyword+js.client.clientuid,function(err,res){
-        js.resp.send(res);
+        js.client.logintoken="";
+        js.client.logintime="";
+        js.client.username="";
+        js.client.data={};
+        js.resp.send(js.client);
       });
     }
   }).catch(function(err){

@@ -104,7 +104,7 @@ app.post('/change_password', function (req, res) {
     var js={};
     js.client=req.body;
     js.resp=res;
-    js.client.data.user.phone1=js.client.secret;
+    js.client.data.user.phone1=js.client.data.user.secret;
     //js.client.oldpassword1==js.client.oldpassword2;
     //js.client.data.user.password=js.client.oldpassword1;
     change_password(js);

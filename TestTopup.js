@@ -342,6 +342,7 @@ var __design_balance={
 };
 var __design_user={
   "_id": "_design/objectList",
+  "_rev": "830-307770868b26bb69fb4b3a8f11f38f89",
   "views": {
     "containText": {
       "map": "function(doc) {\r\n  var txt = doc.username;\r\n  var words = txt.replace(/[!.,;]+/g,\"\").toLowerCase().split(\" \");\r\n    for(var word in words) {\r\n        emit(words[word],doc);\r\n    }\r\n}"
@@ -388,7 +389,7 @@ var __design_user={
     "searchForQualifiedParents": {
       "map": "function (doc) {\n  if(doc.username&&doc.couplingbalance>0)\n  emit(doc.username, doc);\n}"
     },
-    "changePassword":{
+    "changePassword": {
       "map": "function (doc) {\n  if(doc.username&&doc.password&&doc.phone1)\n  emit([doc.username,doc.password,doc.phone1], doc);\n}"
     },
     "findBy_Id": {

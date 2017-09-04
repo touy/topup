@@ -749,11 +749,83 @@ function changePassword(js){
 
 function authentication_path(path){
   switch (path) {
-    case '/':
+    case '/login':
       
       return true;
       break;
-  
+    case '/logout':
+    
+      return true;
+    break;
+    case '/get_main_balance':
+    
+      return true;
+    break;
+    case '/get_bonus_balance':
+    
+      return true;
+    break;
+    case '/get_topup_balance':
+    
+      return true;
+    break;
+    case '/get_bonus_topup_balance':
+    
+      return true;
+    break;
+    case '/check_main_balance':
+    
+      return true;
+    break;
+    case '/get_coupling_socre':
+    
+      return true;
+    break;
+    case '/get_user_binary_tree':
+    
+      return true;
+    break;
+    case '/get_user_binary':
+    
+      return true;
+    break;
+    case '/get_balance':
+    
+      return true;
+    break;
+    case '/get_payment_list':
+    
+      return true;
+    break;
+    case '/get_package_details':
+    
+      return true;
+    break;
+    case '/get_userdata':
+    
+      return true;
+    break;
+    case '/heartbeat':
+    
+      return true;
+    break;
+    case '/register':
+    
+      return true;
+    break;
+    case '/get_package':
+    
+      return true;
+    break;
+    case '/change_password':
+    
+      return true;
+    break;
+    case '/upgrade':
+    
+      return true;
+    break;
+    
     default:
       break;
   }

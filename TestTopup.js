@@ -2127,7 +2127,7 @@ function getPackage(){
         }
       }
     });
-    return deferred.promise();
+    return deferred.promise;
 }
 function get_package_details(js){
   js.db=create_db('packagedetails')
@@ -2160,7 +2160,7 @@ function getPackageDetailsByUser(user){
         }
       }
     });
-    return deferred.promise();
+    return deferred.promise;
 }
 
 function get_payment_list(js,page,maxpage){
@@ -2269,7 +2269,7 @@ function getUserBinaryByUser(user){
         }
       }
     });
-    return deferred.promise();
+    return deferred.promise;
 }
 
 
@@ -2348,7 +2348,7 @@ function getCouplingScoreByUser(user,page,maxpage){
         }
       }
     });
-    return deferred.promise();
+    return deferred.promise;
 }
 function addCouplingScore(js,parent){//add for above parent only, which search from first parent 
   //find exsit coupling score
@@ -2982,7 +2982,7 @@ function updateUser(user){
       }
     }
   });
-  return deferred.promise();
+  return deferred.promise;
 }
 //
 function transferBalance(user,touser,client,balancetype){// Bonusbalance, MainBalance, TopupBalance, BonusTopupBalance

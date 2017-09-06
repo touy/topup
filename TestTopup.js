@@ -71,7 +71,12 @@ __master_user={
   "packagevalue": 0,
   "packagename": "",
   "packagegui": "",
-  "balancevalue": 0,
+  "balancevalue": 0, //bonus balance
+  "mainbalance":0, // main balance from cash
+  "firstbalance":0,
+  "offeredbonus":0,
+  "topupbalance":0,
+  "bonustopupbalance":0,
   "Lcoupling": 0,
   "Rcoupling": 0,
   "couplingbalance": 0,
@@ -207,20 +212,20 @@ app.post('/get_coupling_score',function (req,res){
   var maxpage=js.maxpage;
   get_coupling_score(js,page,maxpage);
 });
-app.post('get_topup_balance',function(req,res){
+app.post('/get_topup_balance',function(req,res){
   var user=req.body;
   var client=user;
   client.resp;
   showTopupBalance(user,client);
 });
-app.post('get_main_balance',function(req,res){
+app.post('/get_main_balance',function(req,res){
   var user=req.body;
   var client=user;
   client.resp;
   showMainBalance(user,client);
 });
 
-app.post('check_main_balance',function(req,res){
+app.post('/check_main_balance',function(req,res){
   var user=req.body;
   var client=user;
   client.resp;
@@ -228,22 +233,25 @@ app.post('check_main_balance',function(req,res){
   checkMainBalance(user,package,client);
 });
 
-app.post('get_bonus_balance',function(req,res){
+app.post('/get_bonus_balance',function(req,res){
   var user=req.body;
   var client=user;
   client.resp;
   showBonusBalance(user,client);
 });
-app.post('get_bonus_topup_balance',function(req,res){
+app.post('/get_bonus_topup_balance',function(req,res){
   var user=req.body;
   var client=user;
   client.resp;
   showBonusTopupBalance(user,client);
 });
-app.post('upgrade',function(req,res){
+app.post('/upgrade',function(req,res){
   var user=req.body;
   var client=user;
   upgradePackage(user,package,resp);
+});
+app.get('/default_master',function(req,res){
+  init_default_master_user();
 });
 
 app.all('*',function(req,res,next){
@@ -826,6 +834,9 @@ function authentication_path(path){
     
       return true;
     break;
+    case '/default_master':
+      return true;
+    break;
     
     default:
       break;
@@ -907,14 +918,47 @@ function init_redis(){
   r_client.flushdb( function (err, succeeded) {
     console.log(succeeded); // will be true if successfull
 });
+}
+
+function init_default_master_user(){
+  var db=create_db("user");
+  db.view(__design_view,"findTopUser",function(err,res){
+    if(!err){
+      //__master_user._rev=res.rows[0].value._rev; // always update master user
+      db.insert(__master_user,__master_user.gui,function(err,res){
+        //console.log(err); 
+         if(err){
+           throw new Error(err);
+         }
+         else{
+           r_client.setAsync("__Master",JSON.stringify(__master_user)).then(function(body){
+
+           }).catch(function(err){
+             throw new Error("could not set master user for redis"+err);
+           }).done();
+           console.log("top user created!");
+         }
+       });
+    }
+    else{
+      var l={
+        log:("error %s",JSON.stringify(err)),
+        logdate:new Date(),
+        type:"error",
+        gui:uuidV4()
+      };
+      logging(l);
+      console.log(err);
+    }
+      
+  });
 } 
 function init_master_user(){
     var db=create_db("user");
     console.log("init master");
     r_client.getAsync("__Master").then(function(body){
       //console.log("body: "+body);
-      if(!body){
-        
+      if(!body){ 
         db.view(__design_view,"findTopUser",function(err,res){
           // console.log("res"+JSON.stringify(res.rows[0].value));
            if(err){
@@ -945,6 +989,7 @@ function init_master_user(){
              }).done();
            }
            else{
+            //__master_user._rev=res.rows[0].value._rev; // always update master user
             db.insert(__master_user,__master_user.gui,function(err,res){
               //console.log(err); 
                if(err){
@@ -963,8 +1008,9 @@ function init_master_user(){
              
          });
       }
-     
-      else __master_user=JSON.parse(body);
+      else {
+        __master_user=JSON.parse(body);
+      }
     });
 }
 function init_default_package(){

@@ -81,6 +81,7 @@ __master_user={
   "Rcoupling": 0,
   "couplingbalance": 0,
   "couplingtotalmoney": 0,
+  "sponservalue":0,
   "introductorgui": "d2dfb6ac-1abd-47c0-b1b5-ef0465b1592d",
   "introductorcode": "souk@TheFriendd",
   "isfreeuser": false,
@@ -1260,16 +1261,19 @@ function addBalanceByUser(js,user){
             else{
               if(res.rows.length){
                 var u=res.rows[0].value;
-                if(b.balance.indexOf('main')){
+                if(b.type.indexOf('main')){
                   u.mainbalance+=b.balance;
                 }
                 else{
                   u.balancevalue+=b.balance;
+                  if(b.type=="intro"){
+                    u.sponservalue+=b.diffbalance;
+                  }
                 }                                
                 if(b.type=="score"){
                   u.couplingbalance=0;
-                  u.couplingtotalmoney+=b.diffbalance      
-                }                
+                  u.couplingtotalmoney+=b.diffbalance; 
+                }                                
                 db.insert(u,u.gui,function(err,res){
                   if(err) deferred.reject(err);
                   else deferred.resolve(js);

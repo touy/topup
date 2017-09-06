@@ -251,7 +251,11 @@ app.post('/upgrade',function(req,res){
   upgradePackage(user,package,resp);
 });
 app.get('/default_master',function(req,res){
-  init_default_master_user();
+  var js={};
+  js.client=req.body;
+  js.resp=res;
+  init_default_master_user(js);
+
 });
 
 app.all('*',function(req,res,next){
@@ -920,23 +924,27 @@ function init_redis(){
 });
 }
 
-function init_default_master_user(){
+function init_default_master_user(js){
   var db=create_db("user");
   db.view(__design_view,"findTopUser",function(err,res){
     if(!err){
       //__master_user._rev=res.rows[0].value._rev; // always update master user
+      __master_user._rev=res.rows[0].value._rev;
       db.insert(__master_user,__master_user.gui,function(err,res){
         //console.log(err); 
          if(err){
            throw new Error(err);
+           js.resp.send(err);
          }
          else{
            r_client.setAsync("__Master",JSON.stringify(__master_user)).then(function(body){
 
            }).catch(function(err){
              throw new Error("could not set master user for redis"+err);
+             js.resp.send(err);
            }).done();
            console.log("top user created!");
+           js.resp.send("done!");
          }
        });
     }
@@ -949,6 +957,7 @@ function init_default_master_user(){
       };
       logging(l);
       console.log(err);
+      js.resp.send(err);
     }
       
   });

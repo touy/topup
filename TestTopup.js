@@ -159,9 +159,10 @@ app.post('/heartbeat', function (req, res) {
 
 
 app.post('/get_userdata', function (req, res) {
-  var client=req.body;
-  var user=client;
- showUserInfo(user,res);
+  var js={};
+  js.client=req.body;
+  js.resp=res;
+ showUserInfo(js);
 });
 
 app.post('/get_package', function (req, res) {
@@ -2796,22 +2797,25 @@ function showBonusTopupBalance(user,client){
   });
 }
 // - ຂໍ້ມູນຜູ້ໃຊ້
-function showUserInfo(user,client,resp){
+function showUserInfo(js){
+  var user={username:js.username};
   viewUser(user).then(function(body){
     if(body){
-      client.data.message={message:"OK"};
-      client.data.user=body;
-      resp.send(client);  
+      js.client.data.message={message:"OK"};
+      js.client.data.user=body;
+      js.resp.send(js.client);  
     }
   }).catch(function(err){
-    resp.data.message=JSON.stringify(err);
-    resp.send(client);
+    js.client.data.message=JSON.stringify(err);
+    js.resp.send(js.client);
   });
 }
 function viewUser(user){
   var deferred=Q.defer();
   db=create_db("user");
-  db.insert(__design_view,"findByUsername",{key:user.username},function(err,res){
+  db.insert(__design_view,"findByUsername",
+  {key:user.username},
+  function(err,res){
     if(err){
       var l={
         log:("error %s",JSON.stringify(err)),
@@ -2845,7 +2849,7 @@ function viewUser(user){
       }
     }
   });
-  return deferred.promise();
+  return deferred.promise;
 }
 function redeem(user,client,redeemtype,resp){// redeemtype: offer , first balance
   var db=create_db("user");

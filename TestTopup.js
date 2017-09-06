@@ -325,7 +325,7 @@ var __design_balance={
       "map": "function (doc) {\n  if(doc.username)\n emit(doc.username,1);\n}"
     },
     "findByUsername": {
-      "map": "function (doc) {\n  emit(doc.username, doc);\n}"
+      "map": "function (doc) {\n if(doc.username)\n emit(doc.username, doc);\n}"
     },
     "findBalanceByDateAndUser": {
       "map": "function (doc) {\n   var d = new Date(doc.updated);\n                if (d != null) {\n                    var key = [d.getFullYear(),\n                               d.getMonth(),\n                               d.getDate(),\n                               doc.username];\n                        emit(key, doc);\n                }\n}"
@@ -2799,21 +2799,24 @@ function showBonusTopupBalance(user,client){
 // - ຂໍ້ມູນຜູ້ໃຊ້
 function showUserInfo(js){
   var user={username:js.username};
+  
   viewUser(user).then(function(body){
     if(body){
       js.client.data.message={message:"OK"};
       js.client.data.user=body;
+      js.client.data.user.password="";
       js.resp.send(js.client);  
     }
   }).catch(function(err){
     js.client.data.message=JSON.stringify(err);
     js.resp.send(js.client);
-  });
+  }).done();
 }
 function viewUser(user){
   var deferred=Q.defer();
   db=create_db("user");
-  db.insert(__design_view,"findByUsername",
+  //console.log("here view user");
+  db.view(__design_view,"findByUserName",
   {key:user.username},
   function(err,res){
     if(err){
@@ -3044,7 +3047,7 @@ function topupETL(phone,value){
 
 
 
-function Logging(log){
+function logging(log){
   var l={
     log:"",
     logdate:"",

@@ -130,12 +130,7 @@ app.post('/get_balance', function (req, res) {
   js.resp=res;
   get_balance(js);
 });
-app.post('/get_count_balance',function(req,res){
-  var js={};
-  js.client=req.body;
-  js.resp=res;
-  get_count_balance(js)
-});
+
 app.post('/register', function (req, res) {
  register(req.body,res);
 });
@@ -207,58 +202,76 @@ app.post('/show_user_binary_tree',function (req,res){
 
 app.post('/get_coupling_score',function (req,res){
   var js={};
-  js.user=req.body;
+  js.client=req.body;
   js.resp=res;
-  var page=js.page;
-  var maxpage=js.maxpage;
-  get_coupling_score(js,page,maxpage);
+  get_coupling_score(js);
 });
 app.post('/get_topup_balance',function(req,res){
-  var user=req.body;
-  var client=user;
-  client.resp;
-  showTopupBalance(user,client);
+  var js={};
+  js.client=req.body;
+  js.resp=res;
+  showTopupBalance(js);
 });
 app.post('/get_main_balance',function(req,res){
-  var user=req.body;
-  var client=user;
-  client.resp;
-  showMainBalance(user,client);
+  var js={};
+  js.client=req.body;
+  js.resp=res;
+  showMainBalance(js);
 });
 
 app.post('/check_main_balance',function(req,res){
-  var user=req.body;
-  var client=user;
-  client.resp;
-  var package=client.package;
-  checkMainBalance(user,package,client);
+  var js={};
+  js.client=req.body;
+  js.resp=res;
+  
+  checkMainBalance(js);
 });
 
 app.post('/get_bonus_balance',function(req,res){
-  var user=req.body;
-  var client=user;
-  client.resp;
-  showBonusBalance(user,client);
+  var js={};
+  js.client=req.body;
+  js.resp=res;
+  showBonusBalance(js);
 });
 app.post('/get_bonus_topup_balance',function(req,res){
-  var user=req.body;
-  var client=user;
-  client.resp;
-  showBonusTopupBalance(user,client);
+  var js={};
+  js.client=req.body;
+  js.resp=res;
+  showBonusTopupBalance(js);
 });
-app.post('/upgrade',function(req,res){
-  var user=req.body;
-  var client=user;
-  upgradePackage(user,package,resp);
+app.post('/upgrade',function(req,res){//js.client.data.user , js.client.data.package
+  var js={};
+  js.client=req.body;
+  js.resp=res;
+  upgradePackage(js);
 });
 app.get('/default_master',function(req,res){
   var js={};
   js.client=req.body;
   js.resp=res;
   init_default_master_user(js);
-
 });
 
+app.get('/get_member_count_by_month_year',function(req,res){//js.client.data.user,js.client.data.package , js.client.data.user.ismember, js.client.data.user.month ,js.client.data.user.year
+  var js={};
+  js.client=req.body;
+  js.resp=res;
+  get_member_count_by_month_year(js);
+});
+
+app.get('/get_member_count_by_package',function(req,res){//js.client.data.user,js.client.data.package , js.client.data.user.ismember
+  var js={};
+  js.client=req.body;
+  js.resp=res;
+  get_total_member_by_package(js);
+});
+app.get('/get_member_count',function(req,res){//js.client.data.user , js.client.data.user.ismember
+  var js={};
+  js.client=req.body;
+  js.resp=res;
+  get_total_member(js);
+
+});
 app.all('*',function(req,res,next){
   //common action
   console.log(res);
@@ -333,6 +346,10 @@ var __design_balance={
       "reduce": "_count",
       "map": "function (doc) {\n  if(doc.username)\n    emit(doc.username,null);\n}"
     },
+    "findCountAndMonth": {
+      "reduce":"_count",
+      "map": "function (doc) {\n   var d = new Date(doc.updated); \n if (d != null) {\n var key = [doc.username,d.getMonth()];\n emit(key, null);\n }\n}"
+    },
     "findExist": {
       "reduce": "_count",
       "map": "function (doc) {\n  if(doc.username)\n emit(doc.username,1);\n}"
@@ -340,8 +357,11 @@ var __design_balance={
     "findByUsername": {
       "map": "function (doc) {\n if(doc.username)\n emit(doc.username, doc);\n}"
     },
-    "findBalanceByDateAndUser": {
-      "map": "function (doc) {\n   var d = new Date(doc.updated);\n                if (d != null) {\n                    var key = [d.getFullYear(),\n                               d.getMonth(),\n                               d.getDate(),\n                               doc.username];\n                        emit(key, doc);\n                }\n}"
+    "findByUsernameAndMonth": {
+      "map": "function (doc) {\n   var d = new Date(doc.updated);\n if (d != null) {\n var key = [doc.username,d.getMonth()];\n emit(key, doc);\n }\n}"
+    },
+    "findBalanceByUserAndDate": {
+      "map": "function (doc) {\n   var d = new Date(doc.updated);\n if (d != null) {\n var key = [d.getFullYear(),\n d.getMonth(),\n d.getDate(),\n doc.username];\n emit(key, doc);\n }\n}"
     },
     "findBy_Id": {
       "map": "function (doc) {\n if(doc._id) \n emit([doc._id], doc);\n}"
@@ -351,9 +371,22 @@ var __design_balance={
 };
 var __design_user={
   "_id": "_design/objectList",
+  "_rev": "2934-2d29def09e51bb55dd56ac7123d9521a",
   "views": {
     "containText": {
-      "map": "function(doc) {\r\n  var txt = doc.username;\r\n  var words = txt.replace(/[!.,;]+/g,\"\").toLowerCase().split(\" \");\r\n    for(var word in words) {\r\n        emit(words[word],doc);\r\n    }\r\n}"
+      "map": "function(doc) {\r\n  var txt = doc.username;\r\n  var words = txt.toLowerCase();\r\n    if(words&&words.indexOf(word)!==-1) {\r\n        emit(word,doc);\r\n    }\r\n}"
+    },
+    "countMembers": {
+      "map": "function(doc) {\r\n    for(var word in doc.aboveparents) {\r\n        emit(doc.aboveparents[word],1);\r\n    }\r\n}",
+      "reduce": "_count"
+    },
+    "countMembersByPackageValue": {
+      "reduce": "_count",
+      "map": "function(doc) {\r\n    for(var word in doc.aboveparents) {\r\n      emit([doc.aboveparents[word],doc.packagevalue],1);\r\n    }\r\n}"
+    },
+    "countMembersByPackageValueMonthYear": {
+      "reduce": "_count",
+      "map": "function(doc) {\r\n  var d = new Date(doc.createddate);\r\n  if (d != null) {\r\n    var my = [d.getFullYear(),\r\n    d.getMonth()];\r\n    for(var word in doc.aboveparents) {\r\n      emit([doc.aboveparents[word],doc.packagevalue,my],1);\r\n    }\r\n  }\r\n}"
     },
     "findByEmail": {
       "map": "function(doc) {\r\n    if(doc.email) {\r\n        emit(doc.email,doc);\r\n    }\r\n}"
@@ -604,8 +637,6 @@ function fetchTest(){
 
 
 
-
-
 function init_db(dbname,design){
   // create a new database
   var db;
@@ -619,13 +650,12 @@ function init_db(dbname,design){
           else{
             if(res){
               var d=res;
-              console.log(d._rev);
+              //console.log("d:"+JSON.stringify(d));
               db.destroy('_design/objectList',d._rev,function(err,res){
                 if(err) console.log(err);
                 else{
-                  console.log(res);
-                  delete d._rev;
-                  db.insert(d,"_design/objectList",function(err,res){
+                  //console.log(res);
+                  db.insert(design,"_design/objectList",function(err,res){
                     if(err) console.log('err insert new design '+dbname);
                     else{
                       console.log('insert completed '+dbname);
@@ -685,31 +715,32 @@ function set_client(js){
       payment:"",
       userbinary:"",
     };
-    client.message:"ERROR, OK, GOOD, SUCCESS";
+    client.data.message:"ERROR, OK, GOOD, SUCCESS";
   */
   var keyword="Authen";
   console.log("client.clientuid"+js.client.clientuid)
   
-  if(js.client.clientuid==""){
+  if(js.client.clientuid==""||js.client.logintoken==""){
     js.client.clientuid="";
     keyword="NOBODY";
     throw new Error("Client not init, please check");
   } 
 
-  r_client.getAsync(keyword+js.client.clientuid).then(function(res) {
-    console.log("res"+JSON.stringify(res));
+  r_client.getAsync(keyword+js.client.clientuid+js.client.logintoken).then(function(res) {
+    //console.log("res"+JSON.stringify(res));
     if(res){
-      r_client.del(keyword+js.client.clientuid);
+      r_client.del(keyword+js.client.clientuid+js.client.logintoken);
       js.client.clientuid=uuidV4();
       //client.logintoken=uuidV4();
     }
     delete js.client.data;
-    r_client.setAsync(keyword+js.client.clientuid, JSON.stringify(js.client)).then(function(res) {      
+    //js.client.clientuid=uuidV4();
+    js.client.logintoken=uuidV4();
+    r_client.setAsync(keyword+js.client.clientuid+js.client.logintoken, JSON.stringify(js.client),'EX',15*60).then(function(res) {      
       if(js.resp&&res){
         __cur_client=js.client;
         js.resp.send(res);     
-      }
-        
+      }   
     });
   }).catch(function(err){
     js.resp.send(err);
@@ -722,7 +753,7 @@ function change_password(js){
     //delete js.client.data.user.password1;
     delete js.client.data.user.password2;
     changePassword(js).then(function(body){
-      js.client.message=body;
+      js.client.data.message=body;
       js.resp.send(js.client);
     }).catch(function(err){
       if(err)
@@ -853,10 +884,10 @@ function authentication_path(path){
 
 function logout(js,resp){
   var keyword="Authen";
-  r_client.getAsync(keyword+js.client.clientuid).then(function(res) {
+  r_client.getAsync(keyword+js.client.clientuid+js.client.logintoken).then(function(res) {
     //console.log("res"+JSON.stringify(res));
     if(res){
-      r_client.del(keyword+js.client.clientuid,function(err,res){
+      r_client.del(keyword+js.client.clientuid+js.client.logintoken,function(err,res){
         js.client.logintoken="";
         js.client.logintime="";
         js.client.username="";
@@ -875,13 +906,13 @@ function heartbeat(js){
   // UPDATE HEARTBEAT
   if(js.client.logintoken==__cur_client.logintoken){
     
-    check_authentication(js.client.data).then(function(body){
+    r_client.getAsync(keyword+js.client.clientuid+js.client.logintoken).then(function(body){
     if(body.user.username==__cur_client.username){
 
       js.client.data={};
       js.client.username=body.user.username;
       //js.client.logintime=convertTZ(new Date());
-      js.client.logintoken=uuidV4();
+      //js.client.logintoken=uuidV4();
       js.client.lastaccess=convertTZ(new Date());
       //set_client(client,resp);
       set_client(js);
@@ -889,7 +920,7 @@ function heartbeat(js){
     }
     else{
       js.client.data={}; 
-      js.client.message="NO this Username and password";
+      js.client.data.message="NO this Username and password";
       js.resp.send(js.client);
     }
     }).catch(function(err){
@@ -912,6 +943,7 @@ init_db('mainbalance',__design_balance);
 init_db('topupbalance',__design_balance);
 init_db('bonustopupbalance',__design_balance);
 init_db('packagedetails',__design_packagedetails);
+init_db('bonusTopupBalanceReport',__design_balance);
 //init_db("system",__desing_system); 
 init_db('user',__design_user);
 init_db('package',__design_package);
@@ -1093,6 +1125,9 @@ function login(js){
   check_authentication(js.client.data).then(function(body){
     // console.log("body:"+JSON.stringify(body));
     // console.log("client.data:"+JSON.stringify(client.data));
+
+    // encrypt password and compare here 
+
     if(body.user.username==js.client.data.user.username&&body.user.password==js.client.data.user.password){
       js.client.data={};
       js.client.username=body.user.username;
@@ -1111,7 +1146,7 @@ function login(js){
       js.client.data={}; 
       js.client.lastaccess=convertTZ(new Date());
       set_client(js);
-      js.client.message="NO this Username and password";
+      js.client.data.message="NO this Username and password";
       js.resp.send(js.client);
     }
   }).catch(function(err){
@@ -1147,35 +1182,23 @@ function check_authentication(js){
     return deferred.promise;
 }
 function get_balance(js){
-     var __doc={
-      username:"",
-      usergui:"",
-      gui:"",
-      balance:0,
-      updated:convertTZ(new Date()),
-      diffbalance:0
-    };    
-    var db=create_db("balance");    
-    findBalanceByUsername(js.client.data,js.client.data.page,js.client.data.maxpage).then(function(arr){      
-        js.resp.send(arr);
+    var db=create_db("bonusBalance");    
+    countBonusBalanceByUsername(js.client).then(function(res){      
+      var count=res;
+      findBonusBalanceByUsername(js.client,js.client.data.page,js.client.data.maxpage).then(function(arr){   
+        js.client.data.balance={arr:arr,count:count};
+        js.resp.send(js.client);
+      }).catch(function(err){
+        js.resp.send(JSON.stringify(err));
+      }).done();
     }).catch(function(err){
       js.resp.send(JSON.stringify(err));
     }).done();
-
 }
-function get_count_balance(js){
-  var db=create_db("balance");
-  
-  countBalanceByUsername(js.client.data).then(function(arr){      
-      js.resp.send(arr);
-  }).catch(function(err){
-    js.resp.send(JSON.stringify(err));
-  }).done();
-}
-function countBalanceByUsername(js){
+function countBonusBalanceByUsername(user){
   var deferred=Q.defer();
   js.db.view(__design_view,"findCount",{
-      key: js.user.username,
+      key: user.username,
     },function(err,body){
       if (err) {
       deferred.reject(new Error(err));
@@ -1193,10 +1216,10 @@ function countBalanceByUsername(js){
     });
     return deferred.promise;
 }
-function findBalanceByUsername(js,page,maxpage){
+function findBonusBalanceByUsername(js,page,maxpage){
   var deferred=Q.defer();
   js.db.view(__design_view,"findByUsername",{
-      key: js.user.username,
+      key: user.username,
       include_docs: true,
       descending:true,
       limit:maxpage,
@@ -1479,6 +1502,32 @@ function addBinaryTree(js,parent){
 
   return deferred.promise;
 }
+function check_available_user(js){
+
+  findByUserName(js.client.data).then(function(body){
+    if(body[0].username==js.client.data.user.username){
+      js.client.data.message="you can't use this user name";
+      js.resp.send(js.client);
+    }
+    else{
+      js.client.data.message="this user is OK";      
+      js.resp.send(js.client);
+    }
+  }).done();
+}
+function validate_username_password(js){
+
+}
+function validate_phone1(js){
+
+}
+function check_sponser_code(js){
+
+}
+function check_fund(js){
+
+}
+
 function register(register/*,needbalance*/,resp){//needbalance={main:0.5,bunus:0.5}
   var __doc={
     username:"",// show *
@@ -1780,7 +1829,7 @@ function completeRegistration(js,parent,package,introductor,client,isfree,maxpro
               var db=create_db("bonusBalance");
               var now=convertTZ(new Date());
               var nowArr=[now.getFullYear(),(now.getMonth()+1),now.getDate()];
-              db.view(__design_view,"findBalanceByDateAndUser",{
+              db.view(__design_view,"findBalanceByUserAndDate",{
                 key:[nowArr,qp.username],// create a funtion today value only
                 include_docs:true,
               },function(err,res){
@@ -1963,7 +2012,7 @@ function findByUserName(js){
           body.rows.forEach(function(element) {
             arr.push(element.value);
           }, this);
-          js.body=arr;
+          //js.body=arr;
           deferred.resolve(arr);
         }
       }
@@ -2319,7 +2368,14 @@ function getUserBinaryByUser(user){
         if(res.rows.length){
           var arr=[];
           res.rows.forEach(function(element) {
-            arr.push(element.value);
+            e={};
+            e.username=element.value.username;
+            e.packagevalue=element.value.packagevalue;
+            e.packagegui=element.value.packagegui;
+            e.leftside=element.value.leftside;
+            e.rightside=element.value.rightside;
+            e.gui=element.value.gui;
+            arr.push(e);
           }, this);
           deferred.resolve(arr);
         }
@@ -2365,9 +2421,9 @@ function getCountCouplingScoreByUser(user){
   });
   return deferred.promise;
 }
-function get_coupling_score(js,page,maxpage){
+function get_coupling_score(js){
   js.db=create_db('couplingscore');
-  getCouplingScoreByUser(js.user,page,maxpage).then(function(body){
+  getCouplingScoreByUser(js.client,js.client.data.page,js.client.data.maxpage).then(function(body){
     if(body)
       js.resp.send(body);
   }).catch(function(err){
@@ -2583,29 +2639,29 @@ function findQualifiedParents(js,pArr){
 // - ລົງທະບຽນ ==> OK
 
 // - ອັບເກດ
-function upgradePackage(user,package,resp,client){
+function upgradePackage(js){
   var db=create_db("user");
   //find user if exist
-  db.view(__design_view,"findByUsername",function(err,res){
+  db.view(__design_view,"findByUsername",{key:js.client.data.user.username},function(err,res){
     if(err)
-      resp.send(err);
+      js.resp.send(err);
     else{
       if(res.rows.length){
         db=create_db("packagedetails");
         u=res.rows[0].value;
         //find if user has a registeration of package
-        db.view(__design_view,"findActiveByUserGUI",{key:user.gui,descending:true},function(err,res){
+        db.view(__design_view,"findActiveByUserGUI",{key:js.client.data.user.username,descending:true},function(err,res){
           if(err){
-            client.data.message=JSON.stringify(err);
-            resp.send(client);
+            js.client.data.message=JSON.stringify(err);
+            js.resp.send(js.client);
           }
           else{
             if(res.rows.length){
               var d=res.rows[0].value;
               var __doc={
                 gui:uuidV4(),
-                userui:user.username,
-                packageui:package.gui,
+                userui:js.client.data.user.username,
+                packageui:js.client.data.package.gui,
                 registerdate:convertTZ(new Date()),
                 updateddate:convertTZ(new Date()),
                 isactive:true,
@@ -2615,25 +2671,25 @@ function upgradePackage(user,package,resp,client){
               d.notactivedate=convertTZ(new Date());
               d.isactive=false;
               db.insert(d,d.gui,function(err,res){
-                if(err) resp.send(err);
+                if(err) js.resp.send(err);
                 else{
                   db.insert(__doc,__doc.gui,function(err,res){
                     if(err){
-                      client.data.message=JSON.stringify(err);
-                      resp.send(client);
+                      js.client.data.message=JSON.stringify(err);
+                      js.resp.send(js.client);
                     } 
                     else{
-                      u.packageValue=package.packageValue;
-                      u.packagegui=package.gui;
-                      u.packagename=package.packagename;
+                      u.packagevalue=js.client.data.package.packagevalue;
+                      u.packagegui=js.client.data.package.gui;
+                      u.packagename=js.client.data.package.packagename;
                       updateUser(u).then(function(body){
                         if(body){
-                          client.data.message="Upgrade package was completed";
-                          resp.send(client);
+                          js.client.data.message="Upgrade package was completed";
+                          js.resp.send(js.client);
                         }
                       }).catch(function(err){
-                        client.data.message=JSON.stringify(err);
-                        resp.send(client);
+                        js.client.data.message=JSON.stringify(err);
+                        js.resp.send(js.client);
                       });                      
                     }
                   });
@@ -2644,8 +2700,8 @@ function upgradePackage(user,package,resp,client){
             else{
               var __doc={
                 gui:uuidV4(),
-                userui:user.username,
-                packageui:package.gui,
+                userui:js.client.data.user.username,
+                packageui:js.client.data.package.gui,
                 registerdate:convertTZ(new Date()),
                 updateddate:convertTZ(new Date()),
                 isactive:true,
@@ -2653,12 +2709,12 @@ function upgradePackage(user,package,resp,client){
                 };
               db.insert(__doc,__doc.gui,function(err,res){
                 if(err) {
-                  client.data.message=JSON.stringify(err);
-                  resp.send(client);
+                  js.client.data.message=JSON.stringify(err);
+                  js.resp.send(client);
                 }
                 else{
-                  client.data.message="Upgrade package was completed";
-                  resp.send(client);
+                  js.client.data.message="Upgrade package was completed";
+                  js.resp.send(js.client);
                 }
               });
             }                    
@@ -2718,36 +2774,28 @@ function showBonusBalance(user,client,resp,page,maxpage){
   });  
 }
 
-function checkMainBalance(user,package,client){
-  var __balance_doc={
-    username:"",
-    usergui:"",
-    gui:uuidV4(),
-    balance:0,
-    updated:convertTZ(new Date()),
-    diffbalance:0
-  };
+function checkMainBalance(js){
   var db=create_db("mainBalance");
-  db.view(__design_view,"findCount",{key:user.username,reduce:true},function(err,res){
-    if(err) resp.send(err);
+  db.view(__design_view,"findCount",{key:js.client.username,reduce:true},function(err,res){
+    if(err) js.resp.send(err);
     else{
       if(res.rows.length){
         var count=res.rows[0].value;
-        db.view(__design_view,"findByUsername",{key:user.username,descending:true,limi:1},function(err,res){
-          if(err) resp.send(err);
+        db.view(__design_view,"findByUsername",{key:js.client.username,descending:true,limi:1},function(err,res){
+          if(err) js.resp.send(err);
           else{
             if(res.rows.length){
               var arr=[];
               for(i=0;l=rows.length,i<l;i++){
                 arr.push(res.rows[i].value);          
               }
-              if(arr.balance>package.packagevalue)
-                client.data.message="insufficient funds";
+              if(arr[0].balance>js.client.data.package.packagevalue)
+                js.client.data.message="insufficient funds";
               else{
-                client.data.balance={arr:arr,count:count};
-                client.data.message="OK";
+                js.client.data.balance={arr:arr,count:count};
+                js.client.data.message="OK";
               }                
-              resp.send(client);  
+              js.resp.send(js.client);  
             }
           }
         });
@@ -2756,32 +2804,24 @@ function checkMainBalance(user,package,client){
   });
 }
 
-function showMainBalance(user,client){
-  var __balance_doc={
-    username:"",
-    usergui:"",
-    gui:uuidV4(),
-    balance:0,
-    updated:convertTZ(new Date()),
-    diffbalance:0
-  };
+function showMainBalance(js){
   var db=create_db("mainBalance");
-  db.view(__design_view,"findCount",{key:user.username,reduce:true},function(err,res){
-    if(err) resp.send(err);
+  db.view(__design_view,"findCount",{key:js.client.username,reduce:true},function(err,res){
+    if(err) js.resp.send(err);
     else{
       if(res.rows.length){
         var count=res.rows[0].value;
-        db.view(__design_view,"findByUsername",{key:user.username,descending:true,limit:maxpage,skip:page},function(err,res){
-          if(err) resp.send(err);
+        db.view(__design_view,"findByUsername",{key:js.client.username,descending:true,limit:js.client.data.maxpage,skip:js.client.data.page},function(err,res){
+          if(err) js.resp.send(err);
           else{
             if(res.rows.length){
               var arr=[];
               for(i=0;l=rows.length,i<l;i++){
                 arr.push(res.rows[i].value);          
               }
-              client.data.balance={arr:arr,count:count};
-              client.data.message="OK";
-              resp.send(client);  
+              js.client.data.balance={arr:arr,count:count};
+              js.client.data.message="OK";
+              js.resp.send(js.client);  
             }
           }
         });
@@ -2789,32 +2829,25 @@ function showMainBalance(user,client){
     }
   });
 }
-function showTopupBalance(user,client){
-  var __balance_doc={
-    username:"",
-    usergui:"",
-    gui:uuidV4(),
-    balance:0,
-    updated:convertTZ(new Date()),
-    diffbalance:0
-  };
+
+function showTopupBalance(js){
   var db=create_db("topupBalance");
-  db.view(__design_view,"findCount",{key:user.username,reduce:true},function(err,res){
-    if(err) resp.send(err);
+  db.view(__design_view,"findCount",{key:js.client.username,reduce:true},function(err,res){
+    if(err) js.resp.send(err);
     else{
       if(res.rows.length){
         var count=res.rows[0].value;
-        db.view(__design_view,"findByUsername",{key:user.username,descending:true,limit:maxpage,skip:page},function(err,res){
-          if(err) resp.send(err);
+        db.view(__design_view,"findByUsername",{key:js.client.username,descending:true,limit:js.client.data.maxpage,skip:js.client.data.page},function(err,res){
+          if(err) js.resp.send(err);
           else{
             if(res.rows.length){
               var arr=[];
               for(i=0;l=rows.length,i<l;i++){
                 arr.push(res.rows[i].value);          
               }
-              client.data.balance={arr:arr,count:count};
-              client.data.message="OK";
-              resp.send(client);  
+              js.client.data.balance={arr:arr,count:count};
+              js.client.data.message="OK";
+              js.resp.send(js.client);  
             }
           }
         });
@@ -2822,32 +2855,229 @@ function showTopupBalance(user,client){
     }
   });
 }
-function showBonusTopupBalance(user,client){
-  var __balance_doc={
-    username:"",
-    usergui:"",
+function get_member_count_by_month_year(js){
+  getMemberCountByPackage(js.client.data.user,js.client.data.package).then(function(body){
+    if(body){
+      js.client.data.user.count=body;
+      js.resp.send(js.client);
+    }
+  }).catch(function(err){
+    js.client.data.message=err;
+    js.resp.send(js.client);
+  }).done();
+}
+function getMemberCountByPackageMonthYear(user,package,month,year){
+  var deferred=Q.defer();
+  var db=create_db("user");
+  db.view(__design_view,"findByUsername",{key:user.username,limit:1},function(err,res){
+    if(err) deferred.reject(err);
+    else if(res.rows.length){
+      db.view(__design_view,"countMembersByPackageValueMonthYear",{key:[user.username,package.packagevalue,[year,month]]},function(err,res){
+        if(err)
+          deferred.reject(err);
+        else{
+          if(res.rows[0].value.packagevalue==package.packagevalue&&user.ismember)
+            deferred.resolve(res.rows[0].value+1);
+          else
+            deferred.resolve(res.rows[0].value);
+        }
+      });
+    }else{
+      deferred.resolve(0);
+    }
+  });
+  return deferred.promise;
+}
+function get_total_member_by_package(js){
+  getMemberCountByPackage(js.client.data.user,js.client.data.package).then(function(body){
+    if(body){
+      js.client.data.user.count=body;
+      js.resp.send(js.client);
+    }
+  }).catch(function(err){
+    js.client.data.message=err;
+    js.resp.send(js.client);
+  }).done();
+}
+function getMemberCountByPackage(user,package){
+  var deferred=Q.defer();
+  var db=create_db("user");
+  db.view(__design_view,"findByUsername",{key:user.username,limit:1},function(err,res){
+    if(err) deferred.reject(err);
+    else if(res.rows.length){
+      db.view(__design_view,"countMembersByPackageValue",{key:[user.username,package.packagevalue]},function(err,res){
+        if(err)
+          deferred.reject(err);
+        else{
+          if(res.rows[0].value.packagevalue==package.packagevalue&&user.ismember)
+            deferred.resolve(res.rows[0].value+1);
+          else
+            deferred.resolve(res.rows[0].value);
+        }
+      });
+    }else{
+      deferred.resolve(0);
+    }
+  });
+  return deferred.promise;
+}
+function get_total_member(js){
+  getMemberCount(js.client.data.user).then(function(body){
+    if(body){
+      js.client.data.user.count=body;
+      js.resp.send(js.client);
+    }
+  }).catch(function(err){
+    js.client.data.message=err;
+    js.resp.send(js.client);
+  }).done();
+}
+function getMemberCount(user){
+  var deferred=Q.defer();
+  var db=create_db("user");
+  db.view(__design_view,"findByUsername",{key:user.username,limit:1},function(err,res){
+    if(err) deferred.reject(err);
+    else if(res.rows.length){
+      db.view(__design_view,"countMembers",{key:user.username},function(err,res){
+        if(err)
+          deferred.reject(err);
+        else{
+          if(user.ismember)
+            deferred.resolve(res.rows[0].value+1);
+          else
+            deferred.resolve(res.rows[0].value);
+        }
+      });
+    }
+    else{
+      deferred.resolve(0);
+    }
+  });
+  return deferred.promise;
+}
+
+function get_bonus_topup_balance_report(js){
+  showBonusTopupBalanceReport(js.client.user,js.client.data.my).then(function(body){
+    js.client.data.bonustopupbalancereport=body;
+    js.resp.send(js.client);
+  }).catch(function(err){
+    js.client.data.message=err;
+    js.resp.send(js.client);
+  }).done();
+}
+function showBonusTopupBalanceReport(user,my){
+  var deferred=Q.defer();
+  var db=create_db("bonusTopupBalanceReport");
+  db.view(__design_view,"findByUsernameAndMonthYear",
+  {key:[js.client.username,convertTZ(new Date())],descending:true},
+  function(err,res){
+    if(err) deferred.reject(err);
+    else if(res.rows.length){
+
+    }
+    else{
+      deferred.resolve({message:"not found"});
+    }
+  });
+
+
+  return deferred.promise;
+}
+
+function processBonusTopupBalance(js){
+  // Month # accumulating value # level1 # level2 # level3 # total bonus
+  // TODO:
+  var __doc={
+    username:js.client.data.user.username,
+    createddate:new Date(),
+    updateddate:new Date(),
     gui:uuidV4(),
-    balance:0,
-    updated:convertTZ(new Date()),
-    diffbalance:0
+    month:convertTZ(new Date()).getMonth(),
+    year:convertTZ(new Date()).getFullYear(),
+    accumulatingvalue:0,
+    level1:0,
+    level2:0,
+    level3:0,
+    sum:0,
+    ispaid:false,   
+    gui:uuidV4() 
   };
+  var db=create_db("bonusTopupBalanceReport");
+  db.view(__design_view,"findByUsernameAndMonth",{key:[js.client.username,convertTZ(new Date())],descending:true,limit:1},function(err,res){
+    if(err) js.resp.send(err);
+    else{
+      if(res.rows.length){
+        var arr=[];
+        for(i=0;l=rows.length,i<l;i++){
+          arr.push(res.rows[i].value);          
+        }        
+        __doc._rev=arr[0]._rev;
+        //????????????????
+        js.client.data.message="updated a topupbalancereport";
+        js.resp.send(js.client);
+
+      }else{
+        db.insert(__doc,__doc.gui,function(err,res){
+          if(err)
+            js.resp.send(err);
+          else{
+            js.client.data.message="insert a new topupbalancereport";
+            js.resp.send(js.client);
+          }
+        });
+      }
+    }
+  });
+
+}
+function showBonusTopupBalance(js){
+  
   var db=create_db("bonusTopupBalance");
-  db.view(__design_view,"findCount",{key:user.username,reduce:true},function(err,res){
-    if(err) resp.send(err);
+  // find an accumulating topup bonus of current month
+  // Month # accumulating value # level1 # level2 # level3 # total bonus
+  db.view(__design_view,"findCountByUserAndMonth",{key:[js.client.username,convertTZ(new Date())],reduce:true},function(err,res){
+    if(err) js.resp.send(err);
     else{
       if(res.rows.length){
         var count=res.rows[0].value;
-        db.view(__design_view,"findByUsername",{key:user.username,descending:true,limit:maxpage,skip:page},function(err,res){
-          if(err) resp.send(err);
+        db.view(__design_view,"findByUsernameAndMonth",{key:[js.client.username,convertTZ(new Date())],descending:true,limit:js.client.data.maxpage,skip:js.client.data.page},function(err,res){
+          if(err) js.resp.send(err);
           else{
             if(res.rows.length){
               var arr=[];
               for(i=0;l=rows.length,i<l;i++){
                 arr.push(res.rows[i].value);          
               }
-              client.data.balance={arr:arr,count:count};
-              client.data.message="OK";
-              resp.send(client);  
+              js.client.data.balance={arr:arr,count:count};
+              js.client.data.message="OK";
+              js.client.resp.send(js.client);  
+            }
+          }
+        });
+      }
+    }
+  });
+}
+function showBonusTopupBalanceHistory(js){
+  var db=create_db("bonusTopupBalance");
+  // find an accumulating topup bonus of current month
+  // 
+  db.view(__design_view,"findCount",{key:js.client.username,reduce:true},function(err,res){
+    if(err) js.resp.send(err);
+    else{
+      if(res.rows.length){
+        var count=res.rows[0].value;
+        db.view(__design_view,"findByUsername",{key:js.client.username,descending:true,limit:js.client.data.maxpage,skip:js.client.data.page},function(err,res){
+          if(err) js.resp.send(err);
+          else{
+            if(res.rows.length){
+              var arr=[];
+              for(i=0;l=rows.length,i<l;i++){
+                arr.push(res.rows[i].value);          
+              }
+              js.client.data.balance={arr:arr,count:count};
+              js.client.data.message="OK";
+              js.client.resp.send(js.client);  
             }
           }
         });

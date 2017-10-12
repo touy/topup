@@ -1142,6 +1142,27 @@ function addTheBestFriendByMonthYear(user,month,year){
   
   return deferred.promise;
 }
+function addTheBestFriendLog(user,introd,month,year){
+  var deferred=Q.defer();
+  var db=create_db('introductions');
+    var introdlog={
+      gui:uuidV4(),
+      username:user.username,
+      introductor:introd,
+      month:0,
+      year:0,
+      createddate:convertTZ(new Date())
+    };
+    db.insert(introd,introd.gui,
+    function(err,res){
+      if(err) deferred.reject(err);
+      else{
+        deferred.resolve('OK');
+      }
+    });  
+  return deferred.promise;
+
+}
 function findCountTheBestFriendByMonthYear(month,year){
   var deferred=Q.defer();
   var db=create_db('introductions');
@@ -1191,23 +1212,130 @@ function showTheBestFriendByMonthYear(js){ // get from the most introduction by 
     js.resp.send(js.client);
   }).done();  
 }
+//
 
-//RESET 
 
 //for a certain user
 app.post('/show_latest_members',function(req,res){//js.client.data.user , js.client.data.package
   var js={};
   js.client=req.body;
   js.resp=res;
-  showLatestMembers(js);//{month:0,year:0,package1:0,package2:0,package3:0}
+  showLatestMembers(js).then(
+    function(body){
+      js.client.data.latestmember=body;
+      js.resp.send(client);
+  }).catch(
+    function(err){
+      js.client.data.message=err;
+      js.resp.send(client);
+    }).done();//{month:0,year:0,package1:0,package2:0,package3:0}
 });
+function countLatestMember(user,month,year){
+  var deferred=Q.defer();
+  var db=create_db('introductionslog');
+    db.view(__design_view,'findCountByIntroductorMonthYear',{key:[user.username,month,year]},
+    function(err,res){
+      if(err) deferred.reject(err);
+      else{
+        var arr=[];
+        if(res.rows.length){
+          for (var index = 0; index < res.rows.length; index++) {
+            arr.push(res.rows[index].value);
+          }
+        }
+        deferred.resolve(arr);
+      }
+    });  
+  return deferred.promise;
+}
+function showLatestMembers(js){
+  var deferred=Q.defer();
+  var db=create_db('introductionslog');
+  countLatestMember(js.client,js.client.data.month,js.client.data.year).then(function(body){
+    var count=body[0];
+    db.view(__design_view,'findByIntroductorMonthYear',{key:[js.client.username,js.client.data.month,js.client.data.year],decending:true,skip:js.client.data.page,limit:js.client.data.maxpage},
+    function(err,res){
+      if(err) deferred.reject(err);
+      else{
+        var arr=[];
+        if(res.rows.length){
+          for (var index = 0; index < res.rows.length; index++) {
+            arr.push(res.rows[index].value);
+          }
+        }
+        deferred.resolve({arr:arr,count:count});
+      }
+    }); 
+  }).catch(function(err){
+    deferred.reject(err);
+  }).done();
+     
+  return deferred.promise;
+
+}
 // for admin
 app.post('/show_latest_members_list',function(req,res){//js.client.data.user , js.client.data.package
   var js={};
   js.client=req.body;
   js.resp=res;
-  showLatestMembersList(js);//{month:0,year:0,user:"",package1:0,package2:0,package3:0}
+  showLatestMembersList(js).then(
+    function(body){
+      js.client.data.latestmember=body;
+      js.resp.send(client);
+  }).catch(
+    function(err){
+      js.client.data.message=err;
+      js.resp.send(client);
+    }).done();//{month:0,year:0,package1:0,package2:0,package3:0}
 });
+function countLatestMemberList(month,year){
+  var deferred=Q.defer();
+  var db=create_db('introductionslog');
+    db.view(__design_view,'findCountByIntroductorMonthYear',{key:[month,year]},
+    function(err,res){
+      if(err) deferred.reject(err);
+      else{
+        var arr=[];
+        if(res.rows.length){
+          for (var index = 0; index < res.rows.length; index++) {
+            arr.push(res.rows[index].value);
+          }
+        }
+        deferred.resolve(arr);
+      }
+    });  
+  return deferred.promise;
+}
+function showLatestMembersList(js){
+  var deferred=Q.defer();
+  var db=create_db('introductionslog');
+  countLatestMemberList(js.client,js.client.data.month,js.client.data.year).then(function(body){
+    var count=body[0];
+    db.view(__design_view,'findByMonthYear',{key:[js.client.data.month,js.client.data.year],decending:true,skip:js.client.data.page,limit:js.client.data.maxpage},
+    function(err,res){
+      if(err) deferred.reject(err);
+      else{
+        var arr=[];
+        if(res.rows.length){
+          for (var index = 0; index < res.rows.length; index++) {
+            arr.push(res.rows[index].value);
+          }
+        }
+        deferred.resolve({arr:arr,count:count});
+      }
+    }); 
+  }).catch(function(err){
+    deferred.reject(err);
+  }).done();
+     
+  return deferred.promise;
+
+}
+
+
+//RESET bonus topup monthly.
+
+
 
 
 app.get('/default_master',function(req,res){
@@ -1741,7 +1869,7 @@ var __design_operatorbalance={
   },
   "language": "javascript"
 };
-var __design_introduction={
+var __design_introductionslog={
   "_id": "_design/objectList",
   "views": {
     "findAll": {
@@ -1761,9 +1889,39 @@ var __design_introduction={
     },
     "findByMonthYear": {
       //"map": "function (doc) {\n  emit(['by_count',doc.month,doc.year], doc);\n}"
+      "map": "function (doc) {\n  emit([doc.month,doc.year], doc);\n}"
+    },
+    "findByIntroductorMonthYear": {
+      "map": "function (doc) {\n  emit([doc.introductor,doc.month,doc.year], doc);\n}"
+    },
+    "findCountByIntroductorMonthYear": {
+      "reduce": "_count",
+      "map": "function (doc) {\n  emit([doc.introductor,doc.month,doc.year],1);\n}"
+    },
       
-      
-
+  },
+  "language": "javascript"
+};
+var __design_introductions={
+  "_id": "_design/objectList",
+  "views": {
+    "findAll": {
+      "map": "function (doc) {\n  emit(null,doc);\n}"
+    },
+    "findCount": {
+      "reduce": "_count",
+      "map": "function (doc) {\n  emit(1);\n}"
+    },
+    "findExist": {
+      "reduce": "_count",
+      "map": "function (doc) {\n  emit(doc.gui,1);\n}"
+    },
+    "findCountByMonthYear": {
+      "reduce": "_count",
+      "map": "function (doc) {\n  emit([doc.month,doc.year],1);\n}"
+    },
+    "findByMonthYear": {
+      //"map": "function (doc) {\n  emit(['by_count',doc.month,doc.year], doc);\n}"
       "map": "function (doc) {\n  emit([doc.month,doc.year,doc.count], doc);\n}"
     },
     "findByUsernameMonthYear": {
@@ -2135,7 +2293,8 @@ function heartbeat(js){
 // }
 /** */
 init_redis();
-init_db('introductions',__design_introductions);
+init_db('introductions',__design_introduction);
+init_db('introductionslog',__design_introductionslog);
 init_db('bonusbalance',__design_balance);
 init_db('couplingscore',__design_coupling_score);
 init_db('topupfailure',__design_topupfailure);
@@ -3036,70 +3195,39 @@ function completeRegistration(js,parent,package,introductor,client,isfree,maxpro
   js.db=create_db("user");
   // add a new user
   // add new binary tree 
-  
-  addNewUser(js,parent,package,introductor,client).then(function(body){
 
-    js.user.firstbalance=firstbalance;// 125.000 top-up new user added
-    js.balance={
-      username:js.user.username,
-      usergui:js.user.gui,
-      gui:uuidV4(),
-      balance:0,
-      updated:convertTZ(new Date()),
-      diffbalance:0,
-      type:"none"
-    };
-    
-    //js.balance.balance+=js.balance.diffbalance;
-    //var js={db:create_db('balance'),balance:balance};
-    js.db=create_db('bonusBalance');                                                     
-    // add top up value for a new user 125.000 --- OK
-    addMainBalanceByUser(js,js.user).then(function(body){
-      console.log(body);
-      var __doc={
-        usergui:js.user.gui,
-        username:js.user.username,
-        paymentdate:Date(),
-        paymentvalue:js.user.firstbalance,
-        paymentby:__master_user.username,
-        paidbygui:__master_user.gui,
-        payreason:"system first balance",
-        bankinfo:'',
-        targetuser:js.user.username,
-        status:"approved",
-        attache:"",
-        description:"",
-        receiveddate:Date(),
-        certifieddate:Date(),
-        approveddate:Date(),
-        gui:uuidV4()
-        };
-      makePayment(__doc);
-      //// insert  to introductor 250.000 ---OK
+  addNewUser(js,parent,package,introductor,client).then(function(body){
+    var month=convertTZ(new Date()).getMonth()+1;
+    var year=convertTZ(new Date()).getFullYear();
+    addTheBestFriendByMonthYear(introductor,month,year).then(function(boy){
+      addTheBestFriendLog(js.user,introductor,month,year).then(function(body){
+      js.user.firstbalance=firstbalance;// 125.000 top-up new user added
       js.balance={
-        username:introductor.username,
-        usergui:introductor.gui,
+        username:js.user.username,
+        usergui:js.user.gui,
         gui:uuidV4(),
         balance:0,
         updated:convertTZ(new Date()),
-        diffbalance:introductionvalue,
-        type:"intro"
+        diffbalance:0,
+        type:"none"
       };
-      js.balance.balance+=js.balance.diffbalance;
-      js.introductor=introductor;
-
-      addMainBalanceByUser(js,introductor).then(function(body){
-        console.log(body); 
+  
+      //js.balance.balance+=js.balance.diffbalance;
+      //var js={db:create_db('balance'),balance:balance};
+      js.db=create_db('bonusBalance');                                                     
+      // add top up value for a new user 125.000 --- OK
+      addMainBalanceByUser(js,js.user).then(function(body){
+        console.log(body);
         var __doc={
-          usergui:introductor.gui,
-          username:introductor.username,
+          usergui:js.user.gui,
+          username:js.user.username,
           paymentdate:Date(),
-          paymentvalue:introductionvalue,
+          paymentvalue:js.user.firstbalance,
           paymentby:__master_user.username,
           paidbygui:__master_user.gui,
-          payreason:"system intro",
-          bankinfo:"",
-          targetuser:introductor.username,
+          payreason:"system first balance",
+          bankinfo:'',
+          targetuser:js.user.username,
           status:"approved",
           attache:"",
           description:"",
@@ -3109,32 +3237,31 @@ function completeRegistration(js,parent,package,introductor,client,isfree,maxpro
           gui:uuidV4()
           };
         makePayment(__doc);
-
+        //// insert  to introductor 250.000 ---OK
         js.balance={
-          username:js.topuser.username,
-          usergui:js.topuser.gui,
+          username:introductor.username,
+          usergui:introductor.gui,
           gui:uuidV4(),
           balance:0,
           updated:convertTZ(new Date()),
-          diffbalance:fee,
-          type:"fee"
+          diffbalance:introductionvalue,
+          type:"intro"
         };
         js.balance.balance+=js.balance.diffbalance;
-        addMainBalanceByUser(js,js.topuser).then(function(body){                                                                                                            
-          //// the rest money===> 1750000- 125000- 250.000- 107500 -100000 =1.167.500
-          // normally each parent get 100.000 max, but limit by max pay and total parent will get average value 
-          // by total number of parent.
-          //js.db=create_db("user");
+        js.introductor=introductor;
+
+        addMainBalanceByUser(js,introductor).then(function(body){
+          console.log(body); 
           var __doc={
-            usergui:js.topuser.gui,
-            username:js.topuser.username,
+            usergui:introductor.gui,
+            username:introductor.username,
             paymentdate:Date(),
-            paymentvalue:fee,
+            paymentvalue:introductionvalue,
             paymentby:__master_user.username,
             paidbygui:__master_user.gui,
-            payreason:"system fee",
+            payreason:"system intro",
             bankinfo:"",
-            targetuser:js.topuser.username,
+            targetuser:introductor.username,
             status:"approved",
             attache:"",
             description:"",
@@ -3145,169 +3272,131 @@ function completeRegistration(js,parent,package,introductor,client,isfree,maxpro
             };
           makePayment(__doc);
 
-          js.parent=parent;
-          js.theregistrabalance=theregistrabalance;
-          // get all above parent , 
-          
-          var totalparent=0;
-          js.db=create_db("user");
-          js.score=score;
-        ////return score to all parent 100.000 OK
-        addCouplingScore(js,parent).then(function(body){
-          //********************TODO */
-          var pArr=parent.aboveparents;
-          pArr.push(parent.username);
-          //pArr=pArr.reverse();
-          // find qualified above parents
-          //js.theregistrabalance
-          //TODO: qualifiedParents
-          // - balance >0 on couplingscore
-          js.db=create_db("user");
-          
-          searchForQualifiedParents(js,pArr).then(function(body){
-            var qp=body;
-            var averageValue=js.theregistrabalance/qp.length;
-            var theRestValue=0;
-            // pretend overppay  
-            if(averageValue>js.score){
-              theRestValue=(js.score-averageValue)*qp.length;//add to topuser
-              averageValue=js.score;//this value add to every above qualified parent
-              // TODO : NEED TO ADD TO TOPUSER here
-              js.balance={
-                username:js.topuser.username,
-                usergui:js.topuser.gui,
-                gui:uuidV4(),
-                balance:0,
-                updated:convertTZ(new Date()),
-                diffbalance:theRestValue,
-                type:"rest"
+          js.balance={
+            username:js.topuser.username,
+            usergui:js.topuser.gui,
+            gui:uuidV4(),
+            balance:0,
+            updated:convertTZ(new Date()),
+            diffbalance:fee,
+            type:"fee"
+          };
+          js.balance.balance+=js.balance.diffbalance;
+          addMainBalanceByUser(js,js.topuser).then(function(body){                                                                                                            
+            //// the rest money===> 1750000- 125000- 250.000- 107500 -100000 =1.167.500
+            // normally each parent get 100.000 max, but limit by max pay and total parent will get average value 
+            // by total number of parent.
+            //js.db=create_db("user");
+            var __doc={
+              usergui:js.topuser.gui,
+              username:js.topuser.username,
+              paymentdate:Date(),
+              paymentvalue:fee,
+              paymentby:__master_user.username,
+              paidbygui:__master_user.gui,
+              payreason:"system fee",
+              bankinfo:"",
+              targetuser:js.topuser.username,
+              status:"approved",
+              attache:"",
+              description:"",
+              receiveddate:Date(),
+              certifieddate:Date(),
+              approveddate:Date(),
+              gui:uuidV4()
               };
-              js.db=create_db("bonusBalance");
-              addMainBalanceByUser(js,js.topuser).then(function(body){                  
-                  if(body){
-                    console.log("rest value has been added to topup ");
-                    var __doc={
-                      usergui:js.topuser.gui,
-                      username:js.topuser.username,
-                      paymentdate:Date(),
-                      paymentvalue:theRestValue,
-                      paymentby:__master_user.username,
-                      paidbygui:__master_user.gui,
-                      attache:"",
-                      bankinfo:"",
-                      targetuser:js.topuser.username,
-                      status:"approved",
-                      payreason:"system rest",
-                      description:"",
-                      receiveddate:Date(),
-                      certifieddate:Date(),
-                      approveddate:Date(),
-                      gui:uuidV4()
-                      };
-                    makePayment(__doc);
-                  }
-              }); 
-            }
-              // - under limit of max paid per day
-            qp.forEach(function(element) {
-              var db=create_db("bonusBalance");
-              var now=convertTZ(new Date());
-              var nowArr=[now.getFullYear(),(now.getMonth()+1),now.getDate()];
-              db.view(__design_view,"findBalanceByUserAndDate",{
-                key:[nowArr,qp.username],// create a funtion today value only
-                include_docs:true,
-              },function(err,res){
-                if(err) throw new Error(err);
-                else{
-                  if(res.rows.length){
-                    var sum=0;
-                    for (var i = 0, len = res.rows.length; i < len; i++) {
-                      if(rews.rows[i].value.type=="score")// score, introduction, fee ,
-                      sum+=res.rows[i].value.balance;
-                    }
-                    if(sum>qp.maxpaid){ // ignore payment for this transaction
-                      // insert to topuser balance
-                      // update topuser
-                      js.balance={
-                        username:js.topuser.username,
+            makePayment(__doc);
+
+            js.parent=parent;
+            js.theregistrabalance=theregistrabalance;
+            // get all above parent , 
+            
+            var totalparent=0;
+            js.db=create_db("user");
+            js.score=score;
+          ////return score to all parent 100.000 OK
+          addCouplingScore(js,parent).then(function(body){
+            //********************TODO */
+            var pArr=parent.aboveparents;
+            pArr.push(parent.username);
+            //pArr=pArr.reverse();
+            // find qualified above parents
+            //js.theregistrabalance
+            //TODO: qualifiedParents
+            // - balance >0 on couplingscore
+            js.db=create_db("user");
+            
+            searchForQualifiedParents(js,pArr).then(function(body){
+              var qp=body;
+              var averageValue=js.theregistrabalance/qp.length;
+              var theRestValue=0;
+              // pretend overppay  
+              if(averageValue>js.score){
+                theRestValue=(js.score-averageValue)*qp.length;//add to topuser
+                averageValue=js.score;//this value add to every above qualified parent
+                // TODO : NEED TO ADD TO TOPUSER here
+                js.balance={
+                  username:js.topuser.username,
+                  usergui:js.topuser.gui,
+                  gui:uuidV4(),
+                  balance:0,
+                  updated:convertTZ(new Date()),
+                  diffbalance:theRestValue,
+                  type:"rest"
+                };
+                js.db=create_db("bonusBalance");
+                addMainBalanceByUser(js,js.topuser).then(function(body){                  
+                    if(body){
+                      console.log("rest value has been added to topup ");
+                      var __doc={
                         usergui:js.topuser.gui,
-                        gui:uuidV4(),
-                        balance:0,
-                        updated:convertTZ(new Date()),
-                        diffbalance:averageValue,
-                        type:"over-recieved"
-                      };
-                      addMainBalanceByUser(js,js.topuser).then(function(body){
-                        if(body){
-                          // insert to qp balance
-                          // update qp
-                          var __doc={
-                            usergui:js.topuser.gui,
-                            username:js.topuser.username,
-                            paymentdate:Date(),
-                            paymentvalue:averageValue,
-                            paymentby:__master_user.username,
-                            paidbygui:__master_user.gui,
-                            payreason:"system over-recieved",
-                            attache:"",
-                            bankinfo:"",
-                            targetuser:js.topuser.username,
-                            status:"approved",
-                            description:"",
-                            receiveddate:Date(),
-                            certifieddate:Date(),
-                            approveddate:Date(),
-                            gui:uuidV4()
-                            };
-                          makePayment(__doc);
-                          js.balance={
-                            username:qp.username,
-                            usergui:qp.gui,
-                            gui:uuidV4(),
-                            balance:0,
-                            updated:convertTZ(new Date()),
-                            diffbalance:0,
-                            type:"score"
-                          };
-                          addMainBalanceByUser(js,qp).then(function(body){
-                            if(body){
-                              var __doc={
-                                usergui:qp.gui,
-                                username:qp.username,
-                                paymentdate:Date(),
-                                paymentvalue:0,
-                                paymentby:__master_user.username,
-                                paidbygui:__master_user.gui,
-                                payreason:"system score",
-                                attache:"",
-                                bankinfo:"",
-                                targetuser:qp.username,
-                                status:"approved",
-                                description:"",
-                                receiveddate:Date(),
-                                certifieddate:Date(),
-                                approveddate:Date(),
-                                gui:uuidV4()
-                                };
-                              makePayment(__doc);
-                              deductBalanceForRegister(js);
-                              console.log("update user couplingscore completed");                                                        
-                            }
-                          });
-                        }
-                      });
+                        username:js.topuser.username,
+                        paymentdate:Date(),
+                        paymentvalue:theRestValue,
+                        paymentby:__master_user.username,
+                        paidbygui:__master_user.gui,
+                        attache:"",
+                        bankinfo:"",
+                        targetuser:js.topuser.username,
+                        status:"approved",
+                        payreason:"system rest",
+                        description:"",
+                        receiveddate:Date(),
+                        certifieddate:Date(),
+                        approveddate:Date(),
+                        gui:uuidV4()
+                        };
+                      makePayment(__doc);
                     }
-                    if(sum+averageValue>qp.maxpaid){
-                      var averageValue2=(sum+averageValue)-qp.maxpaid
-                      // insert to topuser balance
-                      // update topuser
+                }); 
+              }
+                // - under limit of max paid per day
+              qp.forEach(function(element) {
+                var db=create_db("bonusBalance");
+                var now=convertTZ(new Date());
+                var nowArr=[now.getFullYear(),(now.getMonth()+1),now.getDate()];
+                db.view(__design_view,"findBalanceByUserAndDate",{
+                  key:[nowArr,qp.username],// create a funtion today value only
+                  include_docs:true,
+                },function(err,res){
+                  if(err) throw new Error(err);
+                  else{
+                    if(res.rows.length){
+                      var sum=0;
+                      for (var i = 0, len = res.rows.length; i < len; i++) {
+                        if(rews.rows[i].value.type=="score")// score, introduction, fee ,
+                        sum+=res.rows[i].value.balance;
+                      }
+                      if(sum>qp.maxpaid){ // ignore payment for this transaction
+                        // insert to topuser balance
+                        // update topuser
                         js.balance={
                           username:js.topuser.username,
                           usergui:js.topuser.gui,
                           gui:uuidV4(),
                           balance:0,
                           updated:convertTZ(new Date()),
-                          diffbalance:averageValue2,
+                          diffbalance:averageValue,
                           type:"over-recieved"
                         };
                         addMainBalanceByUser(js,js.topuser).then(function(body){
@@ -3318,7 +3407,7 @@ function completeRegistration(js,parent,package,introductor,client,isfree,maxpro
                               usergui:js.topuser.gui,
                               username:js.topuser.username,
                               paymentdate:Date(),
-                              paymentvalue:averageValue2,
+                              paymentvalue:averageValue,
                               paymentby:__master_user.username,
                               paidbygui:__master_user.gui,
                               payreason:"system over-recieved",
@@ -3339,7 +3428,7 @@ function completeRegistration(js,parent,package,introductor,client,isfree,maxpro
                               gui:uuidV4(),
                               balance:0,
                               updated:convertTZ(new Date()),
-                              diffbalance:averageValue-averageValue2,
+                              diffbalance:0,
                               type:"score"
                             };
                             addMainBalanceByUser(js,qp).then(function(body){
@@ -3348,10 +3437,10 @@ function completeRegistration(js,parent,package,introductor,client,isfree,maxpro
                                   usergui:qp.gui,
                                   username:qp.username,
                                   paymentdate:Date(),
-                                  paymentvalue:js.balance,
+                                  paymentvalue:0,
                                   paymentby:__master_user.username,
                                   paidbygui:__master_user.gui,
-                                  payreason:"system over-recieved",
+                                  payreason:"system score",
                                   attache:"",
                                   bankinfo:"",
                                   targetuser:qp.username,
@@ -3364,72 +3453,152 @@ function completeRegistration(js,parent,package,introductor,client,isfree,maxpro
                                   };
                                 makePayment(__doc);
                                 deductBalanceForRegister(js);
-                                console.log("update user couplingscore completed"+qp.username);
-
+                                console.log("update user couplingscore completed");                                                        
                               }
                             });
                           }
                         });
-                      
-                    }
-                    else{
-                      
-                      js.balance={
-                        username:qp.username,
-                        usergui:qp.gui,
-                        gui:uuidV4(),
-                        balance:0,
-                        updated:convertTZ(new Date()),
-                        diffbalance:averageValue,
-                        type:"score"
-                      };
-                      addMainBalanceByUser(js,qp).then(function(body){
-                        if(body){
-                            // update couplingscore of qp current user
-                            var __doc={
-                              usergui:qp.gui,
-                              username:qp.username,
-                              paymentdate:Date(),
-                              paymentvalue:js.balance,
-                              paymentby:__master_user.username,
-                              paidbygui:__master_user.gui,
-                              payreason:"system over-recieved",
-                              attache:"",
-                              bankinfo:"",
-                              targetuser:qp.username,
-                              status:"approved",
-                              description:"",
-                              receiveddate:Date(),
-                              certifieddate:Date(),
-                              approveddate:Date(),
-                              gui:uuidV4()
+                      }
+                      if(sum+averageValue>qp.maxpaid){
+                        var averageValue2=(sum+averageValue)-qp.maxpaid
+                        // insert to topuser balance
+                        // update topuser
+                          js.balance={
+                            username:js.topuser.username,
+                            usergui:js.topuser.gui,
+                            gui:uuidV4(),
+                            balance:0,
+                            updated:convertTZ(new Date()),
+                            diffbalance:averageValue2,
+                            type:"over-recieved"
+                          };
+                          addMainBalanceByUser(js,js.topuser).then(function(body){
+                            if(body){
+                              // insert to qp balance
+                              // update qp
+                              var __doc={
+                                usergui:js.topuser.gui,
+                                username:js.topuser.username,
+                                paymentdate:Date(),
+                                paymentvalue:averageValue2,
+                                paymentby:__master_user.username,
+                                paidbygui:__master_user.gui,
+                                payreason:"system over-recieved",
+                                attache:"",
+                                bankinfo:"",
+                                targetuser:js.topuser.username,
+                                status:"approved",
+                                description:"",
+                                receiveddate:Date(),
+                                certifieddate:Date(),
+                                approveddate:Date(),
+                                gui:uuidV4()
+                                };
+                              makePayment(__doc);
+                              js.balance={
+                                username:qp.username,
+                                usergui:qp.gui,
+                                gui:uuidV4(),
+                                balance:0,
+                                updated:convertTZ(new Date()),
+                                diffbalance:averageValue-averageValue2,
+                                type:"score"
                               };
-                            makePayment(__doc);
-                            js.db=create_db("user");
-                            qp.couplingbalance=0;
-                            js.db.insert(qp,qp.gui,function(err,res){
-                              if(err)
-                                throw new Error(err);
-                              else{
-                                deductBalanceForRegister(js);
-                                console.log("update user couplingscore completed"+qp.username);
-                              }                                                            
-                            });
-                        }
-                      });
+                              addMainBalanceByUser(js,qp).then(function(body){
+                                if(body){
+                                  var __doc={
+                                    usergui:qp.gui,
+                                    username:qp.username,
+                                    paymentdate:Date(),
+                                    paymentvalue:js.balance,
+                                    paymentby:__master_user.username,
+                                    paidbygui:__master_user.gui,
+                                    payreason:"system over-recieved",
+                                    attache:"",
+                                    bankinfo:"",
+                                    targetuser:qp.username,
+                                    status:"approved",
+                                    description:"",
+                                    receiveddate:Date(),
+                                    certifieddate:Date(),
+                                    approveddate:Date(),
+                                    gui:uuidV4()
+                                    };
+                                  makePayment(__doc);
+                                  deductBalanceForRegister(js);
+                                  console.log("update user couplingscore completed"+qp.username);
+
+                                }
+                              });
+                            }
+                          });
+                        
+                      }
+                      else{
+                        
+                        js.balance={
+                          username:qp.username,
+                          usergui:qp.gui,
+                          gui:uuidV4(),
+                          balance:0,
+                          updated:convertTZ(new Date()),
+                          diffbalance:averageValue,
+                          type:"score"
+                        };
+                        addMainBalanceByUser(js,qp).then(function(body){
+                          if(body){
+                              // update couplingscore of qp current user
+                              var __doc={
+                                usergui:qp.gui,
+                                username:qp.username,
+                                paymentdate:Date(),
+                                paymentvalue:js.balance,
+                                paymentby:__master_user.username,
+                                paidbygui:__master_user.gui,
+                                payreason:"system over-recieved",
+                                attache:"",
+                                bankinfo:"",
+                                targetuser:qp.username,
+                                status:"approved",
+                                description:"",
+                                receiveddate:Date(),
+                                certifieddate:Date(),
+                                approveddate:Date(),
+                                gui:uuidV4()
+                                };
+                              makePayment(__doc);
+                              js.db=create_db("user");
+                              qp.couplingbalance=0;
+                              js.db.insert(qp,qp.gui,function(err,res){
+                                if(err)
+                                  throw new Error(err);
+                                else{
+                                  deductBalanceForRegister(js);
+                                  console.log("update user couplingscore completed"+qp.username);
+                                }                                                            
+                              });
+                          }
+                        });
+                      }
                     }
+                    console.log("no balance record for "+qp.username);
                   }
-                  console.log("no balance record for "+qp.username);
-                }
-              });
-            }, this);
+                });
+              }, this);
+              
+            });
             
+            });                                  
           });
-          
-          });                                  
-        });
-      });  
-    });
+        });  
+      });
+  }).catch(function(err){
+    js.resp.send(error);
+  }).done();
+    }).catch(function(err){
+      js.resp.send(err);
+    }).done();
+    
   }).catch(function(error){
     js.resp.send(error);
   }).done();                          

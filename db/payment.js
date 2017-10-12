@@ -11,6 +11,9 @@ var __doc={
     paidbygui:"",
     payreason:"",
     description:"",
+    receiveddate:Date(),
+    certifieddate:Date(),
+    approveddate:Date(),
     gui:uuidV4()
     };
 var __uuidV4 = uuidV4;

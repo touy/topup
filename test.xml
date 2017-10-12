@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  xmlns:tm="http://microsoft.com/wsdl/mime/textMatching/" xmlns:tns="http://ltcservice.laotel.com">
+<soap:Body><CheckBalance xmlns:ns1="http://ltcservice.laotel.com">
+<type>"3"</type>
+<msisdn>"2054445447"</msisdn>
+<user_id>"THEFRIEND"</user_id>
+<key>"undefined"</key>
+</CheckBalance>
+</soap:Body>
+</soap:Envelope>
+
+<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <CheckBalance xmlns="http://ltcservice.laotel.com">
+      <type>string</type>
+      <msisdn>string</msisdn>
+      <user_id>string</user_id>
+      <key>= ltc.srv.com.ltc.encrypt((type+msisdn+user_id),privateKey)</key>
+    </CheckBalance>
+  </soap:Body>
+</soap:Envelope>

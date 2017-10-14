@@ -115,43 +115,46 @@ app.get('/', function (req, res) {
 });
 // CHANGE PASSWORD
 app.post('/change_password', function (req, res) {//client.data.user
+    //js.client.oldpassword1==client.oldpassword2;
+    //js.client.data.user.phone1=client.secret;
 
-    //res.send("hello");
     var js={};
     js.client=req.body;
-    js.resp=res;
-    //console.log(js.client.data);
+    js.resp=res;  
     js.client.data.user.phone1=js.client.data.user.secret;
     delete js.client.data.user.secret;
-    //js.client.oldpassword1==js.client.oldpassword2;
-    //js.client.data.user.password=js.client.oldpassword1;
+    
     change_password(js);
  });
 
 
-app.get('/init_client',function(req,res){//
+app.get('/init_client',function(req,res){// GET new GUI
   client_ip = req.clientIp;
-  res.send(get_init_client(client_ip));
+  if(__cur_client.clientuid!=req.body.clientuid)
+    res.send(get_init_client(client_ip));
+  else
+    res.send('good client');
 });
 
 
 app.post('/register', function (req, res) {//client.data.user
   var js={};
   js.client=req.body;
-  
  register(js.client.data.user,res);
 });
 
 app.post('/login', function (req, res) {//client.data.user
+  //client.data.user.username
+  //client.data.user.password
+
   console.log("LOGIN ");
   //var client=req.body;
   var js={};
   js.client=req.body;
   js.resp=res;
-  console.log(js);
   login(js);
 });
-app.post('/logout',function (req,res){//client.data.user
+app.post('/logout',function (req,res){//client
   var js={};
   js.client=req.body;
   js.resp=res;
@@ -166,7 +169,7 @@ app.post('/heartbeat', function (req, res) {//client
 });
 
 
-app.post('/get_userdata', function (req, res) {//client.data.user
+app.post('/get_userdata', function (req, res) {//client
   var js={};
   js.client=req.body;
   js.resp=res;
@@ -176,43 +179,30 @@ app.post('/get_userdata', function (req, res) {//client.data.user
 app.post('/get_package', function (req, res) {//
   var js={};
   js.resp=res;
-  get_package(js);
+  showPackages(js);
 });
 
 app.post('/get_package_details', function (req, res) {//client.data.user
   var js={};
   js.user=req.body;
   js.resp=res;
-  get_package_details(js);
+  showPackageDetailsByUser(js);
 });
 
-app.post('/get_payment_list',function (req,res){
-  var js={};
-  js.user=req.body;
-  js.res=res;
-  get_payment_list(js,page,maxpage);
-});
-
-app.post('/get_user_binary',function (req,res){
+app.post('/get_user_binary',function (req,res){//client.data.user
   var js={};
   js.user=req.body;
   js.resp=res
-  get_user_binary(js);
+  showUserBinary(js);
 });
-app.post('/show_user_binary_tree',function (req,res){
-  var js={};
-  js.client=req.body;
-  js.resp=res;
-  showBinaryTree(js);
-});
+// app.post('/show_user_binary_tree',function (req,res){
+//   var js={};
+//   js.client=req.body;
+//   js.resp=res;
+//   showBinaryTree(js);
+// });
 
-app.post('/get_coupling_score_by_user',function (req,res){
-  var js={};
-  js.client=req.body;
-  js.resp=res;
-  get_coupling_score(js);
-});
-app.post('/get_topup_balance_by_user',function(req,res){
+app.post('/get_topup_balance_by_user',function(req,res){//client
   var js={};
   js.client=req.body;
   js.resp=res;
@@ -220,20 +210,14 @@ app.post('/get_topup_balance_by_user',function(req,res){
 });
 
 
-app.post('/check_main_balance_by_user',function(req,res){
+app.post('/check_main_balance_by_user',function(req,res){//client
   var js={};
   js.client=req.body;
   js.resp=res;
   checkMainBalanceByUser(js);
 });
 
-app.post('/get_bonus_topup_balance',function(req,res){
-  var js={};
-  js.client=req.body;
-  js.resp=res;
-  showBonusTopupBalance(js);
-});
-app.post('/upgrade',function(req,res){//js.client.data.user , js.client.data.package
+app.post('/upgrade',function(req,res){//client.data.user , client.data.package
   var js={};
   js.client=req.body;
   js.resp=res;
@@ -241,7 +225,7 @@ app.post('/upgrade',function(req,res){//js.client.data.user , js.client.data.pac
 });
 
 
-app.post('/pay_first_balance',function(req,res){//js.client.data.user , js.client.data.package
+app.post('/pay_first_balance',function(req,res){//client 
   var js={};
   js.client=req.body;
   js.resp=res;
@@ -307,7 +291,7 @@ function payFirsBalance(js){
   });
 }
 
-app.post('/pay_offer',function(req,res){//js.client.data.user , js.client.data.package
+app.post('/pay_offer',function(req,res){//client
   var js={};
   js.client=req.body;
   js.resp=res;
@@ -354,12 +338,41 @@ function payOffer(js){
   });
 }
 
+
+
+// for admin only
+app.post('/show_offer_list',function(req,res){//?
+  var js={};
+  js.client=req.body;
+  js.resp=res;
+  showOfferList(js);
+});
+// for admin only
+app.post('/show_bonus_topup_list',function(req,res){//?
+  var js={};
+  js.client=req.body;
+  js.resp=res;
+  showBonusTopUpList(js);
+});
+
+
+
+
+//admin only
 app.post('/send_offer',function(req,res){//js.client.data.user , js.client.data.package
   var js={};
   js.client=req.body;
   js.resp=res;
   sendOffer(js);
 });
+//admin only
+app.post('/send_bonus_topup',function(req,res){//js.client.data.user , js.client.data.package
+  var js={};
+  js.client=req.body;
+  js.resp=res;
+  sendBonusTopUpBalanceByUser(js);
+});
+
 function makePayment(p){
   var deferred=Q.defer();
   var db=create_db('payment');
@@ -862,7 +875,7 @@ function getPaymentListByUsername(user,page,maxpage){
     else if(!res.rows.length) deferred.reject("user no record");
     else{
       var count=res.rows[0].value;
-      db.view(__design_view,'findByUsername',{key:user.username,decending:true,page:page,limit:maxpage},function(err,res){
+      db.view(__design_view,'findByUsername',{key:user.username,decending:true,skip:page,limit:maxpage},function(err,res){
         if(err)deferred.reject(err);
         else if(!res.rows.length) deferred.reject("payment no record");
         else{
@@ -902,7 +915,7 @@ function getPaymentList(user,page,maxpage){
     else if(!res.rows.length) deferred.reject("user no record");
     else{
       var count=res.rows[0].value;
-      db.view(__design_view,'findall',{decending:true,page:page,limit:maxpage},function(err,res){
+      db.view(__design_view,'findall',{decending:true,skip:page,limit:maxpage},function(err,res){
         if(err)deferred.reject(err);
         else if(!res.rows.length) deferred.reject("payment no record");
         else{
@@ -941,7 +954,7 @@ function getPaymentRequestListByUsername(user,page,maxpage){
     else if(!res.rows.length) deferred.reject("user no record");
     else{
       var count=res.rows[0].value;
-      db.view(__design_view,'findPaymentRequestByUsername',{key:user.username,decending:true,page:page,limit:maxpage},function(err,res){
+      db.view(__design_view,'findPaymentRequestByUsername',{key:user.username,decending:true,skip:page,limit:maxpage},function(err,res){
         if(err)deferred.reject(err);
         else if(!res.rows.length) deferred.reject("payment no record");
         else{
@@ -980,7 +993,7 @@ function getCashingListByUsername(user,page,maxpage){
     else if(!res.rows.length) deferred.reject("user no record");
     else{
       var count=res.rows[0].value;
-      db.view(__design_view,'findCashingRequestByUsername',{key:user.username,decending:true,page:page,limit:maxpage},function(err,res){
+      db.view(__design_view,'findCashingRequestByUsername',{key:user.username,decending:true,skip:page,limit:maxpage},function(err,res){
         if(err)deferred.reject(err);
         else if(!res.rows.length) deferred.reject("cashing no record");
         else{
@@ -1021,7 +1034,7 @@ function getPaymentRequestList(page,maxpage){
     else if(!res.rows.length) deferred.reject("user no record");
     else{
       var count=res.rows[0].value;
-      db.view(__design_view,'findPaymentRequest',{decending:true,page:page,limit:maxpage},function(err,res){
+      db.view(__design_view,'findPaymentRequest',{decending:true,skip:page,limit:maxpage},function(err,res){
         if(err)deferred.reject(err);
         else if(!res.rows.length) deferred.reject("payment no record");
         else{
@@ -1059,7 +1072,7 @@ function getCashingList(user,page,maxpage){
     else if(!res.rows.length) deferred.reject("user no record");
     else{
       var count=res.rows[0].value;
-      db.view(__design_view,'findCashingRequest',{decending:true,page:page,limit:maxpage},function(err,res){
+      db.view(__design_view,'findCashingRequest',{decending:true,skip:page,limit:maxpage},function(err,res){
         if(err)deferred.reject(err);
         else if(!res.rows.length) deferred.reject("cashing no record");
         else{
@@ -3853,7 +3866,7 @@ function findByUserGui(js){
     return deferred.promise;
 }
 /** */
-function get_package(js){
+function showPackages(js){
   if(__default_package){
     js.resp.send(__default_package);
   }
@@ -3891,8 +3904,7 @@ function getPackage(){
     });
     return deferred.promise;
 }
-function get_package_details(js){
-  js.db=create_db('packagedetails')
+function showPackageDetailsByUser(js){
   getPackageDetailsByUser(js.client.data.user).then(function(body){
     if(body)
       js.resp.send(body);
@@ -3902,7 +3914,7 @@ function get_package_details(js){
 }
 function getPackageDetailsByUser(user){
   var deferred=Q.defer();
-    
+  var db=create_db('packagedetails');
   db.view(__design_view,"findByUsername", {
       key:user.username,
       include_docs:true,
@@ -3916,93 +3928,15 @@ function getPackageDetailsByUser(user){
           res.rows.forEach(function(element) {
             arr.push(element.value);
           }, this);
-          deferred.resolve(arr);
         }
-        else{
           deferred.resolve(arr);
-        }
       }
     });
     return deferred.promise;
 }
 
-function get_payment_list(js,page,maxpage){
-  js.db=create_db('payment');
-  getPaymentListByUser(js.user).then(function(body){
-    if(body) js.resp.send(body);
-  }).then(function(err){
-    if(err) js.resp.send(err);
-  });
-}
-function getPaymentListByUser(user,page,maxpage){
-  var deferred=Q.defer();
-  db.view(__design_view,"findByUsername",{
-      key: user.username,
-      include_docs: true,
-      limit:maxpage,
-      skip:page
-    },function(err,body){
-      if (err) {
-        deferred.reject(new Error(err));
-      } else {
-        if (body.rows.length) {
-          var arr=[];
-          body.rows.forEach(function(element) {
-            arr.push(element.value);
-          }, this);
-          deferred.resolve(arr);
-        }
-      }
-    });
-    return deferred.promise;
-}
-// function make_payment(js){
-//   js.db=create_db('payment');
-//   js.payment={};
-//   makePayemntForUser(js).then(function(body){
-//     if(body) js.resp.send(body);
-//   }).catch(function(err){
-//     if(err) js.resp.send(err);
-//   })
-// }
-// function makePayemntForUser(js){
-//   var deferred=Q.defer();
-//   js.db.insert(js.payment,js.payment.gui,function(err,body){
-//       if (err) {
-//         deferred.reject(new Error(err));
-//       } else {
-//         if (body.rows.length) {
-//           var arr=[];
-//           body.rows.forEach(function(element) {
-//             arr.push(element.value);
-//           }, this);
-//           js.db=create_db('user');
-//           findUserByUserName(js).then(function(body){
-//             if(body){
-//               js.db.insert(body,body.gui,function(err,res){
-//                 if(err) deferred.reject(err);
-//                 else{
-//                   if(res.rows.count){
-//                     // TODO : deduct money from user
-                    
-//                     //deferred.resolve()
-//                   }
-//                 }
-//               });
-//             }
-//           }).catch(function(err){
-//             if(err) deferred.reject(err);
-//           });
-          
-//         }
-//       }
-//     });
-//     return deferred.promise;
-// }
-
-
-function get_user_binary(js){
-  getUserBinaryByUser(js.user).then(function(body){
+function showUserBinary(js){
+  getUserBinaryByUser(js.client.data.user).then(function(body){
     if(body)
       js.resp.send(body);
   }).catch(function(err){
@@ -4012,7 +3946,8 @@ function get_user_binary(js){
 }
 function getUserBinaryByUser(user){
   var deferred=Q.defer();
-    js.db.view(__design_view,"findByUsername", {
+  var db=create_db('userbinary');
+  db.view(__design_view,"findByUsername", {
       key:user.username,
       include_docs:true,
       descending:true,
@@ -4461,30 +4396,42 @@ function showMainBalance(js){
   });
 }
 
-function showTopupBalanceByUser(js){
-  var db=create_db("topupbalance");
-  db.view(__design_view,"findCountByUsername",{key:js.client.username,reduce:true},function(err,res){
-    if(err) js.resp.send(err);
+function getCountBalanceByUser(user){
+  var deferred=Q.defer();
+  db.view(__design_view,"findCountByUsername",{key:js.client.username},function(err,res){
+    if(err) deferred.reject(err);
     else{
+      var arr=[];
       if(res.rows.length){
-        var count=res.rows[0].value;
-        db.view(__design_view,"findByUsername",{key:js.client.username,descending:true,limit:js.client.data.maxpage,skip:js.client.data.page},function(err,res){
-          if(err) js.resp.send(err);
-          else{
-            if(res.rows.length){
-              var arr=[];
-              for(i=0;l=rows.length,i<l;i++){
-                arr.push(res.rows[i].value);          
-              }
-              js.client.data.balance={arr:arr,count:count};
-              js.client.data.message="OK";
-              js.resp.send(js.client);  
-            }
-          }
-        });
+        arr.push(res.rows[0].value);
       }
+      deferred.resolve(arr);
     }
   });
+  return deferred.promise;
+}
+function showTopupBalanceByUser(js){
+  var db=create_db("topupbalance");
+  getCountBalanceByUser(js.client.username).then(function(body){
+    var count=body[0];
+    db.view(__design_view,"findByUsername",{key:js.client.username,descending:true,limit:js.client.data.maxpage,skip:js.client.data.page},function(err,res){
+      if(err) js.resp.send(err);
+      else{
+        if(res.rows.length){
+          var arr=[];
+          for(i=0;l=res.rows.length,i<l;i++){
+            arr.push(res.rows[i].value);          
+          }
+          js.client.data.balance={arr:arr,count:count};
+          js.client.data.message="OK";
+          js.resp.send(js.client);  
+        }
+      }
+    });
+  }).catch(function(err){
+
+  }).done();
+        
 }
 function get_member_count_by_year_month(js){
   getMemberCountByPackageYearMonth(js.client.data.user,js.client.data.package,js.client.data.my.year,js.client.data.my.month).then(function(body){
@@ -5207,7 +5154,7 @@ function showBonusTopupBalanceSumValueByUser(js){
     }
   });
 }
-function payBonusTopUpBalanceByUser(js){
+function sendBonusTopUpBalanceByUser(js){
   var db =create_db("user");
   db.view(__design_view,"findByUsername",{key:js.client.data.user.username},function(err,res){
     if(err) js.resp.send(err);
@@ -5228,8 +5175,30 @@ function payBonusTopUpBalanceByUser(js){
           db.insert(t,t.gui,function(err,res){
             if(err)js.resp.send(err);
             else{
-              js.client.data.message="completed pay bonus topup balance by this user: "+u.username+"/"+js.client.data.bonustopupbalance.sumvalue;
-              js.resp.send(js.client);    
+              var p={
+                usergui:u.gui,
+                username:u.username,
+                paymentdate:Date(),
+                paymentvalue:u.bonustopupbalance,
+                paymentby:__master_user.username,
+                paidbygui:__master_user.gui,
+                payreason:"system bonus topup", // cashing , request confirm, 
+                attache:"",
+                bankinfo:'',
+                targetuser:u.username,
+                status:"approved",
+                description:"",
+                receiveddate:Date(), //
+                certifieddate:Date(), //
+                approveddate:Date(), //
+                gui:uuidV4()
+                };
+              makePayment(p).then(function(body){
+                js.client.data.message="completed pay bonus topup balance by this user: "+u.username+"/"+js.client.data.bonustopupbalance.sumvalue;
+                js.resp.send(js.client);  
+              }).catch(function(err){
+                js.resp.send(err);
+              }).done();
             }
           });
         }
@@ -5336,13 +5305,14 @@ function showBonusTopupBalanceByYear(js){
 }
 // - ຂໍ້ມູນຜູ້ໃຊ້
 function showUserInfo(js){
-  var user={username:js.username};
+  var user={username:js.client.username};
   
   viewUser(user).then(function(body){
     if(body){
       js.client.data.message={message:"OK"};
       js.client.data.user=body;
       js.client.data.user.password="";
+      js.client.data.user._rev='';
       js.resp.send(js.client);  
     }
   }).catch(function(err){
@@ -5392,107 +5362,7 @@ function viewUser(user){
   });
   return deferred.promise;
 }
-function redeem(user,client,redeemtype,resp){// redeemtype: offer , first balance
-  var db=create_db("user");
-  viewUser(user).then(function(body){
-    client.data.user=res.rows[0].value;
-    if(redeemtype=="firstBalance"){                    
-      var topres=topupbalance(client.data.user.phone1,client.data.user.firstbalance);
-      if(topres) {
-        var l={
-          log:("info %s",JSON.stringify(topres)),
-          logdate:new Date(),
-          type:"ifno",
-          gui:uuidV4()
-        };
-        logging(l);
-        client.data.message="redeem was not completed";
-        client.data.user=user;
-        resp.send(client);
-        return;
-      }
-      client.data.message="redeem was completed";
-      client.data.user.firstbalance=0;
-      updateUser(client).then(function(body){
-        var l={
-          log:("info %s",JSON.stringify(body)),
-          logdate:new Date(),
-          type:"info",
-          gui:uuidV4()
-        };
-        logging(l);
-        client.data.message=JSON.stringify(body);
-        client.data.user=user;
-        resp.send(client);
-      }).catch(function(err){
-        var l={
-          log:("error %s",JSON.stringify(err)),
-          logdate:new Date(),
-          type:"error",
-          gui:uuidV4()
-        };
-        logging(l);
-        client.data.message=JSON.stringify(err);
-        client.data.user=user;
-        resp.send(client);
-      });          
-    }
-    else if(redeemtype=="offer"){
-      var topres=topupbalance(client.data.user.phone1,client.data.user.offeredbonus);
-      if(topres) {
-        var l={
-          log:("info %s",JSON.stringify(topres)),
-          logdate:new Date(),
-          type:"error",
-          gui:uuidV4()
-        };
-        logging(l);
-        client.data.message="offer was not completed";
-        client.data.user=user;
-        resp.send(client);
-        return;
-      }
-      client.data.message="offer was completed";
-      client.data.user.offeredbonus=0;
-      updateUser(client.user).then(function(body){
-        var l={
-          log:("info %s",JSON.stringify(body)),
-          logdate:new Date(),
-          type:"info",
-          gui:uuidV4()
-        };
-        logging(l);
-        client.data.message=JSON.stringify(body);
-        client.data.user=user;
-        resp.send(client);
-      }).catch(function(err){
-        var l={
-          log:("error %s",JSON.stringify(err)),
-          logdate:new Date(),
-          type:"error",
-          gui:uuidV4()
-        };
-        logging(l);
-        client.data.message=JSON.stringify(err);
-        client.data.user=user;
-        resp.send(client);
-      });          
-    }
-  }).catch(function(err){
-    var l={
-      log:("error %s",JSON.stringify(err)),
-      logdate:new Date(),
-      type:"error",
-      gui:uuidV4()
-    };
-    logging(l);
-    client.data.message=JSON.stringify(err);
-    client.data.user=user;
-    resp.send(client);
-  });        
 
-
-}
 function updateUser(user){
   var deferred=Q.defer();
   db=create_db("user");

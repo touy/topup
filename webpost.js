@@ -2088,7 +2088,7 @@ function init_db(dbname, design) {
 
 app.all('*', function (req, res, next) {
   //common action
-  console.log(res);  
+  //console.log(res);  
   var client = req.body;
   var keyword = __login_kw;
   if (authentication_path(req.path)) {

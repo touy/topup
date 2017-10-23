@@ -15,6 +15,7 @@
     "detect-browser": "^1.9.0",
     "express": "^4.15.2",
     "express-handlebars": "^3.0.0",
+    "file-base64": "^1.0.0",
     "handlebars": "^4.0.6",
     "handlebars-helpers": "^0.8.0",
     "jquery": "^3.1.1",

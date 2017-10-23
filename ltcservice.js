@@ -1,7 +1,7 @@
 var ltc=require("./ltctopup")();
 //console.log(ltc.test('test'));
 
-// ltc.checkBalanceCenterLTC();
+ltc.checkBalanceCenterLTC();
 
 // // ltc.topupLTC('2055899974',5000);
 // // ltc.checkBalanceLTC('2054445447');
@@ -28,7 +28,7 @@ var ltc=require("./ltctopup")();
 // ltc.checkBalanceLTC('2055280960');
 // ltc.checkBalanceLTC('2055280971');
 // ltc.checkBalanceLTC('2055280962');
- ltc.checkBalanceLTC('2059028998');
+//ltc.checkBalanceLTC('2059028998');
 //generate number
 
 // var os = require("os");

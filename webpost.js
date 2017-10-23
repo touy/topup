@@ -8,6 +8,7 @@ const LTCSERVICE = require('./ltctopup')();
 const fs = require('fs');
 const _current_picture_path = './_doc_item_/';
 const base64 = require('file-base64');
+var __client_ip='';
 //const nano = require('nano')('http://localhost:5984');
 const cors = require('cors');
 var redis = require("redis");
@@ -28,7 +29,7 @@ app.use(bodyParser());
 app.use(cors());
 __design_view = "objectList";
 const requestIp = require('request-ip');
-
+var __login_kw='Authen';
 var __client_ip = "";
 app.use(requestIp.mw());
 var __cur_client = {};
@@ -143,6 +144,9 @@ var __design_doc = {
       "reduce": "_count",
       "map": "function (doc) {\n  emit(doc.gui,1);\n}"
     },
+    "findByGui": {      
+      "map": "function (doc) {\n  emit(doc.gui,doc);\n}"
+    },
     "findCountByItemGui": {
       "reduce": "_count",
       "map": "function (doc) {\n  if(doc.isactive) \n emit([doc.itemgui],1);\n}"
@@ -253,7 +257,9 @@ var __design_searchkw = {
   "language": "javascript"
 };
 
-
+var _pp='/pp';
+var _prp='/prp';
+var _ap='/ap';
 init_db('shop', __design_shop);
 init_db('item', __design_item);
 init_db('approvallist', __design_approvallist);
@@ -344,7 +350,7 @@ var doc = {
   content: ''
 }
 // GET sample data 
-app.get('/get_sample', function (req, res) {
+app.get(_pp+'/get_sample', function (req, res) {
   var arr=[];
   shop._property_name='shop';
   arr.push(shop);
@@ -361,7 +367,7 @@ app.get('/get_sample', function (req, res) {
   html=displayJson(arr);
   return res.send(html);
 });
-app.get('/get_routes',function(req,res){
+app.get(_pp+'/get_routes',function(req,res){
   var rr=app._router.stack;
   for (var index = 0; index < rr.length; index++) {
     var r=rr[index];
@@ -379,7 +385,7 @@ app.get('/', function (req, res) {
 
 
 //Public , show front page monthly or weekly ==> event page ads
-app.post('/show_event_ads', function (req, res) { // client
+app.post(_pp+'/show_event_ads', function (req, res) { // client
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -387,7 +393,7 @@ app.post('/show_event_ads', function (req, res) { // client
 });
 
 //PUBLIC , edit Keyword ads
-app.post('/show_registered_KW_ads', function (req, res) { // client , client.data.page, client.data.maxpage
+app.post(_pp+'/show_registered_KW_ads', function (req, res) { // client , client.data.page, client.data.maxpage
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -423,8 +429,8 @@ function getRegisteredKWAds(page, maxpage) {
   var db = create_db('searchkw');
   getCountRegisteredKWAds().then(function (body) {
     db.view(__design_view, 'findByIsActive', {
-      startkey: [true, {}],
-      endkey: [true, {}],
+      startkey: [true, '\u9999'],
+      endkey: [true, '\u9999'],
       decending: true,
       skip: page,
       limit: maxpage
@@ -491,7 +497,7 @@ function updateRegisteredKWAds(ads) {
 }
 
 // PUBLIC , search item
-app.post('/show_searched_item', function (req, res) { // client.data.sk , client.data.page , client.data.maxpage
+app.post(_pp+'/show_searched_item', function (req, res) { // client.data.sk , client.data.page , client.data.maxpage
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -529,7 +535,7 @@ function getSearchedItems(sk, page, maxpage) {
 }
 
 // User , edit shop
-app.post('/edit_shop', function (req, res) { //client ,client.data.shop
+app.post(_prp+'/edit_shop', function (req, res) { //client ,client.data.shop
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -615,7 +621,7 @@ function updateShop(shop) {
   return deferred.promise;
 }
 // User , edit shop
-app.post('/find_exist_shop', function (req, res) { //client ,client.data.shop
+app.post(_prp+'/find_exist_shop', function (req, res) { //client ,client.data.shop
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -633,7 +639,7 @@ function findExistShop(js) {
   }).done();
 }
 // Public , shop
-app.post('/show_shop', function (req, res) { //client ,client.data.shop
+app.post(_pp+'/show_shop', function (req, res) { //client ,client.data.shop
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -666,7 +672,7 @@ function displayShop(shopname) {
   return deferred.promise;
 }
 //Admin , shop
-app.post('/show_shop_list', function (req, res) { //client.data.user ,client.data.shop, client.data.page,client.data.maxpage
+app.post(_ap+'/show_shop_list', function (req, res) { //client.data.user ,client.data.shop, client.data.page,client.data.maxpage
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -700,8 +706,8 @@ function displayShopList(page, maxpage) {
   var db = create_db('shop');
   findCountShopList().then(function (body) {
     db.view(__design_view, 'findAll', {
-      startkey: [{}],
-      endkey: [{}],
+      startkey: [""],
+      endkey: ["\u9999"],
       decending: true,
       skip: page,
       limit: maxpage
@@ -724,7 +730,7 @@ function displayShopList(page, maxpage) {
   return deferred.promise;
 }
 //User  , edit shope
-app.post('/show_shop_details', function (req, res) { //client.data.user ,client.data.shop
+app.post(_prp+'/show_shop_details', function (req, res) { //client.data.user ,client.data.shop
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -755,7 +761,7 @@ function displayShopDetails(shopname) {
   return deferred.promise;
 }
 //User , edit item
-app.post('/edit_item', function (req, res) { //client.data.user ,client.data.shop, client.data.item
+app.post(_prp+'/edit_item', function (req, res) { //client.data.user ,client.data.shop, client.data.item
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -821,7 +827,7 @@ function updateItem(item, approval) {
   return deferred.promise;
 }
 // FOR ADMIN, edit item
-app.post('/approve_item', function (req, res) { //client.data.user ,client.data.shop, client.data.item
+app.post(_ap+'/approve_item', function (req, res) { //client.data.user ,client.data.shop, client.data.item
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -839,7 +845,7 @@ function approveItem(js) {
   }).done();
 }
 // FOR public , item
-app.post('/show_item', function (req, res) { // client.data.item , client.data.shop
+app.post(_pp+'/show_item', function (req, res) { // client.data.item , client.data.shop
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -878,7 +884,7 @@ function displayItem(itemname, shopname) {
   return deferred.promise;
 }
 //FOR user ,edit item
-app.post('/show_item_details', function (req, res) { //client.data.user ,client.data.shop , client.data.item
+app.post(_prp+'/show_item_details', function (req, res) { //client.data.user ,client.data.shop , client.data.item
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -916,7 +922,7 @@ function displayItemDetails(itemname, shopname) {
 }
 
 // FOR user  , item
-app.post('/show_item_list_by_shop_owner', function (req, res) { //client.data.user ,client.data.shop, client.data.item.isactive, client.data.maxpage, client.data.page
+app.post(_prp+'/show_item_list_by_shop_owner', function (req, res) { //client.data.user ,client.data.shop, client.data.item.isactive, client.data.maxpage, client.data.page
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -983,7 +989,7 @@ function displayItemListShopNameOwnerName(shopname, ownername, page, maxpage) {
 }
 
 // FOR User by Active , item
-app.post('/show_item_list_by_shop_owner_active', function (req, res) { //client.data.user ,client.data.shop, client.data.item.isactive, client.data.maxpage, client.data.page
+app.post(_prp+'/show_item_list_by_shop_owner_active', function (req, res) { //client.data.user ,client.data.shop, client.data.item.isactive, client.data.maxpage, client.data.page
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1050,7 +1056,7 @@ function displayItemListShopNameOwnerNameIsActive(shopname, ownername, isactive,
 }
 
 // FOR pulbic , item
-app.post('/show_item_list_by_shop', function (req, res) { //client.data.user ,client.data.shop , client.data.maxpage, client.data.page
+app.post(_pp+'/show_item_list_by_shop', function (req, res) { //client.data.user ,client.data.shop , client.data.maxpage, client.data.page
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1117,7 +1123,7 @@ function displayItemListShop(shopname, page, maxpage) {
 }
 
 //FOR ADMIN , doc
-app.post('/show_approval_item', function (req, res) { // client.data.maxpage, client.data.page
+app.post(_ap+'/show_approval_item', function (req, res) { // client.data.maxpage, client.data.page
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1159,8 +1165,8 @@ function displayByApprovalItem(isapproved) {
   var db = create_db('item');
   findCountByApprovalItem(isapproved).then(function (body) {
     db.view(__design_view, 'findByApprovalItem', {
-        startkey: [isapproved, {}],
-        endkey: [isapproved, {}],
+        startkey: [isapproved, ""],
+        endkey: [isapproved, "\u9999"],
         decending: true
       },
       function (err, res) {
@@ -1182,7 +1188,7 @@ function displayByApprovalItem(isapproved) {
 }
 
 // FOR USER ONLY , doc
-app.post('/update_doc_by_user', function (req, res) { //client.data.user, client.data.item, client.data.doc
+app.post(_prp+'/update_doc_by_user', function (req, res) { //client.data.user, client.data.item, client.data.doc
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1228,30 +1234,41 @@ function updateDocByUser(doc) {
       else {
         if (!doc._rev) {
           doc.gui = new uuidV4();
-          doc.link = makePhotoFromBase64(doc.content);
-        }
-        doc.content = '';
-        db.insert(doc, doc.gui, function (err, res) {
-          if (err) deferred.reject(err);
-          else {
-            if (doc._deleted) {
-              // delete picture
-              deleteFile(doc.itemgui, doc.link, doc.name).then(function (body) {
-                deferred.resolve(body);
-              }).catch(function (err) {
-                deferred.reject(err);
-              }).done();;
-            } else if (!doc._rev) {
-              // make a picture from base64
-              makePhotoFromBase64(doc.content, doc.itemgui, doc.link, doc.name).then(function (body) {
-                deferred.resolve(body);
-              }).catch(function (err) {
-                deferred.reject(err);
-              }).done();
+          makePhotoFromBase64(doc.content,doc.gui,doc.name).then(function(body){
+            doc.link=body;
+            db.insert(doc, doc.gui, function (err, res) {
+              if (err) deferred.reject(err);
+              else {
+                deferred.resolve(res);
+              }
+            });
+          }).catch(function(err){
+            deferred.reject(err);
+          }).done();
+        }else{
+          doc.content = '';
+          db.insert(doc, doc.gui, function (err, res) {
+            if (err) deferred.reject(err);
+            else {
+              if (doc._deleted) {
+                // delete picture
+                deleteFile(doc.itemgui, doc.name).then(function (body) {
+                  deferred.resolve(res);
+                }).catch(function (err) {
+                  deferred.reject(err);
+                }).done();;
+              } else if (!doc._rev) {
+                // make a picture from base64
+                makePhotoFromBase64(doc.content, doc.itemgui,doc.name).then(function (body) {
+                  deferred.resolve(res);
+                }).catch(function (err) {
+                  deferred.reject(err);
+                }).done();
+              }
+              //deferred.resolve(res);
             }
-            //deferred.resolve(res);
-          }
-        });
+          });
+        }        
       }
   }).catch(function (err) {
     deferred.reject(err);
@@ -1259,9 +1276,9 @@ function updateDocByUser(doc) {
   return deferred.promise;
 }
 
-function deleteFile(itemgui, link, name) {
+function deleteFile(itemgui, name) {
   var deferred = Q.defer();
-  var path = _current_picture_path + '/' + itemgui + '/' + link + '/' + name;
+  var path = _current_picture_path + '/' + itemgui + '/' + name;
   fs.unlink(path, function (err) {
     if (err && err.code == 'ENOENT') {
       // file doens't exist
@@ -1275,19 +1292,18 @@ function deleteFile(itemgui, link, name) {
   });
   return deferred.promise;
 }
-
-function makePhotoFromBase64(content, itemgui, link, name) {
+function makePhotoFromBase64(content, itemgui,name) {
   var deferred = Q.defer();
-  base64.decode(content, _current_picture_path + '/' + itemgui + '/' + link + '/' + name, function (err, res) {
+  base64.decode(content, _current_picture_path + '/' + itemgui + '/' + name, function (err, res) {
     if (err) deferred.reject(err);
-    else deferred.resolve(res);
+    else deferred.resolve(_current_picture_path + '/' + itemgui + '/' + name); //put _current_icture_path for correct URL
   });
   return deferred.promise;
 }
 
-function makeBase64FromFile(itemgui, link, name) {
+function makeBase64FromFile(itemgui, name) {// IF use only base64 string we can give short link which need request base64 string only
   var deferred = Q.defer();
-  base64.encode(_current_picture_path + '/' + itemgui + '/' + link + '/' + name, function (err, base64String) {
+  base64.encode(_current_picture_path + '/' + itemgui +  '/' + name, function (err, base64String) {
     if (err) deferred.reject(err);
     else deferred.resolve(base64String);
   });
@@ -1295,7 +1311,7 @@ function makeBase64FromFile(itemgui, link, name) {
 }
 
 //FOR USER , doc
-app.post('/show_doc_by_itemgui_owner', function (req, res) { //client.data.user,  client.data.doc
+app.post(_prp+'/show_doc_by_itemgui_owner', function (req, res) { //client.data.user,  client.data.doc
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1359,7 +1375,7 @@ function displayDocByItemGuiOwner(itemgui, ownername) {
   return deferred.promise;
 }
 //For PUBLIC , doc
-app.post('/show_doc_by_itemgui', function (req, res) { // client.data.doc
+app.post(_pp+'/show_doc_by_itemgui', function (req, res) { // client.data.doc
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1388,7 +1404,7 @@ function displayDocByItemGui(itemgui) {
         var arr = [];
         if (res.rows.length) {
           for (var index = 0; index < res.rows.length; index++) {
-            res.rows[index].value.gui = '';
+            //res.rows[index].value.gui = '';
             arr.push(res.rows[index].value);
           }
         }
@@ -1405,7 +1421,7 @@ function displayDocByItemGui(itemgui) {
 }
 
 //ADMIN ONLY , search keyword
-app.post('/register_search_kw', function (req, res) { //client.data.keyword,  client.data.user
+app.post(_ap+'/register_search_kw', function (req, res) { //client.data.keyword,  client.data.user
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1467,7 +1483,7 @@ function updateSearchKW(kw) {
 }
 
 // ADMIN ONLY
-app.post('/show_search_kw_list', function (req, res) { //client.data.keyword, client.data.maxpage, client.data.page
+app.post(_ap+'/show_search_kw_list', function (req, res) { //client.data.keyword, client.data.maxpage, client.data.page
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1489,7 +1505,8 @@ function displaySearchKWList(isactive, page, maxpage) {
   var db = create_db('searchkw');
   findCountSearchKW(isactive).then(function (body) {
     db.view(__design_view, 'findByIsActive', {
-      key: [isactive, {}],
+      startkey: [isactive, ""],
+      endkey:[isactive,"\u9999"],
       decending: true,
       skip: page,
       limit: maxpage
@@ -1514,7 +1531,7 @@ function displaySearchKWList(isactive, page, maxpage) {
   return deferred.promise;
 }
 // USER ONLY
-app.post('/show_search_kw_by_user', function (req, res) { //client.data.user, client.data.maxpage,client.data.page, client.data.shop
+app.post(_prp+'/show_search_kw_by_user', function (req, res) { //client.data.user, client.data.maxpage,client.data.page, client.data.shop
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1536,8 +1553,8 @@ function displaySearchKWByUser(ownername, shopname, isactive, page, maxpage) {
   var db = create_db('searchkw');
   findCountSearchKWByUser(ownername, shopname, isactive).then(function (body) {
     db.view(__design_view, 'findByOwnerNameShopNameIsActive', {
-      startkey: [ownername, shopname, isactive, {}],
-      endkey: [ownername, shopname, isactive, {}],
+      startkey: [ownername, shopname, isactive, ""],
+      endkey: [ownername, shopname, isactive, "\u9999"],
       decending: true,
       skip: page,
       limit: maxpage
@@ -1580,7 +1597,7 @@ function findCountSearchKWByUser(ownername, shopname, isactive) {
   return deferred.promise;
 }
 //ADMIN ONLY
-app.post('/edit_itemaddon', function (req, res) { //client.data.user, client.data.shop
+app.post(_ap+'/edit_itemaddon', function (req, res) { //client.data.user, client.data.shop
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1594,7 +1611,7 @@ function updateItemaddon(itemaddon) {
 }
 
 //ADMIN , itemaddon
-app.post('/show_item_addon', function (req, res) { //client.data.maxpage,client.data.page, 
+app.post(_ap+'/show_item_addon', function (req, res) { //client.data.maxpage,client.data.page, 
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1616,8 +1633,8 @@ function displayItemAddOn(page, maxpage) {
   var db = create_db('itemaddon');
   findCountItemAddOn().then(function (body) {
     db.view(__design_view, 'findAll', {
-      startkey: [{}],
-      endkey: [{}],
+      startkey: [""],
+      endkey: ["\u9999"],
       decending: true,
       skip: page,
       limit: maxpage
@@ -1659,7 +1676,7 @@ function findCountItemAddOn() {
 }
 
 // User , itemaddon
-app.post('/show_item_addon_by_user', function (req, res) { //client.data.user, client.data.maxpage,client.data.page, client.data.shop
+app.post(_prp+'/show_item_addon_by_user', function (req, res) { //client.data.user, client.data.maxpage,client.data.page, client.data.shop
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1681,8 +1698,8 @@ function displayItemAddOnByUser(ownername, shopname, isactive, page, maxpage) {
   var db = create_db('itemaddon');
   findCountItemAddOnByUser(ownername, shopname, isactive).then(function (body) {
     db.view(__design_view, 'findByOwnerNameShopName', {
-      startkey: [ownername, shopname, isactive, {}],
-      endkey: [ownername, shopname, {}],
+      startkey: [ownername, shopname, isactive, ""],
+      endkey: [ownername, shopname, "\u9999"],
       decending: true,
       skip: page,
       limit: maxpage
@@ -1727,9 +1744,49 @@ function findCountItemAddOnByUser(ownername, shopname) {
   return deferred.promise;
 }
 
-
-
+// public , set client
+app.all(_pp+'/init_client', function (req, res) { //client.data.user, client.data.maxpage,client.data.page, client.data.shop
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  __cur_client=js.client;
+})
+//Public , doc
+app.post(_pp+'/show_doc_base64_by_gui', function (req, res) { //client.data.user,  client.data.doc
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  showDocBase64ByGui(js);
+});
+function showDocBase64ByGui(js){
+  displayDocBase64ByGui(js.client.data.doc.gui).then(function(body){
+    js.client.data.doc=body;
+    js.resp.send(js.client);
+  }).catch(function(err){
+    js.client.data.message=err;
+    js.resp.send(js.client);
+  }).done();
+}
+function displayDocBase64ByGui(docgui){
+  var deferred=Q.defer();
+  var db=create_db('doc');
+  db.view(__design_view,'findByGui',{Key:docgui},function(err,res){
+    if(err)deferred.reject(err);
+    else{
+      var arr=[];
+      if(res.rows.length)
+        arr.push(res.rows[0].value);
+      makeBase64FromFile(arr[0].gui,arr[0].name).then(function(body){
+        deferred.resolve(body);
+      }).catch(function(err){
+        deferred.reject(err);
+      }).done();      
+    }
+  });
+  return deferred.promise;
+}
 function displayJson(arr){
+  arr.sort();
   var html="<html><head>";
   html+="<script>";
   html+="js=JSON.stringify("+JSON.stringify(arr)+",undefined,2);";
@@ -1796,6 +1853,200 @@ function init_db(dbname, design) {
   //db = nano.use(dbname);
   //return db;
 }
+
+app.all('*', function (req, res, next) {
+  //common action
+  console.log(res);  
+  var client = req.body;
+  var keyword = __login_kw;
+  if (authentication_path(req.path)) {
+    __client_ip=req.clientIp;
+    r_client.getAsync(keyword +' '+ client.clientuid+' '+__cur_client.logintoken).then(function (body) {
+      if (body) { // NEED TO CHECK  USER OR ADMIN
+        //next();
+        var c=JSON.parse(body);
+        if(auth==1){//CHECK authorization ADMIN
+          checkAdmin(c).then(function(body){
+            if(!body) res.send(new Error('No Authorized'));
+            else{
+            var a={
+              username:c.username,
+              workingpage:req.path,
+              clientuid:c.clientuid,
+              logintoken:c.logintoken
+            }
+            updateAdminAccessLog(a).then(function(body){
+              next();
+            }).catch(function(err){
+              res.send(err);
+            }).done();          
+            }
+          }).catch(function(err){
+            res.send(err);
+          }).done(); 
+        }
+        else if(auth==2) //CHECK authorization User 
+          var u={
+            username:c.username,
+            workingpage:req.path,
+            clientuid:c.clientuid,
+            logintoken:c.logintoken
+          }       
+          updateUserAccessLog(c).then(function(body){
+            next();
+          }).catch(function(err){
+            res.send(err);
+          }).done();
+        //   next();
+      } else
+        res.send(new Error("not Allow"));
+    }).catch(function (err) {
+      res.send(err);
+      //render error
+    }).done();
+  } else if (req.path != '/init_client') {
+    if (client.clientuid != __cur_client.clientuid)
+      res.send('not allow!');
+    else
+      res.send('OK!');
+  } else
+    next();
+});
+
+function updateUserAccessLog(u){
+  var deferred=Q.defer();
+  var db=create_db('userlog');
+  u.accesseddate=convertTZ(new Date());
+  u.ip=__client_ip;
+  //admin.username
+  //admin.workingpage
+
+  db.insert(u,u.gui,function(err,res){
+    if(err) deferred.reject(err);
+    else{
+      deferred.resolve(res);
+    }
+  });
+  return deferred.promise;
+}
+function updateAdminAccessLog(a){
+  var deferred=Q.defer();
+  var db=create_db('adminlog');
+  a.accesseddate=convertTZ(new Date());
+  a.ip=__client_ip;
+  //admin.username
+  //admin.workingpage
+
+  db.insert(a,a.gui,function(err,res){
+    if(err) deferred.reject(err);
+    else{
+      deferred.resolve(res);
+    }
+  });
+  return deferred.promise;
+}
+
+function checkAdmin(client){
+  var deferred=Q.defer();
+  var db=create_db('authorize');
+  db.view(__design_view,'findByUsername',{key:client.username},function(err,res){
+    if(err) deferred.reject(err);
+    else{
+      var arr=[];
+      if(res.rows.length)
+        arr.push(res.rows[0].value);
+      deferred.resolve(arr);
+    }
+  });
+  return deferred.promise;
+}
+
+function authentication_path(path) {
+  switch (path) {
+    case '/edit_shop':
+
+      return 2;
+      break;
+    case '/find_exist_shop':
+
+      return 2;
+      break;
+    case '/show_shop_details':
+
+      return 2;
+      break;
+    case '/edit_item':
+
+      return 2;
+      break;
+    case '/show_item_details':
+
+      return 2;
+      break;
+    case '/show_item_list_by_shop_owner':
+
+      return 2;
+      break;
+    case '/show_item_list_by_shop_owner_active':
+
+      return 2;
+      break;
+    case '/update_doc_by_user':
+
+      return 2;
+      break;
+    case '/show_doc_by_itemgui_owner':
+
+      return 2;
+      break;
+    case '/show_search_kw_by_user':
+
+      return 2;
+      break;
+    case '/show_item_addon_by_user':
+
+      return 2;
+      break;
+    case '/show_shop_list':
+
+      return 1;
+      break;
+    case '/approve_item':
+
+      return 1;
+      break;
+    case '/show_approval_item':
+
+      return 1;
+      break;
+    case '/register_search_kw':
+
+      return 1;
+      break;
+    case '/edit_itemaddon':
+
+      return 1;
+      break;
+    case '/show_item_addon':
+
+      return 1;
+      break;
+    case '/init_client':
+
+      return 0;
+      break;
+    case '/show_doc_by_gui':
+      
+      return 0;
+      break;
+    default:
+      break;
+  }
+  return 0;
+}
+
+
+
 app.listen(4000, "0.0.0.0", function () {
   console.log('Example app listening on port 4000!')
 });

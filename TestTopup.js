@@ -6,8 +6,12 @@ const nano = require('nano')('http://admin:admin@localhost:5984');
 const LTCSERVICE = require('./ltctopup')();
 //const nano = require('nano')('http://localhost:5984');
 const cors = require('cors');
+const base64 = require('file-base64');
+const fs = require('fs');
 var redis = require("redis");
 var bluebird = require('bluebird');
+const __browser = require('detect-browser');
+const _current_picture_path = './_doc_item_/';
 r_client = redis.createClient();
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
@@ -23,6 +27,9 @@ const bodyParser = require('body-parser');
 app.use(bodyParser());
 app.use(cors());
 
+var _pp='/pp';
+var _prp='/prp';
+var _ap='/ap';
 
 
 //moment.tz.setDefault("Asia/Vientiane");
@@ -36,11 +43,14 @@ console.log(new Date(convertTZ(new Date())));
 
 const requestIp = require('request-ip');
 
+var __login_kw='Authen';
+
 var __client_ip = "";
 app.use(requestIp.mw());
 var __master_user = {};
 var __cur_client = {};
 var __default_package = {};
+
 
 function convertTZ(fromTZ) {
   return moment.tz(fromTZ, "Asia/Vientiane").format();
@@ -131,6 +141,7 @@ app.post('/change_password', function (req, res) { //client.data.user
 
 app.get('/init_client', function (req, res) { // GET new GUI
   client_ip = req.clientIp;
+  __client_ip=client_ip
   if (__cur_client.clientuid != req.body.clientuid)
     res.send(get_init_client(client_ip));
   else
@@ -718,7 +729,10 @@ function updatePaymentRequest(js) { // js.client.data.payment for admin only
           b.username = js.client.data.payment.targetuser;
           b.usergui = js.client.data.payment.usergui;
           b.diffbalance *= -1;
-          updateMainBalance(js.client.data.payment.targetuser, b).then(function (body) {}).catch(function (err) {
+          updateMainBalance(js.client.data.payment.targetuser, b).then(function (body) {
+            js.client.data.message = 'payment request has been updated ' + mark;
+            js.resp.send(js.client);
+          }).catch(function (err) {
             js.client.data.message = err;
             js.resp.send(js.client);
           }).done();
@@ -731,8 +745,6 @@ function updatePaymentRequest(js) { // js.client.data.payment for admin only
       } else if (mark == 'checked') {
         //notify to user or sms or chat
       }
-      js.client.data.message = 'payment request has been updated ' + mark;
-      js.resp.send(js.client);
     }).catch(function (err) {
       js.client.data.message = err;
       js.resp.send(js.client);
@@ -797,7 +809,10 @@ function sendCashingRequest(js) {
       type: "cashing request"
     };
     updateMainBalance(js.client.data.payment, b).then(function (body) {
-      makePayment(__doc).then(function (body) {}).catch(function (err) {
+      makePayment(__doc).then(function (body) {
+        js.client.data.message = 'send Cashing request completely';
+        js.resp.send(js.client);
+      }).catch(function (err) {
         js.client.data.message = err;
         js.resp.send(js.client);
       }).done();
@@ -849,7 +864,10 @@ function updateCashingRequest(js) { // js.client.data.payment for admin only
     makePayment(p).then(function (body) {
       js.client.data.message = 'payment request has been updated ' + mark;
       js.resp.send(js.client);
-    }).catch(function (err) {}).done();
+    }).catch(function (err) {
+      js.client.message=err;
+      js.resp.send(js.client);
+    }).done();
 
   return deferred.promise;
 }
@@ -1277,9 +1295,9 @@ function showTheBestFriendByMonthYear(js) { // get from the most introduction by
   findCountTheBestFriendByMonthYear(js.client.data.month, js.client.data.year).then(
     function (body) {
       var count = body[0];
-      db.view(__desing_view, 'findByMonthYear', {
-        startkey: [js.client.data.month, js.client.data.year],
-        endkey: [js.client.data.month, js.client.data.year, {}],
+      db.view(__design_view, 'findByMonthYear', {
+        startkey: [js.client.data.month, js.client.data.year,""],
+        endkey: [js.client.data.month, js.client.data.year,"\u9999"],
         decending: true,
         skip: js.client.data.page,
         limit: js.client.data.maxpage
@@ -1496,22 +1514,165 @@ app.post('/check_register_need_balance_per_package', function (req, res) { //js.
   checkRegisterNeedBalancePerPackage(js);
 });
 
+// USER, js.client.data.user 
+app.post('/show_user_accessed_log', function (req, res) { //js.client.data.user,js.client.data.package , js.client.data.user.ismember, js.client.data.user.month ,js.client.data.user.year
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  showUserAccessLog(js);
+});
+function showUserAccessLog(js){
+  displayUserAccessLog(js.client.username).then(function(body){
+    js.client.data.accesslog=body;
+    js.resp.send(js.client);
+  }).catch(function(err){
+    js.client.data.message=err;
+    js.resp.send(js.client);
+  }).done();
+}
+function findCountUserAccessLogUserNameAccessDate(username){
+  var deferred=Q.defer();
+  var db=create_db('useraccesslog');
+  db.view(__design_view,'findCountByUserNameAccessedDate',{startkey:[username,""],endkey:[username,"\u9999"]},
+  function(err,res){
+    if(err) deferred.reject(err);
+    else{
+      var arr=[];
+      if(res.rows.length)
+        arr.push(res.rows[0].value);
+      deferred.resolve(arr[0]);
+    }
+  });
+  return deferred.promise;
+}
+function displayUserAccessLog(u,page,maxpage){
+  var deferred=Q.defer();
+  var db=create_db('useraccesslog');
+  findCountUserAccessLogUserNameAccessDate(u.username).then(function(body){
+    db.view(__design_view,'findByUserNameAccessedDate',{startkey:[u.username,""],endkey:[u.username,"\u9999"],skip:page,limit:maxpage},function(err,res){
+      if(err) deferred.reject(err);
+      else{
+        var arr=[];
+        if(res.rows.length){
+          for (var index = 0; index < res.rows.length; index++) {
+            arr.push(res.rows[index].value);                        
+          }
+        }
+        deferred.resolve(arr);
+      }
+    });
+  }).catch(function(err){
+    deferred.reject(err);
+  }).done();
+  
+  return deferred.promise;
+}
+
+// ADMIN, js.client.data.user 
+app.post('/show_admin_accessed_log', function (req, res) { //js.client.data.user,js.client.data.package , js.client.data.user.ismember, js.client.data.user.month ,js.client.data.user.year
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  showAdminAccessLog(js);
+});
+function showAdminAccessLog(js){
+  displayAdminAccessLog(js.client.username).then(function(body){
+    js.client.data.accesslog=body;
+    js.resp.send(js.client);
+  }).catch(function(err){
+    js.client.data.message=err;
+    js.resp.send(js.client);
+  }).done();
+}
+function findCountAdminAccessLog(username){
+  var deferred=Q.defer();
+  var db=create_db('adminaccesslog');
+  db.view(__design_view,'findCount',{key:""},
+  function(err,res){
+    if(err) deferred.reject(err);
+    else{
+      var arr=[];
+      if(res.rows.length)
+        arr.push(res.rows[0].value);
+      deferred.resolve(arr[0]);
+    }
+  });
+  return deferred.promise;
+}
+function displayAdminAccessLog(u,page,maxpage){
+  var deferred=Q.defer();
+  var db=create_db('adminaccesslog');
+  findCountAdminAccessLog(u.username).then(function(body){
+    db.view(__design_view,'findAll',{startkey:[""],endkey:["\u9999"],skip:page,limit:maxpage},function(err,res){
+      if(err) deferred.reject(err);
+      else{
+        var arr=[];
+        if(res.rows.length){
+          for (var index = 0; index < res.rows.length; index++) {
+            arr.push(res.rows[index].value);                        
+          }
+        }
+        deferred.resolve(arr);
+      }
+    });
+  }).catch(function(err){
+    deferred.reject(err);
+  }).done();
+  
+  return deferred.promise;
+}
+
 
 
 
 app.all('*', function (req, res, next) {
   //common action
-  console.log(res);
+  console.log(res);  
   var client = req.body;
-  var keyword = "Authen";
+  var keyword = __login_kw;
   if (authentication_path(req.path)) {
-    r_client.getAsync(keyword + client.clientuid).then(function (body) {
-      if (body) {
-        next();
+    __client_ip=req.clientIp;
+    r_client.getAsync(keyword +' '+ client.clientuid+' '+__cur_client.logintoken).then(function (body) {
+      if (body) { // NEED TO CHECK  USER OR ADMIN
+        //next();
+        var c=JSON.parse(body);
+        if(auth==1){//CHECK authorization ADMIN
+          checkAdmin(c).then(function(body){
+            if(!body) res.send(new Error('No Authorized'));
+            else{
+            var a={
+              username:c.username,
+              workingpage:req.path,
+              clientuid:c.clientuid,
+              logintoken:c.logintoken
+            }
+            updateAdminAccessLog(a).then(function(body){
+              next();
+            }).catch(function(err){
+              res.send(err);
+            }).done();          
+            }
+          }).catch(function(err){
+            res.send(err);
+          }).done(); 
+        }
+        else if(auth==2) //CHECK authorization User 
+          var u={
+            username:c.username,
+            workingpage:req.path,
+            clientuid:c.clientuid,
+            logintoken:c.logintoken
+          }       
+          updateUserAccessLog(c).then(function(body){
+            next();
+          }).catch(function(err){
+            res.send(err);
+          }).done();
+        //   next();
       } else
         res.send(new Error("not Allow"));
     }).catch(function (err) {
-      res.send("redis: " + err);
+      res.send(err);
       //render error
     }).done();
   } else if (req.path != '/init_client') {
@@ -1522,8 +1683,68 @@ app.all('*', function (req, res, next) {
   } else
     next();
 });
+function init_admin(){
+  var deferred=Q.defer();
+  var db=create_db('authorize');
+  var a={
+    gui:"5f15a3119896d245f2562f65ef000801",
+    username:'souk@TheFriendd',
+  }
+  db.insert(a,a.gui,function(err,res){
+    if(err) deferred.reject(err);
+    else{
+      deferred.resolve(res);
+    }
+  });
+  return deferred.promise;
+}
+function updateUserAccessLog(u){
+  var deferred=Q.defer();
+  var db=create_db('userlog');
+  u.accesseddate=convertTZ(new Date());
+  u.ip=__client_ip;
+  //admin.username
+  //admin.workingpage
 
+  db.insert(u,u.gui,function(err,res){
+    if(err) deferred.reject(err);
+    else{
+      deferred.resolve(res);
+    }
+  });
+  return deferred.promise;
+}
+function updateAdminAccessLog(a){
+  var deferred=Q.defer();
+  var db=create_db('adminlog');
+  a.accesseddate=convertTZ(new Date());
+  a.ip=__client_ip;
+  //admin.username
+  //admin.workingpage
 
+  db.insert(a,a.gui,function(err,res){
+    if(err) deferred.reject(err);
+    else{
+      deferred.resolve(res);
+    }
+  });
+  return deferred.promise;
+}
+
+function checkAdmin(client){
+  var deferred=Q.defer();
+  var db=create_db('authorize');
+  db.view(__design_view,'findByUsername',{key:client.username},function(err,res){
+    if(err) deferred.reject(err);
+    else{
+      var arr=[];
+      if(res.rows.length)
+        arr.push(res.rows[0].value);
+      deferred.resolve(arr);
+    }
+  });
+  return deferred.promise;
+}
 
 function create_db(dbname) {
   var db;
@@ -1558,6 +1779,18 @@ var __desing_system = {
     },
     "findBy_Id": {
       "map": "function (doc) {\n if(doc._id) \n emit([doc._id], doc);\n}"
+    }
+  },
+  "language": "javascript"
+};
+var __design_authorize = {
+  "_id": "_design/objectList",
+  "views": {
+    "findByUsername": {
+      "map": "function (doc) {\n  emit(doc.username,doc);\n}"
+    },
+    "findCount": {
+      "map": "function (doc) {\n  emit(null, 1);\n}"
     }
   },
   "language": "javascript"
@@ -2044,6 +2277,31 @@ var __design_introductions = {
   },
   "language": "javascript"
 };
+var __design_useracceslog={
+  "_id": "_design/objectList",
+  "views": {
+    "findAll": {
+      "map": "function (doc) {\n  emit(doc.accesseddate,doc);\n}"
+    },
+    "findCount": {
+      "reduce": "_count",
+      "map": "function (doc) {\n  emit(null,1);\n}"
+    },
+    "findExist": {
+      "reduce": "_count",
+      "map": "function (doc) {\n  emit(doc.gui,1);\n}"
+    },
+    "findCountByUserNameAccessedDate": {
+      "reduce": "_count",
+      "map": "function (doc) {\n  emit([doc.username,doc.accesseddate],1);\n}"
+    },
+    "findByUserNameAccessedDate": {      
+      "map": "function (doc) {\n  emit([doc.username,doc.accesseddate],1);\n}"
+    }
+    
+  },
+  "language": "javascript"
+};
 //console.log(createTodayRange());
 //insertTest();
 //fetchTest();
@@ -2154,17 +2412,15 @@ function init_db(dbname, design) {
 }
 
 function get_init_client(client_ip) {
-  const browser = require('detect-browser');
-
   var c = {
     username: "",
     logintoken: "",
     logintime: null,
     logintimeout: null,
     clientuid: uuidV4(),
-    registeruid: null,
-    confirmregisteruid: null,
-    browserinfo: browser,
+    registeruid: uuidV4(),
+    confirmregisteruid: uuidV4(),
+    browserinfo: __browser,
     ip: client_ip,
     other: "",
     lastaccess: convertTZ(new Date()),
@@ -2191,7 +2447,7 @@ function set_client(js) {
     };
     client.data.message:"ERROR, OK, GOOD, SUCCESS";
   */
-  var keyword = "Authen";
+  var keyword = __login_kw;
   console.log("client.clientuid" + js.client.clientuid)
 
   if (js.client.clientuid == "" || js.client.logintoken == "") {
@@ -2199,18 +2455,17 @@ function set_client(js) {
     keyword = "NOBODY";
     throw new Error("Client not init, please check");
   }
-
-  r_client.getAsync(keyword + js.client.clientuid + js.client.logintoken).then(function (res) {
+  r_client.getAsync(keyword +' '+ js.client.clientuid +' '+ js.client.logintoken).then(function (res) {
     //console.log("res"+JSON.stringify(res));
     if (res) {
-      r_client.del(keyword + js.client.clientuid + js.client.logintoken);
+      r_client.del(keyword +' '+ js.client.clientuid +' '+ js.client.logintoken);
       js.client.clientuid = uuidV4();
       //client.logintoken=uuidV4();
     }
     delete js.client.data;
     //js.client.clientuid=uuidV4();
     js.client.logintoken = uuidV4();
-    r_client.setAsync(keyword + js.client.clientuid + js.client.logintoken, JSON.stringify(js.client), 'EX', 15 * 60).then(function (res) {
+    r_client.setAsync(keyword +' '+ js.client.clientuid +' '+ js.client.logintoken, JSON.stringify(js.client), 'EX', 15 * 60).then(function (res) {
       if (js.resp && res) {
         __cur_client = js.client;
         js.client.data.message = res;
@@ -2365,11 +2620,11 @@ function authentication_path(path) {
 
 
 function logout(js, resp) {
-  var keyword = "Authen";
-  r_client.getAsync(keyword + js.client.clientuid + js.client.logintoken).then(function (res) {
+  var keyword = __login_kw;
+  r_client.getAsync(keyword +' '+ js.client.clientuid +' '+ js.client.logintoken).then(function (res) {
     //console.log("res"+JSON.stringify(res));
     if (res) {
-      r_client.del(keyword + js.client.clientuid + js.client.logintoken, function (err, res) {
+      r_client.del(keyword +' '+ js.client.clientuid +' '+ js.client.logintoken, function (err, res) {
         js.client.logintoken = "";
         js.client.logintime = "";
         js.client.username = "";
@@ -2387,9 +2642,10 @@ function logout(js, resp) {
 /**HEARTBEAT */
 function heartbeat(js) {
   // UPDATE HEARTBEAT
+  var keyword=__login_kw
   if (js.client.logintoken == __cur_client.logintoken) {
 
-    r_client.getAsync(keyword + js.client.clientuid + js.client.logintoken).then(function (body) {
+    r_client.getAsync(keyword +' '+ js.client.clientuid +' '+ js.client.logintoken).then(function (body) {
       if (body.user.username == __cur_client.username) {
 
         js.client.data = {};
@@ -2420,6 +2676,9 @@ function heartbeat(js) {
 // }
 /** */
 init_redis();
+init_db('adminaccesslog',__design_useracceslog);
+init_db('useraccesslog',__design_useracceslog);
+init_db('authorize',__design_authorize);
 init_db('introductions', __design_introduction);
 init_db('introductionslog', __design_introductionslog);
 init_db('bonusbalance', __design_balance);
@@ -2517,6 +2776,7 @@ function init_master_user() {
           r_client.setAsync("__Master", JSON.stringify(res.rows[0].value)).then(function (body) {
             console.log('setAsync');
             console.log("Master has been set");
+            init_admin();
           }).catch(function (err) {
             throw new Error("could not set master user for redis" + err);
           }).done();
@@ -5866,7 +6126,10 @@ function logging(log) {
   });
 }
 
+
+
 function displayJson(arr){
+  arr.sort();
   var html="<html><head>";
   html+="<script>";
   html+="js=JSON.stringify("+JSON.stringify(arr)+",undefined,2);";
@@ -5880,6 +6143,40 @@ function displayJson(arr){
   html+="</html>";
   return html;
 }
+function deleteFile(itemgui, name) {
+  var deferred = Q.defer();
+  var path = _current_picture_path + '/' + itemgui + '/' + name;
+  fs.unlink(path, function (err) {
+    if (err && err.code == 'ENOENT') {
+      // file doens't exist
+      deferred.reject('Could not find this file, so can not delete this file ' + link);
+    } else if (err) {
+      // other errors, e.g. maybe we don't have enough permission
+      deferred.reject(JSON.parse(err) + ' /' + link);
+    } else {
+      deferred.resolve('removed ' + link);
+    }
+  });
+  return deferred.promise;
+}
+function makePhotoFromBase64(content, itemgui,name) {
+  var deferred = Q.defer();
+  base64.decode(content, _current_picture_path + '/' + itemgui + '/' + name, function (err, res) {
+    if (err) deferred.reject(err);
+    else deferred.resolve(_current_picture_path + '/' + itemgui + '/' + name); //put _current_icture_path for correct URL
+  });
+  return deferred.promise;
+}
+function makeBase64FromFile(itemgui, name) {// IF use only base64 string we can give short link which need request base64 string only
+  var deferred = Q.defer();
+  base64.encode(_current_picture_path + '/' + itemgui +  '/' + name, function (err, base64String) {
+    if (err) deferred.reject(err);
+    else deferred.resolve(base64String);
+  });
+  return deferred.promise;
+}
+
+
 
 // GET sample data 
 app.get('/get_sample', function (req, res) {

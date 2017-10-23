@@ -215,7 +215,7 @@ var __design_itemaddon = {
     },
     "findCountByOwnerNameShopName": {
       "reduce": "_count",
-      "map": "function (doc) {\n  emit([doc.ownername,doc.shopname,1);\n}"
+      "map": "function (doc) {\n  emit([doc.ownername,doc.shopname],1);\n}"
     },
     "findByOwnerNameShopName": {
       //"map": "function (doc) {\n  emit(['by_count',doc.month,doc.year], doc);\n}"
@@ -256,16 +256,54 @@ var __design_searchkw = {
   },
   "language": "javascript"
 };
-
-var _pp='/pp';
-var _prp='/prp';
-var _ap='/ap';
+var __design_ads = {
+  "_id": "_design/objectList",
+  "views": {
+    "findAll": {
+      "map": "function (doc) {\n  emit(doc.createddate,doc);\n}"
+    },
+    "findCount": {
+      "reduce": "_count",
+      "map": "function (doc) {\n  emit(null,1);\n}"
+    },
+    "findExist": {
+      "reduce": "_count",
+      "map": "function (doc) {\n  emit(doc.gui,1);\n}"
+    },
+    "findCountByIsActive": {
+      "reduce": "_count",
+      "map": "function (doc) {\n  emit(doc.isactive,1);\n}"
+    },
+    "findByIsActive": {
+      //"map": "function (doc) {\n  emit(['by_count',doc.month,doc.year], doc);\n}"
+      "map": "function (doc) {\n  emit([doc.isactive,doc.createddate], doc);\n}"
+    }
+  },
+  "language": "javascript"
+};
+// var _pp='/pp';
+// var _prp='/prp';
+// var _ap='/ap';
+var _pp='';
+var _prp='';
+var _ap='';
+init_db('ads', __design_ads);
 init_db('shop', __design_shop);
 init_db('item', __design_item);
 init_db('approvallist', __design_approvallist);
 init_db('itemaddon', __design_itemaddon);
 init_db('searchkw', __design_searchkw);
 init_db('doc', __design_doc);
+
+var ads={
+  photo:'',
+  title:'',
+  url:'',
+  gui:'',
+  createddate:'',
+  visitcount:'',
+  isactive:true,
+}
 
 var shop = {
   name: '',
@@ -352,6 +390,8 @@ var doc = {
 // GET sample data 
 app.get(_pp+'/get_sample', function (req, res) {
   var arr=[];
+  ads._property_name='ads';
+  arr.push(ads);
   shop._property_name='shop';
   arr.push(shop);
   item._property_name='item';
@@ -382,7 +422,19 @@ app.get('/', function (req, res) {
   res.send("welcome to The Friendd ads");
 });
 // first page here 
-
+//PUBLIC , count EventAds
+app.post(_pp+'/count_event_ads',function(req,res){
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  countEventAds(js.client.data.ads.gui).then(function(body){
+    js.client.data.message=body;
+    js.resp.send(js.client);
+  }).catch(function(err){
+    js.client.data.message=err;
+    js.resp.send(js.client);
+  }).done();
+});
 
 //Public , show front page monthly or weekly ==> event page ads
 app.post(_pp+'/show_event_ads', function (req, res) { // client
@@ -391,6 +443,186 @@ app.post(_pp+'/show_event_ads', function (req, res) { // client
   js.resp = res;
   showEventAds(js); // load photos or url ....
 });
+function showEventAds(js){
+  displayEventAds(true, js.client.data.page,js.client.data.maxpage).then(function (body) {
+    js.client.data.ads=body;    
+    js.resp.send(js.client);
+  }).catch(function (err) {
+    js.client.data.message = err;
+    js.resp.send(js.client);
+  }).done();
+}
+function findCountEventAdsByIsActive(isactive){
+  var deferred=Q.defer();
+  var db=create_db('ads');
+  db.view(__design_view,'findCountByIsActive',{key:isactive},function(err,res){
+    if(err)deferred.reject(err);
+    else{
+      var arr=[];
+      if(res.rows.length){
+        arr.push(res.rows[0].value)
+        deferred.resolve(arr[0]);
+      }
+    }
+  });
+  return deferred.promise;
+}
+function displayEventAds(isactive,page,maxpage){
+  var deferred=Q.defer();
+  var db=create_db('ads');
+  findCountEventAdsByIsActive(isactive).then(function(body){
+    db.view(__design_view,'findByIsActive',
+    {startkey:[isactive,""],endkey:[isactive,"\u9999"],decending:true,skip:0,limit:maxpage},
+    function(err,res){
+      if(err)deferred.reject(err);
+      else{
+        var arr=[];
+        if(res.rows.length){
+          for (var index = 0; index < res.rows.length; index++) {
+            //delete res.rows[index].value._rev;
+            //delete res.rows[index].value.gui;
+            arr.push(res.rows[index].value);            
+          }
+          deferred.resolve({arr:arr,count:body});
+        }
+      }
+    });
+  }).catch(function(err){
+    deferred.reject(err);
+  }).done();
+  return deferred.promise;
+}
+//ADMIN , show front page monthly or weekly ==> event page ads
+app.post(_ap+'/show_event_ads_list', function (req, res) { // client.data.user,
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  showEventAds(js); // load photos or url ....
+});
+function showEventAdsList(js){
+  displayEventAdsList(js.client.data.ads.isactive, js.client.data.page,js.client.data.maxpage).then(function (body) {
+    js.client.data.ads=body;
+    js.resp.send(js.client);
+  }).catch(function (err) {
+    js.client.data.message = err;
+    js.resp.send(js.client);
+  }).done();
+}
+function findCountEventAdsByIsActiveList(isactive){
+  var deferred=Q.defer();
+  var db=create_db('ads');
+  db.view(__design_view,'findCountByIsActive',{key:isactive},function(err,res){
+    if(err)deferred.reject(err);
+    else{
+      var arr=[];
+      if(res.rows.length){
+        arr.push(res.rows[0].value)
+        deferred.resolve(arr[0]);
+      }
+    }
+  });
+  return deferred.promise;
+}
+function displayEventAdsList(isactive,page,maxpage){
+  var deferred=Q.defer();
+  var db=create_db('ads');
+  findCountEventAdsByIsActiveList(isactive).then(function(body){
+    db.view(__design_view,'findByIsActive',
+    {startkey:[isactive,""],endkey:[isactive,"\u9999"],decending:true,skip:0,limit:maxpage},
+    function(err,res){
+      if(err)deferred.reject(err);
+      else{
+        var arr=[];
+        if(res.rows.length){
+          for (var index = 0; index < res.rows.length; index++) {
+            arr.push(res.rows[index].value);            
+          }
+          deferred.resolve({arr:arr,count:body});
+        }
+      }
+    });
+  }).catch(function(err){
+    deferred.reject(err);
+  }).done();
+  return deferred.promise;
+}
+//ADMIN update event ads
+app.post(_ap+'/update_event_ads', function (req, res) { // client.user, client.data.ads
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  updateEventAds(js); // load photos or url ....
+});
+function updateEventAds(js){
+  editEventAds(js.client.data.ads).then(function (body) {
+    js.client.data.message=body;
+    js.resp.send(js.client);
+  }).catch(function (err) {
+    js.client.data.message = err;
+    js.resp.send(js.client);
+  }).done();
+}
+function findCountEventAds(){
+  var deferred=Q.defer();
+  var db=create_db('ads');
+  db.view(__design_view,'findCount',{},function(err,res){
+    if(err)deferred.reject(err);
+    else{
+      var arr=[];
+      if(res.rows.length){
+        arr.push(res.rows[0].value);
+      }
+      deferred.resolve(arr[0]);
+    }
+  });
+  return deferred.promise;
+}
+function editEventAds(ads){
+  var deferred=Q.defer();
+  var db=create_db('ads');    
+  if(ads._rev) {
+    ads.visitcount++;
+  }
+  else{
+    ads.gui=uuidV4();
+    ads.createddate=convertTZ(new Date());
+  }
+  db.insert(ads,ads.gui,function(err,res){
+    if(err)deferred.reject(err);
+    else{
+      deferred.resolve(res);
+    }
+  });
+  return deferred.promise;
+}
+function findEventAdsByGui(gui){
+  var deferred=Q.defer();
+  var db=create_db('ads');    
+  db.view(__design_view,'findByGui',{key:gui},function(err,res){
+    if(err)deferred.reject(err);
+    else{
+      var arr=[];
+      if(res.rows.length)
+        arr.push(res.rows[0].value);
+      deferred.resolve(arr[0]);
+    }
+  });
+  return deferred.promise;
+}
+function countEventAds(adsgui){
+  var deferred=Q.defer();
+  var db=create_db('ads');    
+  findEventAdsByGui(adsgui).then(function(body){
+    editEventAds(body).then(function(body){
+      deferred.resolve(body);
+    }).catch(function(err){
+      deferred.reject(err);
+    }).done();    
+  }).catch(function(err){
+    deferred.reject(err);
+  }).done();  
+  return deferred.promise;
+}
 
 //PUBLIC , edit Keyword ads
 app.post(_pp+'/show_registered_KW_ads', function (req, res) { // client , client.data.page, client.data.maxpage
@@ -2031,12 +2263,26 @@ function authentication_path(path) {
 
       return 1;
       break;
+    case '/show_event_ads_list':
+
+      return 1;
+      break;
+      case '/update_event_ads':
+      
+      return 1;
+      break;
     case '/init_client':
 
       return 0;
       break;
     case '/show_doc_by_gui':
       
+      return 0;
+      break;
+    case 'show_event_ads':
+      return 0;
+      break;
+    case '/count_event_ads':
       return 0;
       break;
     default:

@@ -40,12 +40,12 @@ var calculate = function(a) {
     return deferred.promise;
 }
 //var arr=[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21];
-var arr=[];
-for (var index = 0; index < 20; index++) {
-    arr.push(index+1);
+// var arr=[];
+// for (var index = 0; index < 20; index++) {
+//     arr.push(index+1);
     
-}
-show(0);
+// }
+//show(0);
 function show(i){
     var db=create_db("user");
     db.view("objectList","findByUserName",{key:"souk@TheFriendd",decending:true},function(err,res){
@@ -118,8 +118,25 @@ function create_db(dbname){
     return db;
 };
 
+function calculateRange(level){
+    r=0;
+    for (var index = 0; index < level; index++) {
+        r+=Math.pow(2,index);// total range is 31 including master user
+        //console.log(r +' index'+index);
+    }
+    return r;
+}
+var maxlevel = 5; // 4 levels
+var range = calculateRange(maxlevel);
 
-
+var level=1;
+for (var index = 1; index < range; index++) {
+    if (calculateRange(level) <= index) {
+        level++;
+    }
+    console.log('level '+level+'index '+(index));
+    
+}
 
 // app.listen(88, function listening() {
 //     console.log('Listening on ');

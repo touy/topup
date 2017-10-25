@@ -4339,8 +4339,10 @@ function showPackages(js) {
   } else {
     js.db = create_db('package')
     getPackage().then(function (body) {
-      if (body)
-        js.resp.send(body);
+      if (body){
+        js.client.data.package=body;
+        js.resp.send(js.client);
+      }        
     }).catch(function (err) {
       js.client.data.message = err;
       js.resp.send(js.client);;
@@ -4373,8 +4375,10 @@ function getPackage() {
 
 function showPackageDetailsByUser(js) {
   getPackageDetailsByUser(js.client.data.user).then(function (body) {
-    if (body)
-      js.resp.send(body);
+    if (body){
+      js.client.data.package=body;
+      js.resp.send(js.client);
+    }
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);;
@@ -4406,8 +4410,10 @@ function getPackageDetailsByUser(user) {
 
 function showUserBinary(js) {
   getUserBinaryByUser(js.client.data.user).then(function (body) {
-    if (body)
-      js.resp.send(body);
+    if (body){
+      js.client.data.userbinary=body;
+      js.resp.send(js.client);
+    }      
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);;
@@ -4428,14 +4434,17 @@ function getUserBinaryByUser(user) {
       var arr = [];
       if (res.rows.length) {
         for (var index = 0; index < res.rows.length; index++) {
-          var element = array[index];
-          e = {};
-          e.username = element.value.username;
-          e.packagevalue = element.value.packagevalue;
-          e.packagegui = element.value.packagegui;
-          e.leftside = element.value.leftside;
-          e.rightside = element.value.rightside;
-          e.gui = element.value.gui;
+          var element = array[index].value;
+          e ={ // for current user
+            usergui: element.usergui,
+            username: element.username,
+            createddate: element.createddate,
+            updateddate: element.updateddate,
+            luser: element.luser,
+            ruser: element.ruser,
+            level: element.level,
+            gui: element.gui
+          };
           arr.push(e);
         }
       }

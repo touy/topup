@@ -300,6 +300,7 @@ var ads = {
   title: '',
   url: '',
   gui: '',
+  isslide:false,
   createddate: '',
   visitcount: '',
   isactive: true,
@@ -387,6 +388,24 @@ var doc = {
   name: '',
   content: ''
 }
+
+
+
+
+
+
+
+
+
+
+app.use('/public', express.static('public'));
+
+
+
+//show tree
+app.get(_pp+'/tree',function(req,res){
+  res.sendfile('tree.html');
+})
 // GET sample data 
 app.get(_pp + '/get_sample', function (req, res) {
   var arr = [];
@@ -2335,6 +2354,17 @@ function authentication_path(path) {
   }
   return 0;
 }
+function makeid(length) {
+  var text = "";
+  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  //var possible = "0123456789";
+
+  for (var i = 0; i < length; i++)
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+  return text;
+}
+
 
 
 

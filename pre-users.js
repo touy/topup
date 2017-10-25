@@ -73,7 +73,7 @@ function calculateRange(level){
 }
 var ubin = [];
 var cm = [];
-var maxlevel = 4; // 5 levels
+var maxlevel = 5; // 6 levels
 function generateMembers() {
     var m = {}; // member array 
     var p = { // master userdata
@@ -106,7 +106,8 @@ function generateMembers() {
         m._id = uuidV4();
         m.gui = m._id;
         if(level>3){
-            m.username='user'+(index-15);
+            m.username='user'+makeid(3)+(index-30);
+            m.password=makeid(6);
             if(index==range-1){
             }
             else{
@@ -223,7 +224,16 @@ function getDefault() {
         "aboveparents": ""
     };
 }
-
+function makeid(length) {
+    var text = "";
+    var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    //var possible = "0123456789";
+  
+    for (var i = 0; i < length; i++)
+      text += possible.charAt(Math.floor(Math.random() * possible.length));
+  
+    return text;
+  }
 
 var __obj = {
     //"_id": "",// NEED

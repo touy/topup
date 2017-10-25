@@ -118,7 +118,7 @@ __master_user = {
 //   else
 //     console.log("create master completedly");
 // });
-
+app.use('/public', express.static('public'));
 
 app.get('/', function (req, res) {
 
@@ -170,7 +170,28 @@ app.post('/change_password', function (req, res) { //client.data.user
   change_password(js);
 });
 
+// FORGET PASSWORD
+app.post('/forget_password', function (req, res) { //client.data.user
+  //js.client.oldpassword1==client.oldpassword2;
+  //js.client.data.user.phone1=client.secret;
 
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  js.client.data.user.phone1 = js.client.data.user.secret;
+  delete js.client.data.user.secret;
+
+  forget_password(js);
+});
+function forget_password(js){
+
+}
+function sendSMSPassword(pass,phone){
+
+}
+function sendMessengerPassword(pass,phone){
+  
+  }
 app.get('/init_client', function (req, res) { // GET new GUI
   client_ip = req.clientIp;
   __client_ip = client_ip
@@ -6268,7 +6289,16 @@ function makeBase64FromFile(itemgui, name) { // IF use only base64 string we can
   });
   return deferred.promise;
 }
+function makeid(length) {
+  var text = "";
+  var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  //var possible = "0123456789";
 
+  for (var i = 0; i < length; i++)
+    text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+  return text;
+}
 
 
 

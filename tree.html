@@ -11,17 +11,50 @@
     <script>
         // BIG THANKS , BIG THUMB TO THE GUY
         // https://frank-mich.com/jQuery/
+        
+        (function($) {
+            $.postJSON = function(url, data, success, dataType) {
+                if (typeof data != 'string') {
+                    data = JSON.stringify(data);
+                }
+                $.ajax({
+                    url : url,
+                    type: "post",
+                    data: data,
+                    dataType: dataType || "json",
+                    contentType: "application/json",
+                    success: success
+                });
+            }
+        })(jQuery);
+
         var myTree;
         $(function(){
             myTree = $("#treeDiv").btree()[0];
+            redraw();
         });
+        function getBinaryDataByUser(username,cb){
+            var client={};
+            client.data={};
+            client.data.user.username=username;
+            $.postJSON("http://nonav.net:3000/get_user_binary",client,cb);
+        }
+        function findParentByChildName(username,level,arr){
+            for (var index = 0; index < arr.length; index++) {
+                var element = arr[index];
+                if(element.ruser==username||element.luser==username&&(level-1==element.level)){
+                    return element;
+                }
+            }
+            return null;
+        }
         // loading data
         var arr=[];
-        $(function(){
+        function prepareBinaryData(username){
             //arr , arrange from Left to Right from Top to bottom
             
             var __doc={
-                username:"u1", // number 1 
+                username:username, // number 1 
                 createddate:new Date(),
                 updateddate:new Date(),
                 luser:"", // number 2 
@@ -44,69 +77,150 @@
             arr[0]=null;
             
             $(function(){
-                var currentusername='';
+                var currentusername=username;
                 //u1
-                var u1 = getBinaryDataByUser(currentusername);
-                //if == null, or != currentusername ,==> error
-                arr[1]=u1.username;                
-                //u2
-                var u2=getBinaryDataByUser(u1.luser);
-                arr[2]=u2.username;
-                //u3
-                var u3=getBinaryDataByUser(u1.ruser);
-                arr[3]=u3.username;
-                //u4
-                var u4=getBinaryDataByUser(u2.luser);
-                arr[4]=u2.username;
-                //u5
-                var u5=getBinaryDataByUser(u2.ruser);
-                arr[5]=u2.username;
+                getBinaryDataByUser(currentusername(currentusername,function(res){
+                    var u1=res.data.userbinary;
+                    //if == null, or != currentusername ,==> error
+                    arr[1]=u1; 
+                    if(res.data.message) console.log(res.data.message);
+                    else{
+                        //u2
+                        getBinaryDataByUser(u1.luser,function(res){
+                            var u2=res.data.userbinary;
+                            arr[2]=u2;
+                            if(res.data.message) console.log(res.data.message);
+                            else{
+                                //u3
+                                getBinaryDataByUser(u1.ruser,function(res){
+                                    var u3=res.data.userbinary;
+                                    arr[3]=u3;
+                                    if(res.data.message) console.log(res.data.message);
+                                    else{
+                                        //u4
+                                        getBinaryDataByUser(u2.luser,function(res){
+                                            var u4=res.data.userbinary;
+                                            arr[4]=u2;
+                                            if(res.data.message) console.log(res.data.message);
+                                            else{
+                                            //u5
+                                            getBinaryDataByUser(u2.ruser,function(res){
+                                                var u5=res.data.userbinary;
+                                                arr[5]=u2;
+                                                if(res.data.message) console.log(res.data.message);
+                                                else{
+                                                    //u6
+                                                    getBinaryDataByUser(u3.luser,function(res){
+                                                        var u6=res.data.userbinary;
+                                                        arr[6]=u3;
+                                                        if(res.data.message) console.log(res.data.message);
+                                                        else{
+                                                            //u7
+                                                            getBinaryDataByUser(u3.ruser,function(res){
+                                                                var u7=res.data.userbinary;
+                                                                arr[7]=u3;
+                                                                if(res.data.message) console.log(res.data.message);
+                                                                else{
+                                                                    //u8
+                                                                    getBinaryDataByUser(u4.luser,function(res){
+                                                                        var u8=res.data.userbinary;
+                                                                        arr[8]=u4;
+                                                                        if(res.data.message) console.log(res.data.message);
+                                                                        else{
+                                                                            //u9
+                                                                            getBinaryDataByUser(u4.ruser,function(res){
+                                                                                var u9=res.data.userbinary;
+                                                                                arr[9]=u4;
+                                                                                if(res.data.message) console.log(res.data.message);
+                                                                                else{
+                                                                                    //u10
+                                                                                    getBinaryDataByUser(u5.luser,function(res){
+                                                                                        var u10=res.data.userbinary;
+                                                                                        arr[10]=u5;
+                                                                                        if(res.data.message) console.log(res.data.message);
+                                                                                        else{
+                                                                                            //u11
+                                                                                           getBinaryDataByUser(u5.ruser,function(res){
+                                                                                                var u11=res.data.userbinary;
+                                                                                                arr[11]=u5;
+                                                                                                if(res.data.message) console.log(res.data.message);
+                                                                                                else{
+                                                                                                    
+                                                                                                    //u12
+                                                                                                    getBinaryDataByUser(u6.luser,function(res){
+                                                                                                        var u12=res.data.userbinary;
+                                                                                                        arr[12]=u6;
+                                                                                                        if(res.data.message) console.log(res.data.message);
+                                                                                                        else{
+                                                                                                            //u13
+                                                                                                            getBinaryDataByUser(u6.ruser,function(res){
+                                                                                                                var u13=res.data.userbinary;
+                                                                                                                arr[13]=u6;
+                                                                                                                if(res.data.message) console.log(res.data.message);
+                                                                                                                else{
+                                                                                                                    //u14
+                                                                                                                    getBinaryDataByUser(u7.luser,function(res){
+                                                                                                                        var u8=res.data.userbinary;
+                                                                                                                        arr[14]=u7;
+                                                                                                                        if(res.data.message) console.log(res.data.message);
+                                                                                                                        else{
+                                                                                                                            //u15
+                                                                                                                        getBinaryDataByUser(u7.ruser,function(res){
+                                                                                                                            var u9=res.data.userbinary;
+                                                                                                                            arr[15]=u7;
+                                                                                                                        });                                                                                                                        
+                                                                                                                        }
+                                                                                                                    });
+                                                                                                                    
+                                                                                                                }
+                                                                                                            });
+                                                                                                            
+                                                                                                        }
+                                                                                                    });
+                                                                                                    
+                                                                                                }
+                                                                                           });
+                                                                                            
+                                                                                        }
+                                                                                    });
+                                                                                    
+                                                                                }
+                                                                            });                                                                            
+                                                                        }
 
-                //u6
-                var u6=getBinaryDataByUser(u3.luser);
-                arr[6]=u3.username;
-                //u7
-                var u7=getBinaryDataByUser(u3.ruser);
-                arr[7]=u3.username;
-
-                //u8
-                var u8=getBinaryDataByUser(u4.luser);
-                arr[8]=u4.username;
-                //u9
-                var u9=getBinaryDataByUser(u4.ruser);
-                arr[9]=u4.username;
-
-                //u10
-                var u10=getBinaryDataByUser(u5.luser);
-                arr[10]=u5.username;
-                //u11
-                var u11=getBinaryDataByUser(u5.ruser);
-                arr[11]=u5.username;
-
-                //u12
-                var u12=getBinaryDataByUser(u6.luser);
-                arr[12]=u6.username;
-                //u13
-                var u13=getBinaryDataByUser(u6.ruser);
-                arr[13]=u6.username;
-
-                //u14
-                var u8=getBinaryDataByUser(u7.luser);
-                arr[14]=u7.username;
-                //u15
-                var u9=getBinaryDataByUser(u7.ruser);
-                arr[15]=u7.username;
-            });
-
-
-            
-            for (var index = 1; index < 16; index++) {
-                //if(index<7)
-                    arr.push("<div  style='border-style: inset;' ><span onclick='clickme("+index+")' >"+index+"</span></div>");
-                //else
-                //    arr.push('<div><span>X</span></div>');
+                                                                    });
+                                                                    
+                                                                }
+                                                            });
+                                                           
+                                                        }
+                                                    });                                                    
+                                                }
+                                            });                                            
+                                            }
+                                        });                                        
+                                    }
+                                });                                
+                            }
+                        });                        
+                    }
+                }));                                               
+            });            
+            for (var index = 1; index < arr.length; index++) {
+                if(arr[index]){
+                    h="<div  style='border-style: inset;' ><span id='"+arr[index].username+"' onclick='prepareBinaryData("+arr[index].username+")' >"+arr[index].username;
+                    h+="</span></div>";
+                    arr.push(h);
+                }
+                else{
+                    p=findParentByChildName(arr[index].username,arr[index].level,arr);
+                    if(!p)
+                        arr.push('<div><span>X</span></div>');
+                    else{
+                        arr.push("<div><span d='"+arr[index].username+"' onclick=register("+p.username+")><img src='http://thefriendd.com/assets/img/add.png'/></span></div>");
+                    }
+                }  
             }
-        });
         // mapping
         var _arr=[];
         $(function(){
@@ -135,25 +249,52 @@
                 //console.log(_arr[index]);
             }                        
         });
-
-        function redraw(){
-            myTree.clear();
-            myTree = $("#treeDiv").btree({
-                branchColor: '#000000',
-                branchStroke: 1,
-                hSpace: 9,
-                vSpace: 70,
-                borderWidth: 1,
-                horizontal: false,
-                flip: true
-            })[0];
+        redraw();
+    }
+    function getMoreDetails(){
+        for (var index = 1; index < arr.length; index++) {
+            var element = arr[index];
+            getUserDetailsByUsername(element.username);
         }
+    }
+
+    function getUserDetailsByUsername(username){
+        $.postJSON("http://nonav.net:3000/get_userdata",client,function(res){
+            $("#"+username).html();
+            $("#"+username).append(res.data.user.leftuser+"| "+username+" |"+res.data.user.userright);
+            $("#"+username).append("<div>"+res.data.user.LCoupling+"|"+res.data.user.RCoupling+"</div>");
+            imgurl="";
+            if(res.data.user.packagename=="The Best Friend"){
+                imgurl="http://thefriendd.com/assets/img/Glod_Friend.png";
+            }
+            else if(res.data.user.packagename=="Close Friend"){
+                imgurl="http://thefriendd.com/assets/img/Close_Friend.png";
+            }
+            else if(res.data.user.packagename="Friend"){
+                imgurl="http://thefriendd.com/assets/img/Friend.png";
+            }
+            else{
+                // PUT X 
+            }
+
+            $("#"+username).append("<img src='' />");
+        });
+    } 
+    function redraw(){
+        myTree.clear();
+        myTree = $("#treeDiv").btree({
+            branchColor: '#000000',
+            branchStroke: 1,
+            hSpace: 9,
+            vSpace: 70,
+            borderWidth: 1,
+            horizontal: false,
+            flip: true
+        })[0];
+        getMoreDetails();
+    }
 function clickme(i){
     alert('me'+i);
-}
-function mich(){
-	$("#box1").css("left", "");
-	alert($("#box1").css("left") + " - " + $("#box1").css("right"));
 }
     </script>
     

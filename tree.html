@@ -19,12 +19,92 @@
         var arr=[];
         $(function(){
             //arr , arrange from Left to Right from Top to bottom
+            
+            var __doc={
+                username:"u1", // number 1 
+                createddate:new Date(),
+                updateddate:new Date(),
+                luser:"", // number 2 
+                ruser:"", // number 3
+                level:0,
+                gui:''
+                };
+            // from number 2 find number 4 and 5
+            // from number 3 find number 6 and 7 
+
+            //from number 4 find number 8 and 9
+            //from number 5 , find number 10 and 11 
+            // from number 6 find number 12 and 13
+            // from number 7 find number 14 and 15
+
+            //ຖ້າໂຕໃດມັນບໍ່ມີ ແຕ່ແມ່ມີຕົວຕົນ ແມ່ນໃຫ້ ໝາຍເພື່ອ ລົງທະບຽນ
+            //ຖ້າໂຕໃດບໍ່ມີແລະແມ່ກະບໍ່ມີ ແມ່ນໃຫ້ໝາຍ ເຄື່ອງ ໝາຍ X
+
+            // get binary data from server
             arr[0]=null;
+            
+            $(function(){
+                var currentusername='';
+                //u1
+                var u1 = getBinaryDataByUser(currentusername);
+                //if == null, or != currentusername ,==> error
+                arr[1]=u1.username;                
+                //u2
+                var u2=getBinaryDataByUser(u1.luser);
+                arr[2]=u2.username;
+                //u3
+                var u3=getBinaryDataByUser(u1.ruser);
+                arr[3]=u3.username;
+                //u4
+                var u4=getBinaryDataByUser(u2.luser);
+                arr[4]=u2.username;
+                //u5
+                var u5=getBinaryDataByUser(u2.ruser);
+                arr[5]=u2.username;
+
+                //u6
+                var u6=getBinaryDataByUser(u3.luser);
+                arr[6]=u3.username;
+                //u7
+                var u7=getBinaryDataByUser(u3.ruser);
+                arr[7]=u3.username;
+
+                //u8
+                var u8=getBinaryDataByUser(u4.luser);
+                arr[8]=u4.username;
+                //u9
+                var u9=getBinaryDataByUser(u4.ruser);
+                arr[9]=u4.username;
+
+                //u10
+                var u10=getBinaryDataByUser(u5.luser);
+                arr[10]=u5.username;
+                //u11
+                var u11=getBinaryDataByUser(u5.ruser);
+                arr[11]=u5.username;
+
+                //u12
+                var u12=getBinaryDataByUser(u6.luser);
+                arr[12]=u6.username;
+                //u13
+                var u13=getBinaryDataByUser(u6.ruser);
+                arr[13]=u6.username;
+
+                //u14
+                var u8=getBinaryDataByUser(u7.luser);
+                arr[14]=u7.username;
+                //u15
+                var u9=getBinaryDataByUser(u7.ruser);
+                arr[15]=u7.username;
+            });
+
+
+            
             for (var index = 1; index < 16; index++) {
-                if(index<7)
+                //if(index<7)
                     arr.push("<div  style='border-style: inset;' ><span onclick='clickme("+index+")' >"+index+"</span></div>");
-                else
-                    arr.push('<div><span>X</span></div>');
+                //else
+                //    arr.push('<div><span>X</span></div>');
             }
         });
         // mapping
@@ -79,7 +159,7 @@ function mich(){
     
 </head>
 
-<body onload="loadCanvas()">
+<body >
     <!-- <div class='input-box'>
         <input id='tree-input' type='number' placeholder='Enter number'>
         <button id='add-to-tree' onclick="addToTree()">Add To Tree</button>

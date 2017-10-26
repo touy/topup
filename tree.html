@@ -217,7 +217,7 @@
                     if(!p)
                         arr.push('<div><span>X</span></div>');
                     else{
-                        arr.push("<div><span d='"+arr[index].username+"' onclick=register("+p.username+")><img src='http://thefriendd.com/assets/img/add.png'/></span></div>");
+                        arr.push("<div><span id='"+arr[index].username+"' onclick=register("+p.username+")><img src='http://thefriendd.com/assets/img/add.png'/></span></div>");
                     }
                 }  
             }
@@ -260,9 +260,7 @@
 
     function getUserDetailsByUsername(username){
         $.postJSON("http://nonav.net:3000/get_userdata",client,function(res){
-            $("#"+username).html();
-            $("#"+username).append(res.data.user.leftuser+"| "+username+" |"+res.data.user.userright);
-            $("#"+username).append("<div>"+res.data.user.LCoupling+"|"+res.data.user.RCoupling+"</div>");
+            $("#"+username).html();            
             imgurl="";
             if(res.data.user.packagename=="The Best Friend"){
                 imgurl="http://thefriendd.com/assets/img/Glod_Friend.png";
@@ -270,14 +268,15 @@
             else if(res.data.user.packagename=="Close Friend"){
                 imgurl="http://thefriendd.com/assets/img/Close_Friend.png";
             }
-            else if(res.data.user.packagename="Friend"){
+            else if(res.data.user.packagename=="Friend"){
                 imgurl="http://thefriendd.com/assets/img/Friend.png";
             }
             else{
                 // PUT X 
             }
-
-            $("#"+username).append("<img src='' />");
+            $("#"+username).append("<img src='"+imgurl+"' />");
+            $("#"+username).append(res.data.user.leftuser+"| "+username+" |"+res.data.user.userright);
+            $("#"+username).append("<div>"+res.data.user.LCoupling+"|"+res.data.user.RCoupling+"</div>");
         });
     } 
     function redraw(){
@@ -294,7 +293,7 @@
         getMoreDetails();
     }
 function clickme(i){
-    alert('me'+i);
+    $(location).attr('href','/Register')
 }
     </script>
     
@@ -309,7 +308,7 @@ function clickme(i){
     <button id='drawtree' onclick="redraw()">draw tree</button>
     <div id="treeDiv" class="center" style="overflow: hidden;text-align: center;  height: 10px; border-style: solid; border-width: 0px; border-color: #b49393;">
             <div style="border-style:unset;" >
-                <span onclick="clickme()" id="box1"> 
+                <span onclick="clickme(box1)" id="box1"> 
                     <img title="HI" width="48px" height="48px" src='http://thefriendd.com/assets/img/Friend.png'/>
                     <div>0| Box1 |0
                         <div>0 / 0</div>
@@ -317,16 +316,16 @@ function clickme(i){
                 </span>
             </div>
             <div style="border-style: unset;">
-                <span onclick="clickme()" id="box2"><img title="HI" width="48px" height="48px" src='http://thefriendd.com/assets/img/Glod_Friend.png'/>
+                <span onclick="clickme(box2)" id="box2"><img title="HI" width="48px" height="48px" src='http://thefriendd.com/assets/img/Glod_Friend.png'/>
                     <div>30| Box2 |50
                         <div>200.000/ 0</div>
                     </div></span>
             </div>
             <div style="border-style: unset;">
-                <span onclick="clickme()" id="box3">Box3</span>
+                <span onclick="clickme()" id="box3"><img title="4" width="48px" height="48px" src='http://thefriendd.com/assets/img/add.png'/></span>
             </div>
             <div style="border-style: unset;">
-                <span onclick="clickme()" id="box4">
+                <span onclick="clickme(box4)" id="box4">
                         <img title="4" width="48px" height="48px" src='http://thefriendd.com/assets/img/Close_Friend.png'/>
                         <div>30| Box2 |50
                             <div>0 / 100.000</div>
@@ -334,8 +333,7 @@ function clickme(i){
                 </span>
             </div>
             <div style="border-style: unset;">
-                <span onclick="clickme()" id="box5"
-                ><img title="4" width="48px" height="48px" src='http://thefriendd.com/assets/img/add.png'/>
+                <span onclick="clickme()" id="box5"></span>
             </div>
             <div style="border-style: unset;">
                 <span onclick="clickme()" id="box6">Box6</span>

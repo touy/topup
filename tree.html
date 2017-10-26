@@ -208,7 +208,7 @@
             });            
             for (var index = 1; index < arr.length; index++) {
                 if(arr[index]){
-                    h="<div  style='border-style: inset;' ><span id='"+arr[index].username+"' onclick='prepareBinaryData("+arr[index].username+")' >"+arr[index].username;
+                    h="<div  style='border-style: unset;' ><span id='"+arr[index].username+"' onclick='prepareBinaryData("+arr[index].username+")' >"+arr[index].username;
                     h+="</span></div>";
                     arr.push(h);
                 }
@@ -307,53 +307,64 @@ function clickme(i){
         
     </div> -->
     <button id='drawtree' onclick="redraw()">draw tree</button>
-    <div id="treeDiv" style="overflow: hidden; height: 10px; border-style: solid; border-width: 0px; border-color: #b49393;">
-            <div style="border-style: inset;" >
+    <div id="treeDiv" class="center" style="overflow: hidden;text-align: center;  height: 10px; border-style: solid; border-width: 0px; border-color: #b49393;">
+            <div style="border-style:unset;" >
                 <span onclick="clickme()" id="box1"> 
-                    <img title="HI" width="48px" height="48px" src='https://www.w3schools.com/tags/img_the_scream.jpg'/>
-                    <div>HI</div>
+                    <img title="HI" width="48px" height="48px" src='http://thefriendd.com/assets/img/Friend.png'/>
+                    <div>0| Box1 |0
+                        <div>0 / 0</div>
+                    </div>
                 </span>
             </div>
-            <div style="border-style: inset;">
-                <span onclick="clickme()" id="box2">Box2</span>
+            <div style="border-style: unset;">
+                <span onclick="clickme()" id="box2"><img title="HI" width="48px" height="48px" src='http://thefriendd.com/assets/img/Glod_Friend.png'/>
+                    <div>30| Box2 |50
+                        <div>200.000/ 0</div>
+                    </div></span>
             </div>
-            <div style="border-style: inset;">
+            <div style="border-style: unset;">
                 <span onclick="clickme()" id="box3">Box3</span>
             </div>
-            <div style="border-style: inset;">
-                <span onclick="clickme()" id="box4">Box4</span>
+            <div style="border-style: unset;">
+                <span onclick="clickme()" id="box4">
+                        <img title="4" width="48px" height="48px" src='http://thefriendd.com/assets/img/Close_Friend.png'/>
+                        <div>30| Box2 |50
+                            <div>0 / 100.000</div>
+                        </div></span>
+                </span>
             </div>
-            <div style="border-style: inset;">
-                <span onclick="clickme()" id="box5">Box5</span>
+            <div style="border-style: unset;">
+                <span onclick="clickme()" id="box5"
+                ><img title="4" width="48px" height="48px" src='http://thefriendd.com/assets/img/add.png'/>
             </div>
-            <div style="border-style: inset;">
+            <div style="border-style: unset;">
                 <span onclick="clickme()" id="box6">Box6</span>
             </div>
-            <div style="border-style: inset;">
+            <div style="border-style: unset;">
                 <span onclick="clickme()" id="box7">Box7</span>
             </div>
-            <div style="border-style: inset;">
+            <div style="border-style: unset;">
                 <span onclick="clickme()" id="box8">Box8</span>
             </div>
-            <div style="border-style: inset;">
+            <div style="border-style: unset;">
                 <span onclick="clickme()" id="box9">Box9</span>
             </div>
-            <div style="border-style: inset;" >
+            <div style="border-style: unset;" >
                 <span onclick="clickme()" id="box10">Box10</span>
             </div>
-            <div style="border-style: inset;">
+            <div style="border-style: unset;">
                 <span onclick="clickme()" id="box11">Box11</span>
             </div>
-            <div style="border-style: inset;">
+            <div style="border-style: unset;">
                 <span onclick="clickme()" id="box12">Box12</span>
             </div>
-            <div style="border-style: inset;">
+            <div style="border-style: unset;">
                 <span onclick="clickme()" id="box13">Box13</span>
             </div>
-            <div style="border-style: inset;">
+            <div style="border-style: unset;">
                 <span onclick="clickme()" id="box14">Box14</span>
             </div>
-            <div style="border-style: inset;">
+            <div style="border-style: unset;">
                 <span onclick="clickme()" id="box15">Box15</span>
             </div>
         </div>

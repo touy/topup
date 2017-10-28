@@ -3202,7 +3202,7 @@ function login(js) {
   check_authentication(js.client.data).then(function (body) {
     // console.log("body:"+JSON.stringify(body));
     // console.log("client.data:"+JSON.stringify(client.data));
-
+    console.log(body);
     // encrypt password and compare here 
     if (body.user.username == js.client.data.user.username && body.user.password == js.client.data.user.password) {
       js.client.data = {};

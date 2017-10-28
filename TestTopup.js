@@ -333,7 +333,7 @@ app.get('/get_default_binary_tree',function(req,res){
     if(element.username==js.client.data.user.username){
       mem.push(element);
     }
-    else if((element.aboveparents.indexOf(js.client.data.user.username)+1)&&js.client.data.user.memberlevel>element.memberlevel){            
+    else if(!!(element.aboveparents.indexOf(js.client.data.user.username)+1)&&js.client.data.user.memberlevel>element.memberlevel){            
       //console.log("added member: "+element.username);
       mem.push(element);
     }    
@@ -352,6 +352,7 @@ app.get('/get_default_binary_tree',function(req,res){
     }
   // console.log("mem:"+mem.length);
   // console.log("bmem:"+bmem.length);
+  console.log('Ready');
   js.client.data.user=mem;
   js.client.data.userbinary=bmem;
   js.resp.send(js.client);
@@ -364,16 +365,15 @@ app.post('/get_default_binary_tree',function(req,res){
   var m={};
   var mem=[];
   var bmem=[];
-
+  //console.log(members.member);
 // gets all member which has parent name : username
   for (var index = 0; index < members.member.length; index++) {
     var element = members.member[index];   
-    
     //console.log("added rooted ?"+element.username);
     if(element.username==js.client.data.user.username){
       mem.push(element);
     }
-    else if((element.aboveparents.indexOf(js.client.data.user.username)+1)&&js.client.data.user.memberlevel>element.memberlevel){            
+    else if((element.aboveparents.indexOf(js.client.data.user.username)+1)&&js.client.data.user.memberlevel+mem[0].memberlevel>element.memberlevel){            
       //console.log("added member: "+element.username);
       mem.push(element);
     }    
@@ -393,6 +393,7 @@ app.post('/get_default_binary_tree',function(req,res){
     }
   // console.log("mem:"+mem.length);
   // console.log("bmem:"+bmem.length);
+  //console.log('Ready');
   js.client.data.user=mem;
   js.client.data.userbinary=bmem;
   js.resp.send(js.client);
@@ -3198,11 +3199,11 @@ function init_default_package() {
 function login(js) {
   console.log("HI LOGIN");
   //var js=client.data;
-  console.log(js.client.data);
+  //console.log(js.client.data);
   check_authentication(js.client.data).then(function (body) {
     // console.log("body:"+JSON.stringify(body));
     // console.log("client.data:"+JSON.stringify(client.data));
-    console.log(body);
+   // console.log(body);
     // encrypt password and compare here 
     if (body.username == js.client.data.user.username && body.password == js.client.data.user.password) {
       js.client.data = {};

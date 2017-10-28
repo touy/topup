@@ -2,7 +2,14 @@
 
 <head>
     <style>
-        .center {margin: auto; width: 50%;}
+        .center {
+            margin: auto;
+            width: 50%;
+        };
+        div#treeDiv.small{
+            font-size: 8p;
+            size:8px;
+        }
     </style>
     <script src="public/js/jquery-1.12.4.min.js"></script>
     <script src="public/js/wz_jsgraphics.js"></script>
@@ -11,502 +18,346 @@
     <script>
         // BIG THANKS , BIG THUMB TO THE GUY
         // https://frank-mich.com/jQuery/
-        function jsonGet(url,data,cb) {
-             //console.log(JSON.stringify(data));
+        function jsonGet(url, data, cb) {
+            //console.log(JSON.stringify(data));
 
             $.ajax({
-						type: 'GET',
-						data: JSON.stringify(data),
-                        contentType: 'application/json',
-                        dataType:"json",
-                        url: url,						
-                        success: cb,
-                        error: function (jqXHR, textStatus, errorThrown) {
-                            if (jqXHR.status == 500) {
-                                console.log('Internal error: ' + jqXHR.responseText);
-                            } else {
-                                console.log('Unexpected error.');
-                            }
-                        }
-                    });
+                type: 'GET',
+                data: JSON.stringify(data),
+                contentType: 'application/json',
+                dataType: "json",
+                url: url,
+                success: cb,
+                error: function (jqXHR, textStatus, errorThrown) {
+                    if (jqXHR.status == 500) {
+                        console.log('Internal error: ' + jqXHR.responseText);
+                    } else {
+                        console.log('Unexpected error.');
+                    }
+                }
+            });
         }
-        function jsonPost(url,data,cb) {
-             //console.log(data);
+        function jsonPost(url, data, cb) {
+            //console.log(data);
             $.ajax({
-						type: 'POST',
-						data: JSON.stringify(data),
-                        contentType: 'application/json',
-                        dataType:"json",
-                        url: url,						
-                        success: cb
-                    });
+                type: 'POST',
+                data: JSON.stringify(data),
+                contentType: 'application/json',
+                dataType: "json",
+                url: url,
+                success: cb
+            });
         }
-        function findTreeByUsername(c,username){            
+        
+        function findTreeByUsername(c, username) {
             for (var index = 0; index < c.length; index++) {
                 var element = c[index];
-                if(element.username==username){
+                if (element.username == username) {
                     return element;
                 }
             }
             return null;
         }
-        function indexingJson(lusername,rusername,c,needlevel=1,i=-1){
-            if(lusername){
-                // var client={};
-                // client.data={};
-                // client.data.user={};
-                // client.data.userbinary={};
-                // client.data.user.username=lusername;                                  
-                //console.log(res);                    
-                if(res=findTreeByUsername(c,lusername)){              
-                    if(needlevel<res.level)
+        function indexingJson(lusername, rusername, c, needlevel = 1, i = -1,parent) {
+            //console.log("1 arr length:"+arr.lenghth);
+            if (lusername) {
+                if (res = findTreeByUsername(c, lusername)) {
+                    if (needlevel < res.level)
                         return;
-                    var x=(2*i)+1;
-                    if(i==-1) x=0; // root                    
-                    res.index=x;
-                    res.request="lusrname:"+lusername; 
-                    arr[x]=res;                          
-                    indexingJson(arr[x].luser,arr[x].ruser,c,needlevel,i+1);                    
+                    //var x=0;                                        
+                    var x = (2 * i) + 1;
+                    if (i == -1) x = 0; // root
+                    res.index = x;
+                    res.request = "lusrname:" + lusername;
+                    res.parent =findParentByUserName(lusername,c);
+                    arr[x] = res;
+                    indexingJson(arr[x].luser, arr[x].ruser, c, needlevel, x,res.parent);
                 }
-            }            
-            if(rusername){
-                // var client={};
-                // client.data={};
-                // client.data.user={};
-                // client.data.userbinary={};
-                // client.data.user.username=rusername;                                                       
-                if(body=findTreeByUsername(c,rusername)){ 
-                    if(needlevel<body.level)
-                        return;                                 
-                    var y=(2*i)+2;                                 
-                    body.index=y;
-                    body.request="rusrname:"+rusername;   
-                    arr[y]=body;                                                 
-                    console.log(arr);
-                    indexingJson(arr[y].luser,arr[y].ruser,c,needlevel,i+1);    
-                    
-                }                                           
-            }                                      
+            }else{
+                if (needlevel < body.level)
+                        return;
+                var x = (2 * i) + 1;
+                if (i == -1) x = 0; // root
+                res={};
+                res.parent =parent;
+                res.luser='';res.ruser='';
+                arr[x] = res;
+                indexingJson(arr[x].luser, arr[x].ruser, c, needlevel, x,'');
+            }
+            if(x)
+            if (rusername) {
+                if (body = findTreeByUsername(c, rusername)) {
+                    if (needlevel < body.level)
+                        return;
+                    var y = (2 * i) + 2;
+                    body.index = y;
+                    body.request = "rusrname:" + rusername;
+                    body.parent =findParentByUserName(rusername,c);
+                    arr[y] = body;
+                    //console.log(arr);
+                    indexingJson(arr[y].luser, arr[y].ruser, c, needlevel, y,body.parent);
+                }
+            }else{    
+                if (needlevel < body.level)
+                        return;            
+                if (i == -1) return; // root
+                var y = (2 * i) + 1;
+                res={};
+                res.parent =parent;
+                res.luser='';res.ruser='';
+                arr[y] = res;
+                indexingJson(arr[y].luser, arr[y].ruser, c, needlevel, y,'');
+            }
+        }
+        function compare(a, b) {
+            const value1 = a.i;
+            const value2 = b.i;
+            let comparison = 0;
+            if (value1 > value2) {
+                comparison = 1;
+            } else if (value1 < value2) {
+                comparison = -1;
+            }
+            return comparison;
         }
         var myTree;
-        var arr=[];
-        $(function(){
-            myTree = $("#treeDiv").btree()[0];
-            redraw();
-        });
-        var dbu=[];
-        var client={};
-        client.data={};
-        client.data.user={};
-        client.data.userbinary={};
-        var needlevel=5; // current user memberlevel + needed level   
-        getBinaryDataByUser("souk@TheFriendd",needlevel,-1);    
-        function getBinaryDataByUser(username,needlevel,i=-1){ 
-            client.data.user.username=username;
-            client.data.user.memberlevel=needlevel      
-            jsonPost("http://localhost:3000/get_default_binary_tree",client,function(res){ 
-                client.data.user=res.data.user;
-                client.data.userbinary=res.data.userbinary;
-                console.log(res.data.userbinary);
-                indexingJson(username,'',client.data.userbinary,needlevel,i);
-                //client.data.userbinary=arr;
-                console.log(arr);
-             }); 
-            //console.log(client);            
-            // if(lusername){
-            //     var client={};
-            //     client.data={};
-            //     client.data.user={};
-            //     client.data.userbinary={};
-            //     client.data.user.username=lusername;
-            //     jsonPost("http://localhost:3000/get_default_binary_tree",client,function(res){                    
-            //     console.log(res);                    
-            //     if(res){              
-            //         if(needlevel<=res.data.userbinary.level)
-            //             return;
-            //         var x=(2*i)+1;
-            //         if(i==-1) x=0; // root                    
-            //         res.data.userbinary.index=x;
-            //         res.data.userbinary.request="lusrname:"+lusername; 
-            //         arr.push(res.data.userbinary);    
-            //         console.log(res);             
-            //         //if(rusername)    
-            //         window.setTimeout(function(){
-            //         getBinaryDataByUser(arr[x].luser,arr[x].ruser,needlevel,++i);
-            //         },200);
-            //     }
-            //     });
-            // }            
-            // if(rusername){
-            //     var client={};
-            //     client.data={};
-            //     client.data.user={};
-            //     client.data.userbinary={};
-            //     client.data.user.username=rusername;
-            //     jsonPost("http://localhost:3000/get_default_binary_tree",client,function(body){                                        
-            //             if(body){                                  
-            //                 var y=(2*i)+2;                                 
-            //                 body.data.userbinary.index=y;
-            //                 body.data.userbinary.request="rusrname:"+rusername;   
-            //                 arr.push(body.data.userbinary);
-            //                 //arr[y]=res.data.userbinary; 
-            //                // arr[y].request="rusrname:"+lusername;              
-            //                 //arr[y].index=y;                             
-            //                 console.log(arr);
-            //                 // window.setTimeout(function(){
-            //                 // getBinaryDataByUser(arr[x].luser,arr[x].ruser,needlevel,++i);
-            //                 // },100);
-            //                 window.setTimeout(function(){
-            //                     getBinaryDataByUser(arr[y].luser,arr[y].ruser,needlevel,++i);    
-            //                 },150);
+        var arr = [];
+        var dbu = [];
+        var client = {};
+        client.data = {};
+        client.data.user = {};
+        client.data.userbinary = {};
 
-            //             }                       
-            //         });
-            // }                                      
+        function getBinaryDataByUser(username, needlevel,cb) {
+            client.data.user.username = username;
+            client.data.user.memberlevel = needlevel
+            jsonPost("http://localhost:3000/get_default_binary_tree", client, cb);
         };
 
-        function findParentByChildName(username,level,arr){
+        function findParentByUserName(username, arr) {
             for (var index = 0; index < arr.length; index++) {
                 var element = arr[index];
-                if(element.ruser==username||element.luser==username&&(level-1==element.level)){
+                if (element.luser == username||element.ruser==username ) {
                     return element;
                 }
             }
             return null;
         }
         // loading data        
-        function prepareBinaryData(username){
-            //arr , arrange from Left to Right from Top to bottom
-            
-            var __doc={
-                username:username, // number 1 
-                createddate:new Date(),
-                updateddate:new Date(),
-                luser:"", // number 2 
-                ruser:"", // number 3
-                level:0,
-                gui:''
-                };
-            // from number 2 find number 4 and 5
-            // from number 3 find number 6 and 7 
+        function prepareBinaryData(username = '',needlevel) {            
+            //arr[0] = null;
+            //var needlevel = 4; // current user memberlevel + needed level   
+            if (!username)
+                username = "souk@TheFriendd";
+            console.log('preparing user'+username);
+            getBinaryDataByUser(username, needlevel,function (res) {
+                client.data.user = res.data.user;
+                client.data.userbinary = res.data.userbinary;
+                // console.log(res.data.userbinary);
+                // console.log(res.data.user);
+                indexingJson(username, '', client.data.userbinary, needlevel, -1);
+                //client.data.userbinary=arr;
+                //console.log("2 arr length:"+arr.length);                
+                //return;
+                //arr.sort(compare);
+                //console.log('sorted')
 
-            //from number 4 find number 8 and 9
-            //from number 5 , find number 10 and 11 
-            // from number 6 find number 12 and 13
-            // from number 7 find number 14 and 15
-
-            //ຖ້າໂຕໃດມັນບໍ່ມີ ແຕ່ແມ່ມີຕົວຕົນ ແມ່ນໃຫ້ ໝາຍເພື່ອ ລົງທະບຽນ
-            //ຖ້າໂຕໃດບໍ່ມີແລະແມ່ກະບໍ່ມີ ແມ່ນໃຫ້ໝາຍ ເຄື່ອງ ໝາຍ X
-
-            // get binary data from server
-            arr[0]=null;
-            
-            $(function(){
-                var currentusername=username;
-                getBinaryDataByUser(currentusername,'',function(res){
-
-                });
-                //u1
-                getBinaryDataByUser(currentusername(currentusername,function(res){
-                    var u1=res.data.userbinary;
-                    //if == null, or != currentusername ,==> error
-                    arr[1]=u1; 
-                    if(res.data.message) console.log(res.data.message);
-                    else{
-                        //u2
-                        getBinaryDataByUser(u1.luser,function(res){
-                            var u2=res.data.userbinary;
-                            arr[2]=u2;
-                            if(res.data.message) console.log(res.data.message);
-                            else{
-                                //u3
-                                getBinaryDataByUser(u1.ruser,function(res){
-                                    var u3=res.data.userbinary;
-                                    arr[3]=u3;
-                                    if(res.data.message) console.log(res.data.message);
-                                    else{
-                                        //u4
-                                        getBinaryDataByUser(u2.luser,function(res){
-                                            var u4=res.data.userbinary;
-                                            arr[4]=u2;
-                                            if(res.data.message) console.log(res.data.message);
-                                            else{
-                                            //u5
-                                            getBinaryDataByUser(u2.ruser,function(res){
-                                                var u5=res.data.userbinary;
-                                                arr[5]=u2;
-                                                if(res.data.message) console.log(res.data.message);
-                                                else{
-                                                    //u6
-                                                    getBinaryDataByUser(u3.luser,function(res){
-                                                        var u6=res.data.userbinary;
-                                                        arr[6]=u3;
-                                                        if(res.data.message) console.log(res.data.message);
-                                                        else{
-                                                            //u7
-                                                            getBinaryDataByUser(u3.ruser,function(res){
-                                                                var u7=res.data.userbinary;
-                                                                arr[7]=u3;
-                                                                if(res.data.message) console.log(res.data.message);
-                                                                else{
-                                                                    //u8
-                                                                    getBinaryDataByUser(u4.luser,function(res){
-                                                                        var u8=res.data.userbinary;
-                                                                        arr[8]=u4;
-                                                                        if(res.data.message) console.log(res.data.message);
-                                                                        else{
-                                                                            //u9
-                                                                            getBinaryDataByUser(u4.ruser,function(res){
-                                                                                var u9=res.data.userbinary;
-                                                                                arr[9]=u4;
-                                                                                if(res.data.message) console.log(res.data.message);
-                                                                                else{
-                                                                                    //u10
-                                                                                    getBinaryDataByUser(u5.luser,function(res){
-                                                                                        var u10=res.data.userbinary;
-                                                                                        arr[10]=u5;
-                                                                                        if(res.data.message) console.log(res.data.message);
-                                                                                        else{
-                                                                                            //u11
-                                                                                           getBinaryDataByUser(u5.ruser,function(res){
-                                                                                                var u11=res.data.userbinary;
-                                                                                                arr[11]=u5;
-                                                                                                if(res.data.message) console.log(res.data.message);
-                                                                                                else{
-                                                                                                    
-                                                                                                    //u12
-                                                                                                    getBinaryDataByUser(u6.luser,function(res){
-                                                                                                        var u12=res.data.userbinary;
-                                                                                                        arr[12]=u6;
-                                                                                                        if(res.data.message) console.log(res.data.message);
-                                                                                                        else{
-                                                                                                            //u13
-                                                                                                            getBinaryDataByUser(u6.ruser,function(res){
-                                                                                                                var u13=res.data.userbinary;
-                                                                                                                arr[13]=u6;
-                                                                                                                if(res.data.message) console.log(res.data.message);
-                                                                                                                else{
-                                                                                                                    //u14
-                                                                                                                    getBinaryDataByUser(u7.luser,function(res){
-                                                                                                                        var u8=res.data.userbinary;
-                                                                                                                        arr[14]=u7;
-                                                                                                                        if(res.data.message) console.log(res.data.message);
-                                                                                                                        else{
-                                                                                                                            //u15
-                                                                                                                        getBinaryDataByUser(u7.ruser,function(res){
-                                                                                                                            var u9=res.data.userbinary;
-                                                                                                                            arr[15]=u7;
-                                                                                                                        });                                                                                                                        
-                                                                                                                        }
-                                                                                                                    });
-                                                                                                                    
-                                                                                                                }
-                                                                                                            });
-                                                                                                            
-                                                                                                        }
-                                                                                                    });
-                                                                                                    
-                                                                                                }
-                                                                                           });
-                                                                                            
-                                                                                        }
-                                                                                    });
-                                                                                    
-                                                                                }
-                                                                            });                                                                            
-                                                                        }
-
-                                                                    });
-                                                                    
-                                                                }
-                                                            });
-                                                           
-                                                        }
-                                                    });                                                    
-                                                }
-                                            });                                            
-                                            }
-                                        });                                        
-                                    }
-                                });                                
-                            }
-                        });                        
+                arr.splice(0, 0, {}); // ignore the first item                    
+                console.log(arr.length);
+                var _xarr=[];
+                console.log(arr);
+                for (var index = 0; index < arr.length; index++) {
+                    console.log(arr[index]);
+                    if(arr[index]=={}) continue;
+                    if (arr[index].username) {
+                        h = "<div  style='border-style: unset;' ><span id='" + arr[index].username +
+                            "' onclick=\"prepareBinaryData('" + arr[index].username + "',4)\" >" + arr[index].username;
+                        h += "</span></div>";
+                        _xarr.push(h);
+                    } else {
+                        var p='';                    
+                        p = arr[index].parent;
+                        if (p==''||p==null||p=='undefined')
+                            _xarr.push(
+                                '<div><span onclick="clickme()"><img width="32px" height="32px" src="http://www.iconsdb.com/icons/preview/soylent-red/x-mark-3-xxl.png" /></span></div>'
+                            );
+                        else {
+                            _xarr.push("<div><span  onclick=register('" + p +"')><img width='32px' height='32px' src='http://thefriendd.com/assets/img/add.png'/></span></div>");
+                        }
                     }
-                }));                                               
-            });            
-            for (var index = 1; index < arr.length; index++) {
-                if(arr[index]){
-                    h="<div  style='border-style: unset;' ><span id='"+arr[index].username+"' onclick='prepareBinaryData("+arr[index].username+")' >"+arr[index].username;
-                    h+="</span></div>";
-                    arr.push(h);
                 }
-                else{
-                    p=findParentByChildName(arr[index].username,arr[index].level,arr);
-                    if(!p)
-                        arr.push('<div><span>X</span></div>');
-                    else{
-                        arr.push("<div><span id='"+arr[index].username+"' onclick=register("+p.username+")><img src='http://thefriendd.com/assets/img/add.png'/></span></div>");
+                // mapping
+                console.log(arr);
+                console.log(_xarr.length);
+                console.log('mapping');
+                var _arr = [];
+                $(function () {
+                    // from arr mapping to treeDiv            
+                    // 1-8,2-4, 3-12, 4-2,5-6,6-10,7-14,8-1,9-3,10-5,11-7,12-9,13-11,14-13,15-15                    
+                    _arr.push(_xarr[8]);
+                    _arr.push(_xarr[4]);
+                    _arr.push(_xarr[9]);
+                    _arr.push(_xarr[2]);
+                    _arr.push(_xarr[10]);
+                    _arr.push(_xarr[5]);
+                    _arr.push(_xarr[11]);
+                    _arr.push(_xarr[1]);
+                    _arr.push(_xarr[12]);
+                    _arr.push(_xarr[6]);
+                    _arr.push(_xarr[13]);
+                    _arr.push(_xarr[3]);
+                    _arr.push(_xarr[14]);
+                    _arr.push(_xarr[7]);
+                    _arr.push(_xarr[15]);
+                    html = '';
+                    $("#treeDiv").html('');
+                    for (var index = 0; index < _arr.length; index++) {
+                        //$("#box"+(index+1)).html(_arr[index]);                         
+                        $("#treeDiv").append(_arr[index]);
+                        //console.log(_arr[index]);
                     }
-                }  
-            }
-        // mapping
-        var _arr=[];
-        $(function(){
-            // from arr mapping to treeDiv            
-            // 1-8,2-4, 3-12, 4-2,5-6,6-10,7-14,8-1,9-3,10-5,11-7,12-9,13-11,14-13,15-15                        
-            _arr.push(arr[8]);
-            _arr.push(arr[4]);
-            _arr.push(arr[9]);
-            _arr.push(arr[2]);
-            _arr.push(arr[10]);
-            _arr.push(arr[5]);
-            _arr.push(arr[11]);
-            _arr.push(arr[1]);
-            _arr.push(arr[12]);
-            _arr.push(arr[6]);
-            _arr.push(arr[13]);
-            _arr.push(arr[3]);
-            _arr.push(arr[14]);
-            _arr.push(arr[7]);
-            _arr.push(arr[15]);
-            html='';
-            $("#treeDiv").html('');
-            for (var index = 0; index < _arr.length; index++) {     
-                //$("#box"+(index+1)).html(_arr[index]);                         
-                $("#treeDiv").append(_arr[index]);
-                //console.log(_arr[index]);
-            }                        
-        });
-        redraw();
-    }
-    function getMoreDetails(){
-        for (var index = 1; index < arr.length; index++) {
-            var element = arr[index];
-            getUserDetailsByUsername(element.username);
+                });
+            });            
         }
-    }
 
-    function getUserDetailsByUsername(username){
-        var client={};
-            client.data={};
-            client.data.user.username=username;
-        $.jpost("http://localhost:4000/get_userdata",client,function(res){
-            $("#"+username).html();            
-            imgurl="";
-            if(res.data.user.packagename=="The Best Friend"){
-                imgurl="http://thefriendd.com/assets/img/Glod_Friend.png";
+        function getMoreDetails() {
+            for (var index = 1; index < client.data.user.length; index++) {
+                var element = client.data.user[index];
+                getUserDetailsByUser(element);
             }
-            else if(res.data.user.packagename=="Close Friend"){
-                imgurl="http://thefriendd.com/assets/img/Close_Friend.png";
-            }
-            else if(res.data.user.packagename=="Friend"){
-                imgurl="http://thefriendd.com/assets/img/Friend.png";
-            }
-            else{
+        }
+
+        function getUserDetailsByUser(user) {
+            $("#" + user.username).html('');
+            imgurl = "";
+            if (user.packagename == "The Best Friend") {
+                imgurl = "http://thefriendd.com/assets/img/Glod_Friend.png";
+            } else if (user.packagename == "Close Friend") {
+                imgurl = "http://thefriendd.com/assets/img/Close_Friend.png";
+            } else if (user.packagename == "Friend") {
+                imgurl = "http://thefriendd.com/assets/img/Friend.png";
+            } else {
                 // PUT X                 
-                imgurl="http://www.iconsdb.com/icons/preview/soylent-red/x-mark-3-xxl.png";
+                imgurl = "http://www.iconsdb.com/icons/preview/soylent-red/x-mark-3-xxl.png";
             }
-            $("#"+username).append("<img src='"+imgurl+"' />");
-            $("#"+username).append(res.data.user.leftuser+"| "+username+" |"+res.data.user.userright);
-            $("#"+username).append("<div>"+res.data.user.LCoupling+"|"+res.data.user.RCoupling+"</div>");
+            $("#" + user.username).append("<img title='"+user.username+"' width='48px' height='48px' src='" + imgurl + "'/>");
+            $("#" + user.username).append("<div class='small'>"+user.leftuser + "| " + user.username + " |" + user.userright+"<div>" + user.LCoupling + "|" + user.RCoupling + "</div></div>");
+            //$("#" + user.username).append();
+        }
+
+        $(function () {
+            myTree = $("#treeDiv").btree()[0];
+            redraw();
         });
-    } 
-    function redraw(){
-        myTree.clear();
-        myTree = $("#treeDiv").btree({
-            branchColor: '#000000',
-            branchStroke: 1,
-            hSpace: 9,
-            vSpace: 70,
-            borderWidth: 1,
-            horizontal: false,
-            flip: true
-        })[0];
-        getMoreDetails();
-    }
-function clickme(i){
-    $(location).attr('href','/Register')
-}
-function showARR(){
-    var html="";
-    arr.forEach(function(e) {
-        html+="<div>username"+e.username+",luser:"+e.luser+",ruser:"+e.ruser+",level:"+e.level+",request:"+e.request+",i:"+e.index+"</div>";
-    }, this);
-    $("#arr").html(html);
-}
+        
+        function redraw() {
+            myTree.clear();
+            myTree = $("#treeDiv").btree({
+                branchColor: '#000000',
+                branchStroke: 1,
+                hSpace: 9,
+                vSpace: 70,
+                borderWidth: 1,
+                horizontal: false,
+                flip: true
+            })[0];            
+            getMoreDetails();
+        }
+
+        function clickme(i) {
+           // $(location).attr('href', '/Register')
+           console.log('no one here');
+        }
+
+        function showARR() {
+            var html = "";
+            arr.forEach(function (e) {
+                if(e)
+                html += "<div>username" + e.username + ",luser:" + e.luser + ",ruser:" + e.ruser + ",level:" +
+                    e.level + ",request:" + e.request + ",i:" + e.index + "</div>";
+            }, this);
+            $("#arr").html(html);
+        }
+        prepareBinaryData('',4);
     </script>
-    
+
 </head>
 
-<body >
+<body>
     <!-- <div class='input-box'>
         <input id='tree-input' type='number' placeholder='Enter number'>
         <button id='add-to-tree' onclick="addToTree()">Add To Tree</button>
         
     </div> -->
-    <button  onclick="showARR()">SHow</button>
-    ARR: <div id='arr'></div>
+    <button onclick="showARR()">SHow</button>
+    ARR:
+    <div id='arr'></div>
     <button id='drawtree' onclick="redraw()">draw tree</button>
-    <div id="treeDiv" class="center" style="overflow: hidden;text-align: center;  height: 10px; border-style: solid; border-width: 0px; border-color: #b49393;">
-            <div style="border-style:unset;" >
-                <span onclick="clickme(box1)" id="box1"> 
-                    <img title="HI" width="48px" height="48px" src='http://thefriendd.com/assets/img/Friend.png'/>
-                    <div>0| Box1 |0
-                        <div>0 / 0</div>
-                    </div>
-                </span>
-            </div>
-            <div style="border-style: unset;">
-                <span onclick="clickme(box2)" id="box2"><img title="HI" width="48px" height="48px" src='http://thefriendd.com/assets/img/Glod_Friend.png'/>
-                    <div>30| Box2 |50
-                        <div>200.000/ 0</div>
-                    </div></span>
-            </div>
-            <div style="border-style: unset;">
-                <span onclick="clickme()" id="box3"><img title="4" width="48px" height="48px" src='http://thefriendd.com/assets/img/add.png'/></span>
-            </div>
-            <div style="border-style: unset;">
-                <span onclick="clickme(box4)" id="box4">
-                        <img title="4" width="48px" height="48px" src='http://thefriendd.com/assets/img/Close_Friend.png'/>
-                        <div>30| Box2 |50
-                            <div>0 / 100.000</div>
-                        </div></span>
-                </span>
-            </div>
-            <div style="border-style: unset;">
-                <span onclick="clickme()" id="box5"></span>
-            </div>
-            <div style="border-style: unset;">
-                <span onclick="clickme()" id="box6">Box6</span>
-            </div>
-            <div style="border-style: unset;">
-                <span onclick="clickme()" id="box7">Box7</span>
-            </div>
-            <div style="border-style: unset;">
-                <span onclick="clickme()" id="box8">Box8</span>
-            </div>
-            <div style="border-style: unset;">
-                <span onclick="clickme()" id="box9">Box9</span>
-            </div>
-            <div style="border-style: unset;" >
-                <span onclick="clickme()" id="box10">Box10</span>
-            </div>
-            <div style="border-style: unset;">
-                <span onclick="clickme()" id="box11">Box11</span>
-            </div>
-            <div style="border-style: unset;">
-                <span onclick="clickme()" id="box12">Box12</span>
-            </div>
-            <div style="border-style: unset;">
-                <span onclick="clickme()" id="box13">Box13</span>
-            </div>
-            <div style="border-style: unset;">
-                <span onclick="clickme()" id="box14">Box14</span>
-            </div>
-            <div style="border-style: unset;">
-                <span onclick="clickme()" id="box15">Box15</span>
-            </div>
+    <div id="treeDiv" class="center" style="overflow: hidden;text-align: center; border-style: solid; border-color: #b49393;">
+        <div style="border-style:unset;">
+            <span onclick="clickme(box1)" id="box1">
+                <img title="HI" width="48px" height="48px" src='http://thefriendd.com/assets/img/Friend.png' />
+                <div>0| Box1 |0
+                    <div>0 / 0</div>
+                </div>
+            </span>
         </div>
+        <div style="border-style: unset;">
+            <span onclick="clickme(box2)" id="box2">
+                <img title="HI" width="48px" height="48px" src='http://thefriendd.com/assets/img/Glod_Friend.png' />
+                <div>30| Box2 |50
+                    <div>200.000/ 0</div>
+                </div>
+            </span>
+        </div>
+        <div style="border-style: unset;">
+            <span onclick="clickme()" id="box3">
+                <img title="4" width="48px" height="48px" src='http://thefriendd.com/assets/img/add.png' />
+            </span>
+        </div>
+        <div style="border-style: unset;">
+            <span onclick="clickme(box4)" id="box4">
+                <img title="4" width="48px" height="48px" src='http://thefriendd.com/assets/img/Close_Friend.png' />
+                <div>30| Box2 |50
+                    <div>0 / 100.000</div>
+                </div>
+            </span>
+            </span>
+        </div>
+        <div style="border-style: unset;">
+            <span onclick="clickme()" id="box5"></span>
+        </div>
+        <div style="border-style: unset;">
+            <span onclick="clickme()" id="box6">Box6</span>
+        </div>
+        <div style="border-style: unset;">
+            <span onclick="clickme()" id="box7">Box7</span>
+        </div>
+        <div style="border-style: unset;">
+            <span onclick="clickme()" id="box8">Box8</span>
+        </div>
+        <div style="border-style: unset;">
+            <span onclick="clickme()" id="box9">Box9</span>
+        </div>
+        <div style="border-style: unset;">
+            <span onclick="clickme()" id="box10">Box10</span>
+        </div>
+        <div style="border-style: unset;">
+            <span onclick="clickme()" id="box11">Box11</span>
+        </div>
+        <div style="border-style: unset;">
+            <span onclick="clickme()" id="box12">Box12</span>
+        </div>
+        <div style="border-style: unset;">
+            <span onclick="clickme()" id="box13">Box13</span>
+        </div>
+        <div style="border-style: unset;">
+            <span onclick="clickme()" id="box14">Box14</span>
+        </div>
+        <div style="border-style: unset;">
+            <span onclick="clickme()" id="box15">Box15</span>
+        </div>
+    </div>
 
 
 

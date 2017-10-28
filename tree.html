@@ -11,34 +11,160 @@
     <script>
         // BIG THANKS , BIG THUMB TO THE GUY
         // https://frank-mich.com/jQuery/
-        
-        (function($) {
-            $.postJSON = function(url, data, success, dataType) {
-                if (typeof data != 'string') {
-                    data = JSON.stringify(data);
-                }
-                $.ajax({
-                    url : url,
-                    type: "post",
-                    data: data,
-                    dataType: dataType || "json",
-                    contentType: "application/json",
-                    success: success
-                });
-            }
-        })(jQuery);
+        function jsonGet(url,data,cb) {
+             //console.log(JSON.stringify(data));
 
+            $.ajax({
+						type: 'GET',
+						data: JSON.stringify(data),
+                        contentType: 'application/json',
+                        dataType:"json",
+                        url: url,						
+                        success: cb,
+                        error: function (jqXHR, textStatus, errorThrown) {
+                            if (jqXHR.status == 500) {
+                                console.log('Internal error: ' + jqXHR.responseText);
+                            } else {
+                                console.log('Unexpected error.');
+                            }
+                        }
+                    });
+        }
+        function jsonPost(url,data,cb) {
+             //console.log(data);
+            $.ajax({
+						type: 'POST',
+						data: JSON.stringify(data),
+                        contentType: 'application/json',
+                        dataType:"json",
+                        url: url,						
+                        success: cb
+                    });
+        }
+        function findTreeByUsername(c,username){            
+            for (var index = 0; index < c.length; index++) {
+                var element = c[index];
+                if(element.username==username){
+                    return element;
+                }
+            }
+            return null;
+        }
+        function indexingJson(lusername,rusername,c,needlevel=1,i=-1){
+            if(lusername){
+                // var client={};
+                // client.data={};
+                // client.data.user={};
+                // client.data.userbinary={};
+                // client.data.user.username=lusername;                                  
+                //console.log(res);                    
+                if(res=findTreeByUsername(c,lusername)){              
+                    if(needlevel<res.level)
+                        return;
+                    var x=(2*i)+1;
+                    if(i==-1) x=0; // root                    
+                    res.index=x;
+                    res.request="lusrname:"+lusername; 
+                    arr[x]=res;                          
+                    indexingJson(arr[x].luser,arr[x].ruser,c,needlevel,i+1);                    
+                }
+            }            
+            if(rusername){
+                // var client={};
+                // client.data={};
+                // client.data.user={};
+                // client.data.userbinary={};
+                // client.data.user.username=rusername;                                                       
+                if(body=findTreeByUsername(c,rusername)){ 
+                    if(needlevel<body.level)
+                        return;                                 
+                    var y=(2*i)+2;                                 
+                    body.index=y;
+                    body.request="rusrname:"+rusername;   
+                    arr[y]=body;                                                 
+                    console.log(arr);
+                    indexingJson(arr[y].luser,arr[y].ruser,c,needlevel,i+1);    
+                    
+                }                                           
+            }                                      
+        }
         var myTree;
+        var arr=[];
         $(function(){
             myTree = $("#treeDiv").btree()[0];
             redraw();
         });
-        function getBinaryDataByUser(username,cb){
-            var client={};
-            client.data={};
+        var dbu=[];
+        var client={};
+        client.data={};
+        client.data.user={};
+        client.data.userbinary={};
+        var needlevel=5; // current user memberlevel + needed level   
+        getBinaryDataByUser("souk@TheFriendd",needlevel,-1);    
+        function getBinaryDataByUser(username,needlevel,i=-1){ 
             client.data.user.username=username;
-            $.postJSON("http://nonav.net:3000/get_user_binary",client,cb);
-        }
+            client.data.user.memberlevel=needlevel      
+            jsonPost("http://localhost:3000/get_default_binary_tree",client,function(res){ 
+                client.data.user=res.data.user;
+                client.data.userbinary=res.data.userbinary;
+                console.log(res.data.userbinary);
+                indexingJson(username,'',client.data.userbinary,needlevel,i);
+                //client.data.userbinary=arr;
+                console.log(arr);
+             }); 
+            //console.log(client);            
+            // if(lusername){
+            //     var client={};
+            //     client.data={};
+            //     client.data.user={};
+            //     client.data.userbinary={};
+            //     client.data.user.username=lusername;
+            //     jsonPost("http://localhost:3000/get_default_binary_tree",client,function(res){                    
+            //     console.log(res);                    
+            //     if(res){              
+            //         if(needlevel<=res.data.userbinary.level)
+            //             return;
+            //         var x=(2*i)+1;
+            //         if(i==-1) x=0; // root                    
+            //         res.data.userbinary.index=x;
+            //         res.data.userbinary.request="lusrname:"+lusername; 
+            //         arr.push(res.data.userbinary);    
+            //         console.log(res);             
+            //         //if(rusername)    
+            //         window.setTimeout(function(){
+            //         getBinaryDataByUser(arr[x].luser,arr[x].ruser,needlevel,++i);
+            //         },200);
+            //     }
+            //     });
+            // }            
+            // if(rusername){
+            //     var client={};
+            //     client.data={};
+            //     client.data.user={};
+            //     client.data.userbinary={};
+            //     client.data.user.username=rusername;
+            //     jsonPost("http://localhost:3000/get_default_binary_tree",client,function(body){                                        
+            //             if(body){                                  
+            //                 var y=(2*i)+2;                                 
+            //                 body.data.userbinary.index=y;
+            //                 body.data.userbinary.request="rusrname:"+rusername;   
+            //                 arr.push(body.data.userbinary);
+            //                 //arr[y]=res.data.userbinary; 
+            //                // arr[y].request="rusrname:"+lusername;              
+            //                 //arr[y].index=y;                             
+            //                 console.log(arr);
+            //                 // window.setTimeout(function(){
+            //                 // getBinaryDataByUser(arr[x].luser,arr[x].ruser,needlevel,++i);
+            //                 // },100);
+            //                 window.setTimeout(function(){
+            //                     getBinaryDataByUser(arr[y].luser,arr[y].ruser,needlevel,++i);    
+            //                 },150);
+
+            //             }                       
+            //         });
+            // }                                      
+        };
+
         function findParentByChildName(username,level,arr){
             for (var index = 0; index < arr.length; index++) {
                 var element = arr[index];
@@ -48,8 +174,7 @@
             }
             return null;
         }
-        // loading data
-        var arr=[];
+        // loading data        
         function prepareBinaryData(username){
             //arr , arrange from Left to Right from Top to bottom
             
@@ -78,6 +203,9 @@
             
             $(function(){
                 var currentusername=username;
+                getBinaryDataByUser(currentusername,'',function(res){
+
+                });
                 //u1
                 getBinaryDataByUser(currentusername(currentusername,function(res){
                     var u1=res.data.userbinary;
@@ -259,7 +387,10 @@
     }
 
     function getUserDetailsByUsername(username){
-        $.postJSON("http://nonav.net:3000/get_userdata",client,function(res){
+        var client={};
+            client.data={};
+            client.data.user.username=username;
+        $.jpost("http://localhost:4000/get_userdata",client,function(res){
             $("#"+username).html();            
             imgurl="";
             if(res.data.user.packagename=="The Best Friend"){
@@ -272,7 +403,8 @@
                 imgurl="http://thefriendd.com/assets/img/Friend.png";
             }
             else{
-                // PUT X 
+                // PUT X                 
+                imgurl="http://www.iconsdb.com/icons/preview/soylent-red/x-mark-3-xxl.png";
             }
             $("#"+username).append("<img src='"+imgurl+"' />");
             $("#"+username).append(res.data.user.leftuser+"| "+username+" |"+res.data.user.userright);
@@ -295,6 +427,13 @@
 function clickme(i){
     $(location).attr('href','/Register')
 }
+function showARR(){
+    var html="";
+    arr.forEach(function(e) {
+        html+="<div>username"+e.username+",luser:"+e.luser+",ruser:"+e.ruser+",level:"+e.level+",request:"+e.request+",i:"+e.index+"</div>";
+    }, this);
+    $("#arr").html(html);
+}
     </script>
     
 </head>
@@ -305,6 +444,8 @@ function clickme(i){
         <button id='add-to-tree' onclick="addToTree()">Add To Tree</button>
         
     </div> -->
+    <button  onclick="showARR()">SHow</button>
+    ARR: <div id='arr'></div>
     <button id='drawtree' onclick="redraw()">draw tree</button>
     <div id="treeDiv" class="center" style="overflow: hidden;text-align: center;  height: 10px; border-style: solid; border-width: 0px; border-color: #b49393;">
             <div style="border-style:unset;" >

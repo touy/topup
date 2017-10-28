@@ -4,6 +4,7 @@ const app = express();
 const uuidV4 = require('uuid/v4');
 const nano = require('nano')('http://admin:admin@localhost:5984');
 const LTCSERVICE = require('./ltctopup')();
+var preUser=require('./pre-users')(11);
 //const nano = require('nano')('http://localhost:5984');
 const cors = require('cors');
 const base64 = require('file-base64');
@@ -24,7 +25,8 @@ const Q = require('q');
 //app.use(express.json());       // to support JSON-encoded bodies
 //app.use(express.urlencoded()); // to support URL-encoded bodies
 const bodyParser = require('body-parser');
-app.use(bodyParser());
+//app.use(bodyParser());
+app.use(bodyParser.json());
 app.use(cors());
 
 var _pp = '/pp';
@@ -180,25 +182,244 @@ app.post('/forget_password', function (req, res) { //client.data.user
   js.resp = res;
   js.client.data.user.phone1 = js.client.data.user.secret;
   delete js.client.data.user.secret;
-
   forget_password(js);
 });
 function forget_password(js){
-
+  viewUser(js.client.username).then(function(body){
+  }).catch(function(err){
+    js.client.message=err;
+    js.client.send(js.client);
+  }).done();  
 }
 function sendSMSPassword(pass,phone){
-
+  ltc.checkBalanceCenterLTC();
+  ltc.checkBalanceLTC('2058538459');
+  ltc.sendSMSLTC('2059918880','payment 2058538459 OK','header OK');
+  ltc.checkBalanceLTC('2058538459');
 }
 function sendMessengerPassword(pass,phone){
-  
+    
+}
+
+//RESET bonus topup monthly.
+
+//show tree
+app.get('/tree',function(req,res){
+  res.sendfile('tree.html');
+});
+
+app.get('/delete_node_chain',function(req,res){
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  deleteNodeChain(js).then(function(body){
+    js.client.message=body;
+    js.client.resp.send(js.client);
+  }).catch(function(err){
+    js.client.message=err;
+    js.client.resp.send(js.client);
+  });
+});
+function detele_user(username){
+  var deferred =Q.defer();
+  var db=create_db('user');  
+  findUserByUserName(username).then(function(body){
+    body[0]._deleted=true;
+    db.insert(body[0],body[0].gui,function(err,res){
+      if(err) deferred.reject(err);
+      else{
+        deferred.resolve(res);
+      }
+    });
+  }).catch(function(err){
+    deferred.reject(err);
+  }).done();
+  return deferred.promise;
+}
+function deleteNodeChain(username){
+  var deferred =Q.defer();
+  var db=create_db('user'); 
+  delete_user(username).then(function(body){
+
+  }).catch(function(err){
+    deferred.reject(err);
+  }).done();
+  return deferred.promise;
+}
+function delteBinaryTree(){
+  for (var x = 0; x < binarytree.length; x++) {
+    var b = binarytree[x];
+    //console.log(x);
+    if (!b) continue;
+    if (b.username == username) {
+        delete binarytree[x]; // delete exist binarytree
+        if (b.luser)
+            deleteNode(users, binarytree, b.luser);
+        if (b.ruser)
+            deleteNode(users, binarytree, b.ruser);
+
+    }
+}
+}
+
+app.get('/init_default_users',function(req,res){
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  init_default_users();
+});
+
+function init_default_users(){
+  var members=preUser.generateMembers();
+  var m =members.member;
+  var b = members.binarytree;
+  for (var index = 0; index < m.length; index++) {
+    addUser(m[index]);
   }
+  for (var index = 0; index < b.length; index++) {
+    addUserBinary(b[index]);
+  }
+}
+function addUserBinary(bin){
+  var deferred =Q.defer();
+  var db=create_db('userbinary');
+  db.insert(user,user.gui,function(err,res){
+    if(err) deferred.reject(err);
+    else{
+      var arr=[];
+      if(res.rows.length){
+        for (var index = 0; index < res.rows.length; index++) {
+          arr.push(res.rows[index].value);          
+        }
+      }
+      deferred.resolve(arr);
+    }
+  });
+  return deferred.promise;
+}
+function addUser(user){
+  var deferred =Q.defer();
+  var db=create_db('user');
+  db.insert(user,user.gui,function(err,res){
+    if(err) deferred.reject(err);
+    else{
+      var arr=[];
+      if(res.rows.length){
+        for (var index = 0; index < res.rows.length; index++) {
+          arr.push(res.rows[index].value);          
+        }
+      }
+      deferred.resolve(arr);
+    }
+  });
+  return deferred.promise;
+}
+app.get('/get_default_binary_tree',function(req,res){
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  var members=preUser.generateMembers();  
+  var m={};
+  var mem=[];
+  var bmem=[];
+
+// gets all member which has parent name : username
+// if(js.client.data.user.memberlevel>4)
+//   js.client.data.user.memberlevel=4 ; // set max to show for normal user
+  for (var index = 0; index < members.member.length; index++) {
+    var element = members.member[index];   
+    
+    //console.log("added rooted ?"+element.username);
+    if(element.username==js.client.data.user.username){
+      mem.push(element);
+    }
+    else if((element.aboveparents.indexOf(js.client.data.user.username)+1)&&js.client.data.user.memberlevel>element.memberlevel){            
+      //console.log("added member: "+element.username);
+      mem.push(element);
+    }    
+  }
+  // console.log("member:"+members.member.length);
+  // console.log("binarytree:"+members.binarytree.length);  
+    for (var x = 0; x < mem.length; x++) {
+      var e = mem[x];
+      for (var index = 0; index < members.binarytree.length; index++) {
+        var element =  members.binarytree[index];             
+        if(e.username==element.username){
+          bmem.push(element);
+          console.log("bmem:"+bmem.length); 
+        } 
+      }
+    }
+  // console.log("mem:"+mem.length);
+  // console.log("bmem:"+bmem.length);
+  js.client.data.user=mem;
+  js.client.data.userbinary=bmem;
+  js.resp.send(js.client);
+});
+app.post('/get_default_binary_tree',function(req,res){
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  var members=preUser.generateMembers();  
+  var m={};
+  var mem=[];
+  var bmem=[];
+
+// gets all member which has parent name : username
+  for (var index = 0; index < members.member.length; index++) {
+    var element = members.member[index];   
+    
+    //console.log("added rooted ?"+element.username);
+    if(element.username==js.client.data.user.username){
+      mem.push(element);
+    }
+    else if((element.aboveparents.indexOf(js.client.data.user.username)+1)&&js.client.data.user.memberlevel>element.memberlevel){            
+      //console.log("added member: "+element.username);
+      mem.push(element);
+    }    
+  }
+  // console.log("member:"+members.member.length);
+  // console.log("binarytree:"+members.binarytree.length);
+  
+    for (var x = 0; x < mem.length; x++) {
+      var e = mem[x];
+      for (var index = 0; index < members.binarytree.length; index++) {
+        var element =  members.binarytree[index];             
+        if(e.username==element.username){
+          bmem.push(element);
+          console.log("bmem:"+bmem.length); 
+        } 
+      }
+    }
+  // console.log("mem:"+mem.length);
+  // console.log("bmem:"+bmem.length);
+  js.client.data.user=mem;
+  js.client.data.userbinary=bmem;
+  js.resp.send(js.client);
+});
+
+
+
+
+
+function getDefaultBinaryTree(js){
+  showBinaryTree(js.client.data.user.username).then(function(body){
+    js.client.data.userbinary=body;
+    js.client.data.message="OK";
+    js.resp.send(js.client);
+  }).catch(function(err){
+    js.client.data.message=err;
+    js.resp.send(js.client);
+  })
+}
+
 app.get('/init_client', function (req, res) { // GET new GUI
   client_ip = req.clientIp;
   __client_ip = client_ip
   if (__cur_client.clientuid != req.body.clientuid)
     res.send(get_init_client(client_ip));
   else
-    res.send('good client');
+    res.send(get_init_client(client_ip));// TESTING ONLY
 });
 
 
@@ -1523,8 +1744,6 @@ function showLatestMembersList(js) {
 }
 
 
-//RESET bonus topup monthly.
-
 
 
 
@@ -2813,7 +3032,6 @@ function init_redis() {
     console.log(succeeded); // will be true if successfull
   });
 }
-
 function init_default_master_user(js) {
   var db = create_db("user");
   db.view(__design_view, "findTopUser", function (err, res) {
@@ -2827,7 +3045,6 @@ function init_default_master_user(js) {
           js.resp.send(js.client);
         } else {
           r_client.setAsync("__Master", JSON.stringify(__master_user)).then(function (body) {
-
           }).catch(function (err) {
             throw new Error("could not set master user for redis" + err);
             js.client.data.message = err;
@@ -4797,21 +5014,22 @@ function upgradePackage(js) {
   });
 }
 // - ລາຍຊື່ຕາມ ຕົ້ນໄມ້ binary
-function showBinaryTree(js) {
+function showBinaryTree(username) {
+  var deferred=Q.defer();
   var db = create_db("userbinary");
   db.view(__design_view, "findByUsername", {
-    key: js.client.data.user.username,
-    descending: true
+    key: username,    
   }, function (err, res) {
-    if (err) resp.send(err);
+    if (err) deferred.reject(err);
     else {
-      if (res.rows.length) {
-        js.client.data.userbinary = res.rows[0].value;
-        js.client.data.message = "OK";
-        js.resp.send(js.client);
+      var arr=[];
+      if (res.rows.length) { 
+        arr.push(res.rows[0].value)
       }
+      deferred.resolve(arr);
     }
   });
+  return deferred.promise;
 }
 // - ລາຍງານ, ຄະແນນ ເງິນ ຈຳນວນ ສະມາຊິກຂອງຜູ້ໃຊ້ເອງ
 
@@ -5944,7 +6162,6 @@ function showUserInfo(js) {
   var user = {
     username: js.client.username
   };
-
   viewUser(user).then(function (body) {
     if (body) {
       js.client.data.message = 'OK';
@@ -5977,31 +6194,11 @@ function viewUser(user) {
         logging(l);
         deferred.reject(err);
       } else {
+        var arr=[];
         if (res.rows.length) {
-          var l = {
-            log: ("info %s", JSON.stringify({
-              message: "OK"
-            })),
-            logdate: new Date(),
-            type: "info",
-            gui: uuidV4()
-          };
-          logging(l);
-          deferred.resolve(res.rows[0].value);
-        } else {
-          var l = {
-            log: ("error %s", JSON.stringify({
-              message: "user was not found " + user.username
-            })),
-            logdate: new Date(),
-            type: "error",
-            gui: uuidV4()
-          };
-          logging(l);
-          deferred.resolve({
-            message: ("username %s was not found", user.username)
-          });
+          arr.push(res.rows[0].value);
         }
+        deferred.resolve(arr[0]);
       }
     });
   return deferred.promise;
@@ -6061,7 +6258,7 @@ function checkRegisterAvailableUser(js) { // username password, phone1
 function checkRegisterMaxphone(js) {
   findMaxPhoneNumber(obj).then(function (body) {
     if (body.length > 3) {
-      js.client.data.message += ", could not use this phone number";
+      js.client.data.message = ", could not use this phone number";
     } else {
       js.client.data.message = "OK";
     }

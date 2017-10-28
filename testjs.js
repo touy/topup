@@ -126,18 +126,54 @@ function calculateRange(level){
     }
     return r;
 }
-var maxlevel = 5; // 4 levels
-var range = calculateRange(maxlevel);
+// var maxlevel = 5; // 4 levels
+// var range = calculateRange(maxlevel);
 
-var level=1;
-for (var index = 1; index < range; index++) {
-    if (calculateRange(level) <= index) {
-        level++;
-    }
-    console.log('level '+level+'index '+(index));
+// var level=1;
+// for (var index = 1; index < range; index++) {
+//     if (calculateRange(level) <= index) {
+//         level++;
+//     }
+//     console.log('level '+level+'index '+(index));
     
-}
+// }
 
 // app.listen(88, function listening() {
 //     console.log('Listening on ');
 //   });
+var dbu=[];
+var client=[];
+client.data={};
+client.data.user={};
+client.data.userbinary={};
+
+function getBinaryDataByUser(lusername,rusername,level=0,i=0){
+    client.data.user.username=lusername;
+    //if(lusername)    
+    $.jpost("http://localhost:3000/get_default_binary_tree",client,function(res){
+        console.log("LEFT"+res+"\n");
+        client.data.user.username=rusername;    
+        if(res){              
+            arr[i++]=res.data.userbinary;        
+            arr[i--].index=i;                
+            //if(rusername)    
+            if(rusername)         
+            $.jpost("http://localhost:3000/get_default_binary_tree",client,function(res){                
+                console.log("right"+res+"\n");
+                if(res){                    
+                    arr[i]=res.data.userbinary;       
+                    arr[i].index=i;                                              
+                }
+                getBinaryDataByUser(arr[i-1].luser,arr[i-1].ruser,++level,((i-1)*2)+1);
+                getBinaryDataByUser(arr[i].luser,arr[i].ruser,level,((i-1)*2)+2);
+            });
+            else{
+                getBinaryDataByUser(arr[i-1].luser,arr[i-1].ruser,++level,((i-1)*2)+1);
+            }
+        }
+    });
+};
+
+getBinaryDataByUser("souk@TheFriendd",'',0,0);
+
+

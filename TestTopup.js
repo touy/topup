@@ -3204,9 +3204,9 @@ function login(js) {
     // console.log("client.data:"+JSON.stringify(client.data));
     console.log(body);
     // encrypt password and compare here 
-    if (body.user.username == js.client.data.user.username && body.user.password == js.client.data.user.password) {
+    if (body.username == js.client.data.user.username && body.password == js.client.data.user.password) {
       js.client.data = {};
-      js.client.username = body.user.username;
+      js.client.username = body.username;
       js.client.logintime = convertTZ(new Date());
       js.client.logintoken = uuidV4();
       js.client.isexist = true;

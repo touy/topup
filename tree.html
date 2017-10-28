@@ -110,15 +110,8 @@
             }
         }
         function compare(a, b) {
-            const value1 = a.i;
-            const value2 = b.i;
-            let comparison = 0;
-            if (value1 > value2) {
-                comparison = 1;
-            } else if (value1 < value2) {
-                comparison = -1;
-            }
-            return comparison;
+            var x = a.name < b.name? -1:1; 
+            return x;         
         }
         var myTree;
         var arr = [];
@@ -170,8 +163,9 @@
                     console.log(arr[index]);
                     if(arr[index]=={}) continue;
                     if (arr[index].username) {
-                        h = "<div  style='border-style: unset;' ><span id='" + arr[index].username +
-                            "' onclick=\"prepareBinaryData('" + arr[index].username + "',4)\" >" + arr[index].username;
+                        gui=getUserByUsername(arr[index].username).gui;
+                        h = "<div  style='border-style: unset;' ><span id='" + gui +
+                            "' onclick=\"prepareBinaryData('" + arr[index].username + "',4)\"  title='"+ arr[index].username+"'>" + arr[index].username;
                         h += "</span></div>";
                         _xarr.push(h);
                     } else {
@@ -217,18 +211,29 @@
                         //console.log(_arr[index]);
                     }
                 });
+                getMoreDetails();  
+                redraw();              
             });            
         }
 
         function getMoreDetails() {
-            for (var index = 1; index < client.data.user.length; index++) {
+            for (var index = 0; index < client.data.user.length; index++) {
                 var element = client.data.user[index];
+                console.log(element);
+                if(element||element!={})
                 getUserDetailsByUser(element);
             }
         }
-
+        function getUserByUsername(username){
+            for (var index = 0; index < client.data.user.length; index++) {
+                var element = client.data.user[index];
+                if(element)
+                if(username==element.username)
+                    return element;                
+            }
+        }
         function getUserDetailsByUser(user) {
-            $("#" + user.username).html('');
+            $("#" + user.gui).html('');
             imgurl = "";
             if (user.packagename == "The Best Friend") {
                 imgurl = "http://thefriendd.com/assets/img/Glod_Friend.png";
@@ -240,8 +245,13 @@
                 // PUT X                 
                 imgurl = "http://www.iconsdb.com/icons/preview/soylent-red/x-mark-3-xxl.png";
             }
-            $("#" + user.username).append("<img title='"+user.username+"' width='48px' height='48px' src='" + imgurl + "'/>");
-            $("#" + user.username).append("<div class='small'>"+user.leftuser + "| " + user.username + " |" + user.userright+"<div>" + user.LCoupling + "|" + user.RCoupling + "</div></div>");
+            if(!user.leftuser)user.leftuser=0;
+            if(!user.rightuser)user.rightuser=0;
+            if(!user.LCoupling)user.LCoupling=0;
+            if(!user.RCoupling)user.RCoupling=0;
+            
+            $("#" + user.gui).append("<img title='"+user.username+"' width='48px' height='48px' src='" + imgurl + "'/>");
+            $("#" + user.gui).append("<div class='small'>"+user.leftuser + "| " + user.username + " |" + user.rightuser+"<div>" + user.LCoupling + "|" + user.RCoupling + "</div></div>");
             //$("#" + user.username).append();
         }
 
@@ -260,8 +270,7 @@
                 borderWidth: 1,
                 horizontal: false,
                 flip: true
-            })[0];            
-            getMoreDetails();
+            })[0];                        
         }
 
         function clickme(i) {

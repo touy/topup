@@ -3198,13 +3198,12 @@ function init_default_package() {
 function login(js) {
   console.log("HI LOGIN");
   //var js=client.data;
-  //console.log(js.client.data);
+  console.log(js.client.data);
   check_authentication(js.client.data).then(function (body) {
     // console.log("body:"+JSON.stringify(body));
     // console.log("client.data:"+JSON.stringify(client.data));
 
     // encrypt password and compare here 
-
     if (body.user.username == js.client.data.user.username && body.user.password == js.client.data.user.password) {
       js.client.data = {};
       js.client.username = body.user.username;

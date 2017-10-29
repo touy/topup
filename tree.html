@@ -18,6 +18,7 @@
     <script>
         // BIG THANKS , BIG THUMB TO THE GUY
         // https://frank-mich.com/jQuery/
+        var host=$(location).attr('protocol')+"//"+$(location).attr('host');
         function jsonGet(url, data, cb) {
             //console.log(JSON.stringify(data));
 
@@ -124,7 +125,7 @@
         function getBinaryDataByUser(username, needlevel,cb) {
             client.data.user.username = username;
             client.data.user.memberlevel = needlevel
-            jsonPost("http://localhost:3000/get_default_binary_tree", client, cb);
+            jsonPost(host+"/get_default_binary_tree", client, cb);
         };
 
         function findParentByUserName(username, arr) {

@@ -3,10 +3,12 @@
 <head>
     <style>
         /* DivTable.com */
-
+        body{
+            text-align: center;
+        }
         .divTable {
             display: table;
-            /* width: 100%; */
+            width: 50%;
             text-align: center;
         }
 
@@ -125,13 +127,14 @@
                 r+="<div class='divTableCell' >"+e.l+"</div>";
                 r+="</div>";            
             }
-            $('#rs').html(r);
+            $('#rs').empty().html(r);
         }
         function showDetails(){
             console.log("showing details...");
             var c="";
-            {
-                c+="<div class='divTableRow' >";
+
+            if($('#details').html()===''){
+                c+="<div class='divTableRow' id='headerdetails' >";
                     c+= "<div class='divTableCell'>selected</div>";
                     c+= "<div class='divTableCell'>target</div>";
                     c+= "<div class='divTableCell'>level</div>";
@@ -140,8 +143,8 @@
                     c+= "<div class='divTableCell'>total time</div>";
                     c+="</div>";
             }
-            for (var index = 0; index < details.length; index++) {
-                var element = details[index];
+            // for (var index = 0; index < details.length; index++) {
+                var element = details[details.length-1];
                 c+="<div class='divTableRow'>";
                 c+="<div class='divTableCell' >"+element.selected+"</div>";   
                 c+="<div class='divTableCell' >"+element.target+"</div>";   
@@ -150,8 +153,11 @@
                 c+="<div class='divTableCell' >"+element.etime+"</div>";   
                 c+="<div class='divTableCell' >"+element.ttime+"</div>";   
                 c+="</div>";
-            }            
-            $('#details').html(c);
+            //}            
+            if($('#details').html()==='')
+                $('#details').empty().html(c);
+            else
+            $(c).insertAfter('#headerdetails');
         }
 
         function getTimeSpanSeconds(et,st){
@@ -259,17 +265,17 @@
 
         function revealResult(r,id,res){
             console.log("revealing result");
-                $("#c"+id).html(res); 
+                $("#c"+id).empty().html(res); 
                 if(res=='O')
                     $("#r"+r).prop('class', 'divTableRow_win');  
                 else
                     $("#r"+r).prop('class', 'divTableRow_blocked');  
-                $("#c"+id).prop('onclick', null);
+                // $("#c"+id).prop('onclick', null);
         }
         function revealAll(){
             l=getSeedresult(localseed,remoteseed);
             html="";            
-            $("#tbody").html(html);        
+            $("#tbody").empty();        
             for(var i=maxr;i>0;i--){//rows
                 html+="<div class='divTableRow' id='r"+i+"'>";
                 var id=makeid(3,1);                
@@ -281,7 +287,7 @@
                 }
                 html+="</div>";
             }
-            $("#tbody").html(html);            
+            $("#tbody").empty().html(html);            
         }
         function generaterTB(r,c){
             console.log("generate table");            
@@ -294,7 +300,8 @@
             console.log('res:'+res);
             removeBlockedLevel(1);            
             html="";
-            ticket={id:makeid(50,1),key:makeid(50,1)};            
+            ticket={id:makeid(50,1),key:makeid(50,1)};
+
             for(var i=r;i>0;i--){//rows
                 html+="<div class='divTableRow' id='r"+i+"'>";                               
                 for(var x=0;x<c;x++){//column                 
@@ -303,7 +310,7 @@
                 }
                 html+="</div>";
             }
-            $("#tbody").html(html);            
+            $("#tbody").empty().html(html);            
         }        
         
     </script>

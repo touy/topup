@@ -1,0 +1,333 @@
+<html>
+
+<head>
+    <style>
+        /* DivTable.com */
+
+        .divTable {
+            display: table;
+            /* width: 100%; */
+            text-align: center;
+        }
+
+        .divTableRow {
+            display: table-row;
+            background-color: aliceblue
+        }
+        .divTableRow_blocked{
+            display: table-row;
+            background-color: rgb(206, 108, 108);
+        }
+        .divTableRow_win{
+            display: table-row;
+            background-color: rgb(117, 228, 123);
+        }
+        .divTableHeading {
+            background-color: #EEE;
+            display: table-header-group;
+        }
+
+        .divTableCell,
+        .divTableHead {
+            border: 1px solid #999999;
+            display: table-cell;
+            padding: 3px 10px;
+        }
+
+        .divTableHeading {
+            background-color: #EEE;
+            display: table-header-group;
+            font-weight: bold;
+        }
+
+        .divTableFoot {
+            background-color: #EEE;
+            display: table-footer-group;
+            font-weight: bold;
+        }
+
+        .divTableBody {
+            display: table-row-group;
+        }
+    </style>
+    <script src="public/js/jquery-1.12.4.min.js"></script>
+    <script>
+                function formatDate(d){
+            d=new Date(d);
+            return d.getDate()+'/'+(d.getMonth()+1)+"/"+d.getFullYear()+" "+d.getHours()+":"+d.getMinutes()+":"+d.getSeconds()+" "+d.getMilliseconds();
+        }
+        function generateRandomInteger(min, max) {
+            return Math.floor(max - Math.random()*(max-min));
+        }
+        // Similarly for Numeric
+        function generateRandomNumeric(min, max) {
+            return max - Math.random()*(max-min);
+        }
+        ticket={id:'',key:''};
+        localseed='';
+        remoteseed='';
+        function remoteSeeding(){
+            s='';
+            for (var index = maxr; index >0; index--) {
+                s+=generateRandomInteger(0,3);                
+            }
+            return s;
+        }
+        function localSeeding(){
+            s='';
+            for (var index = maxr; index >0; index--) {
+                s+=generateRandomInteger(0,3);                
+            }
+            return s;
+        }
+        function makeid(length, type = 0) {
+            var text = "";
+            var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            if (type == 1) {
+                possible = "abcdefghijklmnopqrstuvwxyz0123456789";
+            } else if (type == 2) {
+                possible = "abcdefghijklmnopqrstuvwxyz";
+            } else if (type == 3) {
+                possible = "0123456789";
+            } else if (type == 4) {
+                possible = "012";
+                for (var index = 0; index < 10; index++) {
+                    possible+=possible;                    
+                }
+            }
+            console.log(possible);
+            for (var i = 0; i < length; i++)
+                text += possible.charAt(Math.floor(Math.random() * possible.length));
+            console.log(text);
+            return text;
+        }
+        var results=[{level:1,w:0,l:0}];
+        var details=[];//{selected:0,target:0,level:0,stime:'',etime:'',ttime:0}
+        var maxr=5;
+        var maxc=3;
+        var starttime=Date.now();
+        var endtime=Date.now();
+        function showResult(){
+            console.log("showing results...");
+            var r='';
+            {
+                r="<div class='divTableRow'>";
+                    r+="<div class='divTableCell'>level</div>";
+                    r+="<div class='divTableCell'>win</div>";
+                    r+="<div class='divTableCell'>lose</div>";
+                    r+="</div>";
+            }
+            for (var index = 0; index < results.length; index++) {
+                var e = results[index];
+                r+="<div class='divTableRow'>";
+                r+="<div class='divTableCell' >"+e.level+"</div>";
+                r+="<div class='divTableCell' >"+e.w+"</div>";
+                r+="<div class='divTableCell' >"+e.l+"</div>";
+                r+="</div>";            
+            }
+            $('#rs').html(r);
+        }
+        function showDetails(){
+            console.log("showing details...");
+            var c="";
+            {
+                c+="<div class='divTableRow' >";
+                    c+= "<div class='divTableCell'>selected</div>";
+                    c+= "<div class='divTableCell'>target</div>";
+                    c+= "<div class='divTableCell'>level</div>";
+                    c+= "<div class='divTableCell'>start time</div>";
+                    c+= "<div class='divTableCell'>end time</div>";
+                    c+= "<div class='divTableCell'>total time</div>";
+                    c+="</div>";
+            }
+            for (var index = 0; index < details.length; index++) {
+                var element = details[index];
+                c+="<div class='divTableRow'>";
+                c+="<div class='divTableCell' >"+element.selected+"</div>";   
+                c+="<div class='divTableCell' >"+element.target+"</div>";   
+                c+="<div class='divTableCell' >"+element.level+"</div>";   
+                c+="<div class='divTableCell' >"+element.stime+"</div>";   
+                c+="<div class='divTableCell' >"+element.etime+"</div>";   
+                c+="<div class='divTableCell' >"+element.ttime+"</div>";   
+                c+="</div>";
+            }            
+            $('#details').html(c);
+        }
+
+        function getTimeSpanSeconds(et,st){
+            return Math.floor((new Date(et)).getTime()-(new Date(st)).getTime());
+        }
+        // var results=[{level:0,w:0,l:0}];
+        // var details=[{selected:0,target:0,level:0,stime:'',etime:'',ttime:0}];
+        function getSeedresult(local,remote){
+
+            return local;
+        }
+        function checkTicket(value,id,r){
+            console.log("checking ticket...");
+            var d={};
+            d.selected=value;            
+            d.stime=starttime;            
+            var rs={};
+            //rs.level=r;
+            rs.l=0;
+            rs.w=0;          
+            res=getSeedresult(localseed,remoteseed);
+            console.log(res);
+            //find level
+            level=r;
+            d.target=res[level];
+            d.level=level;
+            rs.level=level;
+            if(res[level]==value){
+                rs.w++; 
+                endtime=Date.now();
+                revealResult(level,id,'O');
+                addBlockedLevel();
+                removeBlockedLevel(level+1);               
+                console.log('Win');
+            }else{
+                endtime=Date.now();
+                rs.l++;
+                revealResult(level,id,'X');
+                addBlockedLevel();
+                console.log('Lose');
+            }   
+            d.etime=Date.now();
+            d.ttime=getTimeSpanSeconds(d.etime,d.stime);
+            d.etime=formatDate(d.etime);
+            d.stime=formatDate(d.stime);        
+            details.push(d);
+            exist=0;
+            console.log("res"+results.length);
+            for (var index = 0; index < results.length; index++) {
+                var element = results[index];                
+                if(element.level==rs.level){ 
+                    exist=1;
+                    break;
+                }            
+            }
+            if(exist){                    
+                results[index].l+=rs.l;
+                results[index].w+=rs.w;                    
+            }
+            else{
+                results.push(rs);                
+            } 
+            showDetails();
+            showResult();
+        }
+        var blockedLevels=[];
+        function addBlockedLevel(){
+            var i=0;
+            for (var index = maxr; index>0; index--) {
+                blockedLevels[i++]=index;
+            }
+        }
+        function removeBlockedLevel(l){
+            for (var index = 0; index < blockedLevels.length; index++) {
+                if(blockedLevels[index]==l){
+                    blockedLevels[index]=-1;
+                }                
+            }
+        }
+        function reset(){
+            console.log('reseting');
+            $("#start").show();
+            $("#reset").hide();
+            revealAll();
+            starttime=null;
+            endtime=null;
+        }
+        function start(){
+            starttime=Date.now();
+            console.log("starting");
+            $("#start").hide();
+            $("#reset").show();
+            generaterTB(maxr,maxc);            
+        }
+        function clickme(value,id,r){
+            console.log("selected value:"+value+"id:c"+id+" r:"+r);
+            if(blockedLevels.indexOf(r)>=0){
+                console.log('this level not allowed');
+                return;
+            }            
+            
+            //removeBlockedLevel(r+1);
+            checkTicket(value,id,r);
+        }
+
+        function revealResult(r,id,res){
+            console.log("revealing result");
+                $("#c"+id).html(res); 
+                if(res=='O')
+                    $("#r"+r).prop('class', 'divTableRow_win');  
+                else
+                    $("#r"+r).prop('class', 'divTableRow_blocked');  
+                $("#c"+id).prop('onclick', null);
+        }
+        function revealAll(){
+            l=getSeedresult(localseed,remoteseed);
+            html="";            
+            $("#tbody").html(html);        
+            for(var i=maxr;i>0;i--){//rows
+                html+="<div class='divTableRow' id='r"+i+"'>";
+                var id=makeid(3,1);                
+                for(var x=0;x<maxc;x++){//column                                    
+                    if(l[i]==x) 
+                        html+='<div class="divTableCell" id="c'+id+'" >O</div>';
+                    else
+                        html+='<div class="divTableCell" id="c'+id+'" >X</div>';
+                }
+                html+="</div>";
+            }
+            $("#tbody").html(html);            
+        }
+        function generaterTB(r,c){
+            console.log("generate table");            
+            localseed=localSeeding();
+            
+            remoteseed=remoteSeeding();
+            
+            addBlockedLevel();
+            var res=getSeedresult(localseed,remoteseed);
+            console.log('res:'+res);
+            removeBlockedLevel(1);            
+            html="";
+            ticket={id:makeid(50,1),key:makeid(50,1)};            
+            for(var i=r;i>0;i--){//rows
+                html+="<div class='divTableRow' id='r"+i+"'>";                               
+                for(var x=0;x<c;x++){//column                 
+                    var id=makeid(3,3);                     
+                    html+='<div class="divTableCell" id="c'+id+'" onclick="clickme('+x+','+id+','+i+')">---</div>';
+                }
+                html+="</div>";
+            }
+            $("#tbody").html(html);            
+        }        
+        
+    </script>
+</head>
+
+<body onload="start()">
+        
+    <div class="divTable" style="border: 1px solid #000;">
+        <div class="divTableBody" id="tbody">
+        </div>       
+    </div>
+    <button onclick="start()" id="start">start</button>
+    <button onclick="reset()" id="reset">reset</button>
+    <div id='rs' ></div>
+    <div class="divTable" >
+            <div class="divTableBody">                    
+                    <div class="divTableRow" id="details"></div>
+            </div>
+    </div>
+    
+    
+                
+    <!-- DivTable.com -->
+    
+</body>
+
+</html>

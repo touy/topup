@@ -5,10 +5,12 @@
         .center {
             margin: auto;
             width: 50%;
-        };
-        div#treeDiv.small{
+        }
+
+        ;
+        div#treeDiv.small {
             font-size: 8p;
-            size:8px;
+            size: 8px;
         }
     </style>
     <script src="public/js/jquery-1.12.4.min.js"></script>
@@ -18,7 +20,26 @@
     <script>
         // BIG THANKS , BIG THUMB TO THE GUY
         // https://frank-mich.com/jQuery/
-        var host=$(location).attr('protocol')+"//"+$(location).attr('host');
+        var host = $(location).attr('protocol') + "//" + $(location).attr('host');
+
+        function makeid(length, type = 0) {
+            var text = "";
+            var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            if (type == 1) {
+                possible = "abcdefghijklmnopqrstuvwxyz0123456789";
+            } else if (type == 2) {
+                possible = "abcdefghijklmnopqrstuvwxyz";
+            } else if (type == 3) {
+                possible = "0123456789";
+            } else if (type == 4) {
+                possible = "012";
+            }
+            for (var i = 0; i < length; i++)
+                text += possible.charAt(Math.floor(Math.random() * possible.length));
+
+            return text;
+        }
+
         function jsonGet(url, data, cb) {
             //console.log(JSON.stringify(data));
 
@@ -38,6 +59,7 @@
                 }
             });
         }
+
         function jsonPost(url, data, cb) {
             //console.log(data);
             $.ajax({
@@ -49,7 +71,7 @@
                 success: cb
             });
         }
-        
+
         function findTreeByUsername(c, username) {
             for (var index = 0; index < c.length; index++) {
                 var element = c[index];
@@ -59,7 +81,8 @@
             }
             return null;
         }
-        function indexingJson(lusername, rusername, c, needlevel = 1, i = -1,parent) {
+
+        function indexingJson(lusername, rusername, c, needlevel = 1, i = -1, parent) {
             //console.log("1 arr length:"+arr.lenghth);
             if (lusername) {
                 if (res = findTreeByUsername(c, lusername)) {
@@ -70,49 +93,52 @@
                     if (i == -1) x = 0; // root
                     res.index = x;
                     res.request = "lusrname:" + lusername;
-                    res.parent =findParentByUserName(lusername,c);
+                    res.parent = findParentByUserName(lusername, c);
                     arr[x] = res;
-                    indexingJson(arr[x].luser, arr[x].ruser, c, needlevel, x,res.parent);
+                    indexingJson(arr[x].luser, arr[x].ruser, c, needlevel, x, res.parent);
                 }
-            }else{
+            } else {
                 if (needlevel < body.level)
-                        return;
+                    return;
                 var x = (2 * i) + 1;
                 if (i == -1) x = 0; // root
-                res={};
-                res.parent =parent;
-                res.luser='';res.ruser='';
+                res = {};
+                res.parent = parent;
+                res.luser = '';
+                res.ruser = '';
                 arr[x] = res;
-                indexingJson(arr[x].luser, arr[x].ruser, c, needlevel, x,'');
+                indexingJson(arr[x].luser, arr[x].ruser, c, needlevel, x, '');
             }
-            if(x)
-            if (rusername) {
-                if (body = findTreeByUsername(c, rusername)) {
+            if (x)
+                if (rusername) {
+                    if (body = findTreeByUsername(c, rusername)) {
+                        if (needlevel < body.level)
+                            return;
+                        var y = (2 * i) + 2;
+                        body.index = y;
+                        body.request = "rusrname:" + rusername;
+                        body.parent = findParentByUserName(rusername, c);
+                        arr[y] = body;
+                        //console.log(arr);
+                        indexingJson(arr[y].luser, arr[y].ruser, c, needlevel, y, body.parent);
+                    }
+                } else {
                     if (needlevel < body.level)
                         return;
-                    var y = (2 * i) + 2;
-                    body.index = y;
-                    body.request = "rusrname:" + rusername;
-                    body.parent =findParentByUserName(rusername,c);
-                    arr[y] = body;
-                    //console.log(arr);
-                    indexingJson(arr[y].luser, arr[y].ruser, c, needlevel, y,body.parent);
+                    if (i == -1) return; // root
+                    var y = (2 * i) + 1;
+                    res = {};
+                    res.parent = parent;
+                    res.luser = '';
+                    res.ruser = '';
+                    arr[y] = res;
+                    indexingJson(arr[y].luser, arr[y].ruser, c, needlevel, y, '');
                 }
-            }else{    
-                if (needlevel < body.level)
-                        return;            
-                if (i == -1) return; // root
-                var y = (2 * i) + 1;
-                res={};
-                res.parent =parent;
-                res.luser='';res.ruser='';
-                arr[y] = res;
-                indexingJson(arr[y].luser, arr[y].ruser, c, needlevel, y,'');
-            }
         }
+
         function compare(a, b) {
-            var x = a.name < b.name? -1:1; 
-            return x;         
+            var x = a.name < b.name ? -1 : 1;
+            return x;
         }
         var myTree;
         var arr = [];
@@ -122,29 +148,29 @@
         client.data.user = {};
         client.data.userbinary = {};
 
-        function getBinaryDataByUser(username, needlevel,cb) {
+        function getBinaryDataByUser(username, needlevel, cb) {
             client.data.user.username = username;
             client.data.user.memberlevel = needlevel
-            jsonPost(host+"/get_default_binary_tree", client, cb);
+            jsonPost(host + "/get_default_binary_tree", client, cb);
         };
 
         function findParentByUserName(username, arr) {
             for (var index = 0; index < arr.length; index++) {
                 var element = arr[index];
-                if (element.luser == username||element.ruser==username ) {
+                if (element.luser == username || element.ruser == username) {
                     return element;
                 }
             }
             return null;
         }
         // loading data        
-        function prepareBinaryData(username = '',needlevel) {            
+        function prepareBinaryData(username = '', needlevel) {
             //arr[0] = null;
             //var needlevel = 4; // current user memberlevel + needed level   
             if (!username)
                 username = "souk@TheFriendd";
-            console.log('preparing user'+username);
-            getBinaryDataByUser(username, needlevel,function (res) {
+            console.log('preparing user' + username);
+            getBinaryDataByUser(username, needlevel, function (res) {
                 client.data.user = res.data.user;
                 client.data.userbinary = res.data.userbinary;
                 // console.log(res.data.userbinary);
@@ -158,26 +184,29 @@
 
                 arr.splice(0, 0, {}); // ignore the first item                    
                 console.log(arr.length);
-                var _xarr=[];
+                var _xarr = [];
                 console.log(arr);
                 for (var index = 0; index < arr.length; index++) {
                     console.log(arr[index]);
-                    if(arr[index]=={}) continue;
+                    if (arr[index] == {}) continue;
                     if (arr[index].username) {
-                        gui=getUserByUsername(arr[index].username).gui;
+                        gui = getUserByUsername(arr[index].username).gui;
                         h = "<div  style='border-style: unset;' ><span id='" + gui +
-                            "' onclick=\"prepareBinaryData('" + arr[index].username + "',4)\"  title='"+ arr[index].username+"'>" + arr[index].username;
+                            "' onclick=\"prepareBinaryData('" + arr[index].username + "',4)\"  title='" + arr[
+                                index].username + "'>" + arr[index].username;
                         h += "</span></div>";
                         _xarr.push(h);
                     } else {
-                        var p='';                    
+                        var p = '';
                         p = arr[index].parent;
-                        if (p==''||p==null||p=='undefined')
+                        if (p == '' || p == null || p == 'undefined')
                             _xarr.push(
                                 '<div><span onclick="clickme()"><img width="32px" height="32px" src="http://www.iconsdb.com/icons/preview/soylent-red/x-mark-3-xxl.png" /></span></div>'
                             );
                         else {
-                            _xarr.push("<div><span  onclick=register('" + p +"')><img width='32px' height='32px' src='http://thefriendd.com/assets/img/add.png'/></span></div>");
+                            _xarr.push("<div><span  onclick=register('" + p +
+                                "')><img width='32px' height='32px' src='http://thefriendd.com/assets/img/add.png'/></span></div>"
+                            );
                         }
                     }
                 }
@@ -212,27 +241,29 @@
                         //console.log(_arr[index]);
                     }
                 });
-                getMoreDetails();  
-                redraw();              
-            });            
+                getMoreDetails();
+                redraw();
+            });
         }
 
         function getMoreDetails() {
             for (var index = 0; index < client.data.user.length; index++) {
                 var element = client.data.user[index];
                 console.log(element);
-                if(element||element!={})
-                getUserDetailsByUser(element);
+                if (element || element != {})
+                    getUserDetailsByUser(element);
             }
         }
-        function getUserByUsername(username){
+
+        function getUserByUsername(username) {
             for (var index = 0; index < client.data.user.length; index++) {
                 var element = client.data.user[index];
-                if(element)
-                if(username==element.username)
-                    return element;                
+                if (element)
+                    if (username == element.username)
+                        return element;
             }
         }
+
         function getUserDetailsByUser(user) {
             $("#" + user.gui).html('');
             imgurl = "";
@@ -246,13 +277,15 @@
                 // PUT X                 
                 imgurl = "http://www.iconsdb.com/icons/preview/soylent-red/x-mark-3-xxl.png";
             }
-            if(!user.leftuser)user.leftuser=0;
-            if(!user.rightuser)user.rightuser=0;
-            if(!user.LCoupling)user.LCoupling=0;
-            if(!user.RCoupling)user.RCoupling=0;
-            
-            $("#" + user.gui).append("<img title='"+user.username+"' width='48px' height='48px' src='" + imgurl + "'/>");
-            $("#" + user.gui).append("<div class='small'>"+user.leftuser + "| " + user.username + " |" + user.rightuser+"<div>" + user.LCoupling + "|" + user.RCoupling + "</div></div>");
+            if (!user.leftuser) user.leftuser = 0;
+            if (!user.rightuser) user.rightuser = 0;
+            if (!user.LCoupling) user.LCoupling = 0;
+            if (!user.RCoupling) user.RCoupling = 0;
+
+            $("#" + user.gui).append("<img title='" + user.username + "' width='48px' height='48px' src='" + imgurl +
+                "'/>");
+            $("#" + user.gui).append("<div class='small'>" + user.leftuser + "| " + user.username + " |" + user.rightuser +
+                "<div>" + user.LCoupling + "|" + user.RCoupling + "</div></div>");
             //$("#" + user.username).append();
         }
 
@@ -260,7 +293,7 @@
             myTree = $("#treeDiv").btree()[0];
             redraw();
         });
-        
+
         function redraw() {
             myTree.clear();
             myTree = $("#treeDiv").btree({
@@ -271,24 +304,25 @@
                 borderWidth: 1,
                 horizontal: false,
                 flip: true
-            })[0];                        
+            })[0];
         }
 
         function clickme(i) {
-           // $(location).attr('href', '/Register')
-           console.log('no one here');
+            // $(location).attr('href', '/Register')
+            console.log('no one here');
         }
 
         function showARR() {
             var html = "";
             arr.forEach(function (e) {
-                if(e)
-                html += "<div>username" + e.username + ",luser:" + e.luser + ",ruser:" + e.ruser + ",level:" +
+                if (e)
+                    html += "<div>username" + e.username + ",luser:" + e.luser + ",ruser:" + e.ruser +
+                    ",level:" +
                     e.level + ",request:" + e.request + ",i:" + e.index + "</div>";
             }, this);
             $("#arr").html(html);
         }
-        prepareBinaryData('',4);
+        prepareBinaryData('', 4);
     </script>
 
 </head>

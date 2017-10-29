@@ -202,6 +202,10 @@ function sendMessengerPassword(pass,phone){
 }
 
 //RESET bonus topup monthly.
+//GAME
+app.get('/game',function(req,res){
+  res.sendfile('random.html');
+});
 
 //show tree
 app.get('/tree',function(req,res){

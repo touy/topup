@@ -162,8 +162,8 @@ module.exports = function (m) {
             };
             ubin.push(userbin);
         }   
-        // console.log("ubin:  "+ubin.length);
-        // console.log("cm: "+cm.length);
+        console.log("ubin:  "+ubin.length);
+        console.log("cm: "+cm.length);
         assignBinaryTree(cm, ubin);
         // console.log("M:  "+M.length);
         // console.log("UB: "+UB.length);
@@ -189,8 +189,7 @@ module.exports = function (m) {
                     elementR = _arr[++x];
                 ub.luser = elementL.username;
                 ub.ruser = elementR.username;
-                UB.push(ub);
-                x++;
+                UB.push(ub);               
                 elementL.aboveparents = [];
                 elementL.parentname = element.username;
                 elementL.parentgui = element.gui;
@@ -209,12 +208,12 @@ module.exports = function (m) {
                     elementR.aboveparents = elementR.aboveparents.concat(element.aboveparents);
                 elementR.introductorcode = __master_user.introductorcode;
                 elementR.introductorgui = __master_user.gui;
-                elementR.registeredby = 'master';
-                if(!M.length) 
+                elementR.registeredby = 'master';                
+                //if(!M.length) 
                     M.push(element); // add root first
-                M.push(elementL);
-                M.push(elementR);
-
+                //M.push(elementL);
+                //M.push(elementR);
+                x++;
             }
         }
     }

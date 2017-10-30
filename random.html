@@ -11,7 +11,7 @@
             width: 50%;
             text-align: center;
         }
-
+        
         .divTableRow {
             display: table-row;
             background-color: aliceblue
@@ -25,8 +25,13 @@
             background-color: rgb(117, 228, 123);
         }
         .divTableHeading {
+            display: table-row;
             background-color: #EEE;
             display: table-header-group;
+        }
+        .divTableRow_active{
+            display: table-row;
+            background-color: lightgoldenrodyellow;
         }
 
         .divTableCell,
@@ -70,14 +75,14 @@
         remoteseed='';
         function remoteSeeding(){
             s='';
-            for (var index = maxr; index >0; index--) {
+            for (var index = 0; index <maxr; index++) {
                 s+=generateRandomInteger(0,3);                
             }
             return s;
         }
         function localSeeding(){
             s='';
-            for (var index = maxr; index >0; index--) {
+            for (var index = 0; index <maxr; index++) {
                 s+=generateRandomInteger(0,3);                
             }
             return s;
@@ -97,10 +102,10 @@
                     possible+=possible;                    
                 }
             }
-            console.log(possible);
+            //console.log(possible);
             for (var i = 0; i < length; i++)
                 text += possible.charAt(Math.floor(Math.random() * possible.length));
-            console.log(text);
+            //console.log(text);
             return text;
         }
         var results=[{level:1,w:0,l:0}];
@@ -166,7 +171,7 @@
         // var results=[{level:0,w:0,l:0}];
         // var details=[{selected:0,target:0,level:0,stime:'',etime:'',ttime:0}];
         function getSeedresult(local,remote){
-
+            console.log('get seed result');
             return local;
         }
         function checkTicket(value,id,r){
@@ -179,7 +184,7 @@
             rs.l=0;
             rs.w=0;          
             res=getSeedresult(localseed,remoteseed);
-            console.log(res);
+            console.log("result: "+res);
             //find level
             level=r;
             d.target=res[level];
@@ -190,7 +195,8 @@
                 endtime=Date.now();
                 revealResult(level,id,'O');
                 addBlockedLevel();
-                removeBlockedLevel(level+1);               
+                removeBlockedLevel(level+1);
+                activeLevel(level+1);               
                 console.log('Win');
             }else{
                 endtime=Date.now();
@@ -225,12 +231,20 @@
         }
         var blockedLevels=[];
         function addBlockedLevel(){
+            console.log('add blocked level');
             var i=0;
             for (var index = maxr; index>0; index--) {
                 blockedLevels[i++]=index;
             }
         }
+        function activeLevel(l){
+            console.log('active level');
+            if(maxr+1>l){
+                $("#r"+l).prop('class', 'divTableRow_active');  
+            }
+        }
         function removeBlockedLevel(l){
+            console.log('remove blocked level level');
             for (var index = 0; index < blockedLevels.length; index++) {
                 if(blockedLevels[index]==l){
                     blockedLevels[index]=-1;
@@ -273,17 +287,26 @@
                 // $("#c"+id).prop('onclick', null);
         }
         function revealAll(){
+            console.log('reveal all');
             l=getSeedresult(localseed,remoteseed);
+            console.log('seed:'+l);
             html="";            
-            $("#tbody").empty();        
+            //$("#tbody").empty();        
             for(var i=maxr;i>0;i--){//rows
                 html+="<div class='divTableRow' id='r"+i+"'>";
-                var id=makeid(3,1);                
-                for(var x=0;x<maxc;x++){//column                                    
-                    if(l[i]==x) 
-                        html+='<div class="divTableCell" id="c'+id+'" >O</div>';
-                    else
-                        html+='<div class="divTableCell" id="c'+id+'" >X</div>';
+                //var id=makeid(3,1);                
+                for(var x=maxc;x>0;x--){//column      
+                    //console.log(l[i]+'=='+x); 
+                    y=x-1;          
+                    if(l[i-1]==y){
+                        console.log(i+"reveal: "+l[i-1]+'=='+y);
+                        html+='<div class="divTableCell">O</div>';
+                    }                         
+                    else{
+                        console.log(i+"reveal: "+l[i-1]+'=='+y);
+                        html+='<div class="divTableCell">X</div>';
+                    }
+                        
                 }
                 html+="</div>";
             }
@@ -291,26 +314,26 @@
         }
         function generaterTB(r,c){
             console.log("generate table");            
-            localseed=localSeeding();
-            
-            remoteseed=remoteSeeding();
-            
+            localseed=localSeeding();            
+            remoteseed=remoteSeeding();            
             addBlockedLevel();
             var res=getSeedresult(localseed,remoteseed);
-            console.log('res:'+res);
-            removeBlockedLevel(1);            
+            //console.log('res:'+res);
+            removeBlockedLevel(1);                      
             html="";
             ticket={id:makeid(50,1),key:makeid(50,1)};
-
+            console.log(res);
             for(var i=r;i>0;i--){//rows
                 html+="<div class='divTableRow' id='r"+i+"'>";                               
-                for(var x=0;x<c;x++){//column                 
-                    var id=makeid(3,3);                     
-                    html+='<div class="divTableCell" id="c'+id+'" onclick="clickme('+x+','+id+','+i+')">---</div>';
+                for(var x=c;x>0;x--){//column                 
+                    var id=makeid(3,3);   
+                    console.log((x-1)+" ; "+res[x-1]);                  
+                    html+='<div class="divTableCell" id="c'+id+'" onclick="clickme('+(x-1)+','+id+','+i+')">---</div>';
                 }
                 html+="</div>";
             }
-            $("#tbody").empty().html(html);            
+            $("#tbody").empty().html(html);       
+            activeLevel(1);      
         }        
         
     </script>

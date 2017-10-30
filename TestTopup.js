@@ -326,24 +326,35 @@ app.get('/get_default_binary_tree',function(req,res){
   var m={};
   var mem=[];
   var bmem=[];
-
 // gets all member which has parent name : username
+  maxlevel=js.client.data.user.memberlevel;
 // if(js.client.data.user.memberlevel>4)
 //   js.client.data.user.memberlevel=4 ; // set max to show for normal user
+  // find current user first
+  var cur_usr={};
+  for (var index = 0; index < members.member.length; index++) {
+    var element = members.member[index];       
+    if(element.username==js.client.data.user.username){
+      cur_usr=element;
+      break;
+    }
+  }
+  maxlevel+=cur_usr.memberlevel;
+  // find children
   for (var index = 0; index < members.member.length; index++) {
     var element = members.member[index];   
-    
     //console.log("added rooted ?"+element.username);
     if(element.username==js.client.data.user.username){
       mem.push(element);
     }
-    else if(!!(element.aboveparents.indexOf(js.client.data.user.username)+1)&&js.client.data.user.memberlevel>element.memberlevel){            
+    else if((element.aboveparents.indexOf(js.client.data.user.username)>-1)&&maxlevel>cur_usr.memberlevel){            
       //console.log("added member: "+element.username);
       mem.push(element);
     }    
   }
   // console.log("member:"+members.member.length);
   // console.log("binarytree:"+members.binarytree.length);  
+  // find Ubinary
     for (var x = 0; x < mem.length; x++) {
       var e = mem[x];
       for (var index = 0; index < members.binarytree.length; index++) {
@@ -369,32 +380,47 @@ app.post('/get_default_binary_tree',function(req,res){
   var m={};
   var mem=[];
   var bmem=[];
-  //console.log(members.member);
-// gets all member which has parent name : username
+  console.log("O mem:"+members.member.length+", bmem"+members.binarytree.length);
+  
+  console.log('find user '+js.client.data.user.username);
+  // gets all member which has parent name : username
+  var maxlevel=js.client.data.user.memberlevel;
+  // if(js.client.data.user.memberlevel>4)
+  //   maxlevel=4 ; // set max to show for normal user
+  //find current user info first
+  var cur_usr={};
   for (var index = 0; index < members.member.length; index++) {
-    var element = members.member[index];   
-    //console.log("added rooted ?"+element.username);
+    var element = members.member[index];       
+    if(element.username==js.client.data.user.username){
+      cur_usr=element;
+      break;
+    }
+  }
+  maxlevel+=cur_usr.memberlevel;
+  //find children
+  for (var index = 0; index < members.member.length; index++) {
+    var element = members.member[index];       
     if(element.username==js.client.data.user.username){
       mem.push(element);
     }
-    else if((element.aboveparents.indexOf(js.client.data.user.username)+1)&&js.client.data.user.memberlevel+mem[0].memberlevel>element.memberlevel){            
-      //console.log("added member: "+element.username);
+    else if((element.aboveparents.indexOf(js.client.data.user.username)>-1)&&maxlevel>cur_usr.memberlevel){                  
       mem.push(element);
     }    
   }
   // console.log("member:"+members.member.length);
   // console.log("binarytree:"+members.binarytree.length);
-  
+  // find Ubinary
     for (var x = 0; x < mem.length; x++) {
       var e = mem[x];
       for (var index = 0; index < members.binarytree.length; index++) {
         var element =  members.binarytree[index];             
         if(e.username==element.username){
-          bmem.push(element);
-          console.log("bmem:"+bmem.length); 
+          bmem.push(element);          
         } 
       }
     }
+    console.log("found mem:"+mem.length); 
+    console.log("found bmem:"+bmem.length); 
   // console.log("mem:"+mem.length);
   // console.log("bmem:"+bmem.length);
   //console.log('Ready');

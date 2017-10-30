@@ -149,6 +149,8 @@
         client.data.userbinary = {};
 
         function getBinaryDataByUser(username, needlevel, cb) {
+            client.data={};
+            client.data.user={};
             client.data.user.username = username;
             client.data.user.memberlevel = needlevel
             jsonPost(host + "/get_default_binary_tree", client, cb);
@@ -167,14 +169,16 @@
         function prepareBinaryData(username = '', needlevel) {
             //arr[0] = null;
             //var needlevel = 4; // current user memberlevel + needed level   
-            if (!username)
+            console.log(username);
+            if (username=='')
                 username = "souk@TheFriendd";
             console.log('preparing user' + username);
             getBinaryDataByUser(username, needlevel, function (res) {
                 client.data.user = res.data.user;
                 client.data.userbinary = res.data.userbinary;
-                // console.log(res.data.userbinary);
-                // console.log(res.data.user);
+                console.log(res.data.userbinary);
+                console.log(res.data.user);
+                
                 indexingJson(username, '', client.data.userbinary, needlevel, -1);
                 //client.data.userbinary=arr;
                 //console.log("2 arr length:"+arr.length);                
@@ -185,12 +189,13 @@
                 arr.splice(0, 0, {}); // ignore the first item                    
                 console.log(arr.length);
                 var _xarr = [];
-                console.log(arr);
+                //console.log(arr);
                 for (var index = 0; index < arr.length; index++) {
-                    console.log(arr[index]);
+                    //console.log(arr[index]);
                     if (arr[index] == {}) continue;
                     if (arr[index].username) {
-                        gui = getUserByUsername(arr[index].username).gui;
+                        u = getUserByUsername(arr[index].username);
+                        gui=u.gui;
                         h = "<div  style='border-style: unset;' ><span id='" + gui +
                             "' onclick=\"prepareBinaryData('" + arr[index].username + "',4)\"  title='" + arr[
                                 index].username + "'>" + arr[index].username;
@@ -256,11 +261,16 @@
         }
 
         function getUserByUsername(username) {
+            //console.log("u:"+username);
             for (var index = 0; index < client.data.user.length; index++) {
                 var element = client.data.user[index];
-                if (element)
-                    if (username == element.username)
+                if (element){
+                    //console.log(element.username);                
+                    if (username == element.username){
+                        //console.log(element.username==username);
                         return element;
+                    }
+                }                                           
             }
         }
 

@@ -227,6 +227,9 @@ app.get('/delete_node_chain',function(req,res){
 function detele_user(username){
   var deferred =Q.defer();
   var db=create_db('user');  
+  var js={};
+  js.user={};
+  js.user.username=username;
   findUserByUserName(username).then(function(body){
     body[0]._deleted=true;
     db.insert(body[0],body[0].gui,function(err,res){
@@ -3700,19 +3703,6 @@ function addBinaryTree(js, parent) {
   return deferred.promise;
 }
 
-function check_available_user(js) {
-
-  findUserByUserName(js.client.data).then(function (body) {
-    if (body[0].username == js.client.data.user.username) {
-      js.client.data.message = "you can't use this user name";
-      js.resp.send(js.client);
-    } else {
-      js.client.data.message = "this user is OK";
-      js.resp.send(js.client);
-    }
-  }).done();
-}
-
 
 
 function register(register /*,needbalance*/ , resp) { //needbalance={main:0.5,bunus:0.5}
@@ -4400,7 +4390,7 @@ function deductBalanceForRegister(js) {
 function findUserByUserName(js) {
   var deferred = Q.defer();
   var db = create_db('user');
-  jdb.view(__design_view, "findByUserName", {
+  db.view(__design_view, "findByUserName", {
     key: js.user.username,
     include_docs: true
   }, function (err, res) {
@@ -6271,12 +6261,12 @@ function updateUser(user) {
   return deferred.promise;
 }
 
-function checkRegisterAvailableUser(js) { // username password, phone1
+function checkRegisterAvailableUser(js) { // client.data.user.username
   var obj = {};
   obj.user = js.client.data.user;
   findUserByUserName(obj).then(function (body) {
     if (body.length > 0) {
-      js.client.data.message += ", this username exist";
+      js.client.data.message = "exist user";
     } else
       js.client.data.message = "OK";
   }).catch(function (err) {

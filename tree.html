@@ -2,15 +2,30 @@
 
 <head>
     <style>
+        body{
+            margin-left: 3%;
+            margin-right: 3%;
+            width: 80%;
+        }
         .center {
             margin: auto;
-            width: 50%;
+            width: 50%;           
         }
 
         ;
         div#treeDiv.small {
             font-size: 8p;
             size: 8px;
+        }
+        #search[type=text] {
+            width: 130px;
+            -webkit-transition: width 0.4s ease-in-out;
+            transition: width 0.4s ease-in-out;
+        }
+
+        /* When the input field gets focus, change its width to 100% */
+        #search[type=text]:focus {
+            width: 100%;
         }
     </style>
     <script src="public/js/jquery-1.12.4.min.js"></script>
@@ -21,7 +36,10 @@
         // BIG THANKS , BIG THUMB TO THE GUY
         // https://frank-mich.com/jQuery/
         var host = $(location).attr('protocol') + "//" + $(location).attr('host');
-
+        function getHost(){
+            host = $(location).attr('protocol') + "//" + $(location).attr('host');
+            return host;
+        }
         function makeid(length, type = 0) {
             var text = "";
             var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
@@ -153,7 +171,7 @@
             client.data.user={};
             client.data.user.username = username;
             client.data.user.memberlevel = needlevel
-            jsonPost(host + "/get_default_binary_tree", client, cb);
+            jsonPost(host + "/get_default_binary_tree", client, cb);// URL : /get_user_binary
         };
 
         function findParentByUserName(username, arr) {
@@ -165,14 +183,23 @@
             }
             return null;
         }
-        // loading data        
-        function prepareBinaryData(username = '', needlevel) {
+        // loading data       
+        var currentUsername='';         
+        function prepareBinaryData(username, needlevel) {      
+            if (username==''){
+                username = "souk@TheFriendd";                
+            }
+                
+
+            if(currentUsername==username)
+                $("#topname").empty().text(currentUsername);
+            else
+                $("#topname").empty().text(currentUsername+"/"+username);
+            
             //arr[0] = null;
             //var needlevel = 4; // current user memberlevel + needed level   
-            console.log(username);
-            if (username=='')
-                username = "souk@TheFriendd";
-            console.log('preparing user' + username);
+          //  console.log(username);            
+            //console.log('preparing user' + username);
             getBinaryDataByUser(username, needlevel, function (res) {
                 client.data={};
                 client.data.user = {};
@@ -190,7 +217,7 @@
                 //console.log('sorted')
 
                 arr.splice(0, 0, {}); // ignore the first item                    
-                console.log(arr.length);
+                //console.log(arr.length);
                 var _xarr = [];
                 //console.log(arr);
                 for (var index = 0; index < arr.length; index++) {
@@ -198,7 +225,7 @@
                     if (arr[index] == {}) continue;
                     if (arr[index].username) {
                         u = getUserByUsername(arr[index].username);
-                        console.log(u);
+                        //console.log(u);
                         gui=u.gui;
                         h = "<div  style='border-style: unset;' ><span id='" + gui +
                             "' onclick=\"prepareBinaryData('" + arr[index].username + "',4)\"  title='" + arr[
@@ -220,8 +247,8 @@
                     }
                 }
                 // mapping
-                console.log(arr);
-                console.log(_xarr.length);
+                // console.log(arr);
+                // console.log(_xarr.length);
                 console.log('mapping');
                 var _arr = [];
                 $(function () {
@@ -258,14 +285,14 @@
         function getMoreDetails() {
             for (var index = 0; index < client.data.user.length; index++) {
                 var element = client.data.user[index];
-                console.log(element);
+                //console.log(element);
                 if (element || element != {})
                     getUserDetailsByUser(element);
             }
         }
 
         function getUserByUsername(username) {
-            console.log("u:"+username);
+            //console.log("u:"+username);
             for (var index = 0; index < client.data.user.length; index++) {
                 var element = client.data.user[index];
                 if (element){
@@ -322,21 +349,50 @@
         }
 
         function clickme(i) {
-            // $(location).attr('href', '/Register')
+            $(location).attr('href', '/#/Register')
             console.log('no one here');
         }
+        currentUsername = "souk@TheFriendd";//TESTING ONLY
+        prepareBinaryData(currentUsername, 4);
 
-        function showARR() {
-            var html = "";
-            arr.forEach(function (e) {
-                if (e)
-                    html += "<div>username" + e.username + ",luser:" + e.luser + ",ruser:" + e.ruser +
-                    ",level:" +
-                    e.level + ",request:" + e.request + ",i:" + e.index + "</div>";
-            }, this);
-            $("#arr").html(html);
+    function toTop(){
+        console.log(currentUsername);
+        if(currentUsername)
+            prepareBinaryData(currentUsername,4);
+    }
+    function search(){
+        var username =$('#searchtext').val();
+        //console.log('search text:'+username)
+        if(username){
+            checkExistUser(username);
         }
-        prepareBinaryData('', 4);
+    }
+    function checkExistUser(username){
+        url=getHost()+"/check_registe_available_username";
+        var client={};
+        client.data={};
+        client.data.user={};
+        client.data.user.username=username;
+        jsonPost(url,client,function(res){          
+            //console.log(res);  
+            prepareBinaryData(username,4);// TESTING ONLY
+            return;
+            if(res.data.message.indexOf('OK')<0){
+                $("#topname").empty().text='Not exist';
+            }else{
+                //$("#topname").empty().text=currentUsername+"/"+username;
+                prepareBinaryData(username,4);
+            }
+        });
+    }
+
+    $(function() {    
+        $("#searchtext").keypress(function(e) {            
+            if(e.which == 10 || e.which == 13) {
+                search();
+            }
+        });        
+    });
     </script>
 
 </head>
@@ -347,74 +403,11 @@
         <button id='add-to-tree' onclick="addToTree()">Add To Tree</button>
         
     </div> -->
-    <button onclick="showARR()">SHow</button>
-    ARR:
-    <div id='arr'></div>
-    <button id='drawtree' onclick="redraw()">draw tree</button>
-    <div id="treeDiv" class="center" style="overflow: hidden;text-align: center; border-style: solid; border-color: #b49393;">
-        <div style="border-style:unset;">
-            <span onclick="clickme(box1)" id="box1">
-                <img title="HI" width="48px" height="48px" src='http://thefriendd.com/assets/img/Friend.png' />
-                <div>0| Box1 |0
-                    <div>0 / 0</div>
-                </div>
-            </span>
-        </div>
-        <div style="border-style: unset;">
-            <span onclick="clickme(box2)" id="box2">
-                <img title="HI" width="48px" height="48px" src='http://thefriendd.com/assets/img/Glod_Friend.png' />
-                <div>30| Box2 |50
-                    <div>200.000/ 0</div>
-                </div>
-            </span>
-        </div>
-        <div style="border-style: unset;">
-            <span onclick="clickme()" id="box3">
-                <img title="4" width="48px" height="48px" src='http://thefriendd.com/assets/img/add.png' />
-            </span>
-        </div>
-        <div style="border-style: unset;">
-            <span onclick="clickme(box4)" id="box4">
-                <img title="4" width="48px" height="48px" src='http://thefriendd.com/assets/img/Close_Friend.png' />
-                <div>30| Box2 |50
-                    <div>0 / 100.000</div>
-                </div>
-            </span>
-            </span>
-        </div>
-        <div style="border-style: unset;">
-            <span onclick="clickme()" id="box5"></span>
-        </div>
-        <div style="border-style: unset;">
-            <span onclick="clickme()" id="box6">Box6</span>
-        </div>
-        <div style="border-style: unset;">
-            <span onclick="clickme()" id="box7">Box7</span>
-        </div>
-        <div style="border-style: unset;">
-            <span onclick="clickme()" id="box8">Box8</span>
-        </div>
-        <div style="border-style: unset;">
-            <span onclick="clickme()" id="box9">Box9</span>
-        </div>
-        <div style="border-style: unset;">
-            <span onclick="clickme()" id="box10">Box10</span>
-        </div>
-        <div style="border-style: unset;">
-            <span onclick="clickme()" id="box11">Box11</span>
-        </div>
-        <div style="border-style: unset;">
-            <span onclick="clickme()" id="box12">Box12</span>
-        </div>
-        <div style="border-style: unset;">
-            <span onclick="clickme()" id="box13">Box13</span>
-        </div>
-        <div style="border-style: unset;">
-            <span onclick="clickme()" id="box14">Box14</span>
-        </div>
-        <div style="border-style: unset;">
-            <span onclick="clickme()" id="box15">Box15</span>
-        </div>
+    <input id='searchtext' placeholder="Search.." />
+    <!-- <button id='search' type="submit" onclick="search()" value='search'></button> -->
+    <button id='gototop' onclick="toTop()">Top</button>
+    <div id='topname'></div>
+    <div id="treeDiv" class="center" style="overflow: hidden;text-align: center; border-style: solid; border-color: #b49393;">        
     </div>
 
 

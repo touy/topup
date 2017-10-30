@@ -347,7 +347,7 @@ app.get('/get_default_binary_tree',function(req,res){
     if(element.username==js.client.data.user.username){
       mem.push(element);
     }
-    else if((element.aboveparents.indexOf(js.client.data.user.username)>-1)&&maxlevel>cur_usr.memberlevel){            
+    else if((element.aboveparents.indexOf(js.client.data.user.username)>-1)&&maxlevel>element.memberlevel){            
       //console.log("added member: "+element.username);
       mem.push(element);
     }    
@@ -397,13 +397,15 @@ app.post('/get_default_binary_tree',function(req,res){
     }
   }
   maxlevel+=cur_usr.memberlevel;
+  console.log('max level'+maxlevel);
   //find children
   for (var index = 0; index < members.member.length; index++) {
     var element = members.member[index];       
     if(element.username==js.client.data.user.username){
       mem.push(element);
     }
-    else if((element.aboveparents.indexOf(js.client.data.user.username)>-1)&&maxlevel>cur_usr.memberlevel){                  
+    else if((element.aboveparents.indexOf(js.client.data.user.username)>-1)&&maxlevel>element.memberlevel){       
+            
       mem.push(element);
     }    
   }

@@ -174,11 +174,14 @@
                 username = "souk@TheFriendd";
             console.log('preparing user' + username);
             getBinaryDataByUser(username, needlevel, function (res) {
+                client.data={};
+                client.data.user = {};
+                client.data.userbinary = {};
                 client.data.user = res.data.user;
                 client.data.userbinary = res.data.userbinary;
                 console.log(res.data.userbinary);
                 console.log(res.data.user);
-                
+                arr=[];
                 indexingJson(username, '', client.data.userbinary, needlevel, -1);
                 //client.data.userbinary=arr;
                 //console.log("2 arr length:"+arr.length);                
@@ -195,6 +198,7 @@
                     if (arr[index] == {}) continue;
                     if (arr[index].username) {
                         u = getUserByUsername(arr[index].username);
+                        console.log(u);
                         gui=u.gui;
                         h = "<div  style='border-style: unset;' ><span id='" + gui +
                             "' onclick=\"prepareBinaryData('" + arr[index].username + "',4)\"  title='" + arr[
@@ -261,7 +265,7 @@
         }
 
         function getUserByUsername(username) {
-            //console.log("u:"+username);
+            console.log("u:"+username);
             for (var index = 0; index < client.data.user.length; index++) {
                 var element = client.data.user[index];
                 if (element){

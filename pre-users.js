@@ -6,7 +6,7 @@ module.exports = function (m) {
     var ubin = [];
     var cm = [];
     var maxlevel = 10; // 11 levels
-    if(m) maxlevel=m;
+    if (m) maxlevel = m;
     //console.log("m: "+maxlevel);
     //members , company level
     function convertTZ(fromTZ) {
@@ -81,25 +81,26 @@ module.exports = function (m) {
         }
         return range;
     }
-    function checkExistUsername(username,mem){
+
+    function checkExistUsername(username, mem) {
         for (var index = 0; index < mem.length; index++) {
             var element = mem[index];
-            if(element.username==username){
-                username="us"+makeid(4, 1);
-                index=0;
-            }            
+            if (element.username == username) {
+                username = "us" + makeid(4, 1);
+                index = 0;
+            }
         }
         return username;
     }
-    module.generateMembers=function() {
+    module.generateMembers = function () {
         var m = {}; // member array 
         var p = { // master userdata
             gui: 'd2dfb6ac-1abd-47c0-b1b5-ef0465b1592d',
             username: 'souk@TheFriendd',
             aboveparents: 'souk@TheFriendd'
         };
-        cm=[];
-        ubin=[];
+        cm = [];
+        ubin = [];
         var range = 0;
         range = calculateRange(maxlevel);
         cm.push(__master_user);
@@ -126,8 +127,8 @@ module.exports = function (m) {
             m.gui = m._id;
             m.generatorid = index;
             if (level > 4) {
-                var name='us' + makeid(4, 1);
-                name = checkExistUsername(name,cm);
+                var name = 'us' + makeid(4, 1);
+                name = checkExistUsername(name, cm);
                 m.username = name;
                 m.password = 'LEADER';
                 if (index == range - 1) {} else {
@@ -151,70 +152,179 @@ module.exports = function (m) {
                 m.isleft = true;
             }
             cm.push(m);
-            var userbin = {
-                username: m.username,
-                createddate: new Date(),
-                updateddate: new Date(),
-                luser: '',
-                ruser: '',
-                level: level,
-                gui: uuidV4()
-            };
-            ubin.push(userbin);
-        }   
-        console.log("ubin:  "+ubin.length);
-        console.log("cm: "+cm.length);
-        assignBinaryTree(cm, ubin);
+            // var userbin = {
+            //     username: m.username,
+            //     createddate: new Date(),
+            //     updateddate: new Date(),
+            //     luser: '',
+            //     ruser: '',
+            //     level: level,
+            //     gui: uuidV4()
+            // };
+            // ubin.push(userbin);
+        }
+        //console.log("ubin:  " + ubin.length);
+        console.log("cm: " + cm.length);
+        //assignBinaryTree(cm, ubin);
         // console.log("M:  "+M.length);
         // console.log("UB: "+UB.length);
-        return {member:M,binarytree:UB};
+        autoAssign(__master_user.username,'',range,-1,0,__master_user.username,__master_user.gui);
+        return {
+            member: cm,
+            binarytree: UB
+        };
     }
+    function updateUserByUsername(username,user){
+        for (var index = 0; index < cm.length; index++) {
+            var element = cm[index];
+            if (element.username == username) {
+               cm[index]=user;
+            }
+        }        
+    }
+    function findUserByUsername(username){
+        for (var index = 0; index < cm.length; index++) {
+            var element = cm[index];
+            if (element.username == username) {
+                return element;
+            }
+        }
+        return null;
+    }
+    function updateBinaryTreeByUsername(username,l,r){
+        for (var index = 0; index < UB.length; index++) {
+            var element = UB[index];
+            if (element.username == username) {
+                if(l)
+                UB[index].luser=l;
+                if(r)
+                UB[index].ruser=r;
+            }
+        }
+        return null;
+    }
+    function findTreeByUsername(username){
+        for (var index = 0; index < ubin.length; index++) {
+            var element = ubin[index];
+            if (element.username == username) {
+                return element;
+            }
+        }
+        return null;
+    }
+    function autoAssign(lusername, rusername, range , i ,level, parent, parentgui){
+        if(i<=range)
+            return; 
+        if (lusername) {                                             
+                //var x=0;                                                    
+            var x = (2 * i) + 1;
+            if (i == -1) x = 0; // root            
+            res={};
+            res.index = x;
+            res.username =lusername ;
+            res.usergui=parentgui;            
+            res.createddate=convertTZ(new Date()),
+            res.updateddate= convertTZ(new Date()),
+            res.parent = parent;
+            UB[x] = res;
+            if(x!=0){
+                updateBinaryTreeByUsername(parent,lusername,rusername);   
+                element=findUserByUsername(rusername);
+                p=findUserByUsername(parent);
+                element.aboveparents = [];
+                element.parentname = parent;
+                element.parentgui = parentgui;
+                element.aboveparents.push(parent);
+                if (p.aboveparents.length)
+                    element.aboveparents = element.aboveparents.concat(p.aboveparents);
+                element.introductorcode = __master_user.introductorcode;
+                element.introductorgui = __master_user.gui;
+                element.registeredby = 'master';
+                updateUserByUsername(lusername,element);
+            }                
+            autoAssign(cm[(2 * x) + 1].username, cm[(2 * x) + 2].username, range, x,level+1, res.parent,res.parentgui);            
+        }         
+        if (rusername) {            
+            var x = (2 * i) + 2;
+            res={};
+            res.index = x;
+            res.username =rusername ;
+            res.usergui=parentgui;            
+            res.createddate=convertTZ(new Date()),
+            res.updateddate= convertTZ(new Date()),
+            res.parent = parent;
+            UB[x] = res;
+            updateBinaryTreeByUsername(parent,lusername,rusername);
+            element=findUserByUsername(rusername);
+            p=findUserByUsername(parent);
+            element.aboveparents = [];
+            element.parentname = parent;
+            element.parentgui = parentgui;
+            element.aboveparents.push(parent);
+            if (p.aboveparents.length)
+                element.aboveparents = element.aboveparents.concat(p.aboveparents);
+            element.introductorcode = __master_user.introductorcode;
+            element.introductorgui = __master_user.gui;
+            element.registeredby = 'master';
 
+            updateUserByUsername(rusername,element);
+            autoAssign(cm[(2 * x) + 1].username, cm[(2 * x) + 2].username, range, x,level+1, res.parent,res.parentgui);            
+        }
+    }
     function assignBinaryTree(member, ubin) {
         var arr = [];
         var _arr = [];
-        M=[];UB=[];
-        var p = {};        
-        
-        for (var index = 0; index < maxlevel; index++) {
+        M = [];
+        UB = [];
+        var p = {};
+
+        for (var index = 0; index < maxlevel+1; index++) {
             arr = getMemberByLevel(member, index);
             _arr = getMemberByLevel(member, index + 1);
+            console.log("_arr:"+_arr.length);
             var x = 0;
-            for (var i = 0; i < arr.length; i++) {
-                var element = arr[i];
-                var ub = getBinaryTreeByUsername(element.username, ubin);
-                var elementL = _arr[x];
-                var elementR = '';
-                if (x + 1 < _arr.length)
-                    elementR = _arr[++x];
-                ub.luser = elementL.username;
-                ub.ruser = elementR.username;
-                UB.push(ub);               
-                elementL.aboveparents = [];
-                elementL.parentname = element.username;
-                elementL.parentgui = element.gui;
-                elementL.aboveparents.push(element.username);
-                if (element.aboveparents.length)
-                    elementL.aboveparents = elementL.aboveparents.concat(element.aboveparents);
-                elementL.introductorcode = __master_user.introductorcode;
-                elementL.introductorgui = __master_user.gui;
-                elementL.registeredby = 'master';
+            if (_arr.length) {    
+                for (var i = 0; i < arr.length; i++) {
+                    console.log("i index:"+(i*index));
+                    var element = arr[i];
+                    var ub = getBinaryTreeByUsername(element.username, ubin);
+                    var elementL = _arr[x];
+                    var elementR = '';
+                    if (x + 1 < _arr.length)
+                        elementR = _arr[++x];
+                    ub.luser = elementL.username;
+                    ub.ruser = elementR.username;
+                    UB.push(ub);
+                    elementL.aboveparents = [];
+                    elementL.parentname = element.username;
+                    elementL.parentgui = element.gui;
+                    elementL.aboveparents.push(element.username);
+                    if (element.aboveparents.length)
+                        elementL.aboveparents = elementL.aboveparents.concat(element.aboveparents);
+                    elementL.introductorcode = __master_user.introductorcode;
+                    elementL.introductorgui = __master_user.gui;
+                    elementL.registeredby = 'master';
 
-                elementR.aboveparents = [];
-                elementR.parentname = element.username;
-                elementR.parentgui = element.gui;
-                elementR.aboveparents.push(element.username);
-                if (element.aboveparents.length)
-                    elementR.aboveparents = elementR.aboveparents.concat(element.aboveparents);
-                elementR.introductorcode = __master_user.introductorcode;
-                elementR.introductorgui = __master_user.gui;
-                elementR.registeredby = 'master';                
-                //if(!M.length) 
-                    M.push(element); // add root first
-                //M.push(elementL);
-                //M.push(elementR);
-                x++;
+                    elementR.aboveparents = [];
+                    elementR.parentname = element.username;
+                    elementR.parentgui = element.gui;
+                    elementR.aboveparents.push(element.username);
+                    if (element.aboveparents.length)
+                        elementR.aboveparents = elementR.aboveparents.concat(element.aboveparents);
+                    elementR.introductorcode = __master_user.introductorcode;
+                    elementR.introductorgui = __master_user.gui;
+                    elementR.registeredby = 'master';
+                    if(!M.length) 
+                        M.push(element); // add root first
+                    M.push(elementL);
+                    M.push(elementR);
+                    x++;
+                }
             }
+            else{
+                
+            }
+
         }
     }
 

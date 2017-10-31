@@ -375,17 +375,26 @@ app.get('/get_default_binary_tree',function(req,res){
   js.client.data.userbinary=bmem;
   js.resp.send(js.client);
 });
+var members='';// would be __current_user
 app.post('/get_default_binary_tree',function(req,res){
   var js = {};
   js.client = req.body;
   js.resp = res;
-  var members=preUser.generateMembers();  
+  if(!members)
+    members=preUser.generateMembers();  
   var m={};
   var mem=[];
   var bmem=[];
+  
   console.log("O mem:"+members.member.length+", bmem"+members.binarytree.length);
   
   console.log('find user '+js.client.data.user.username);
+  // allow show only children of current logged in user
+  // if(!isAChild(__cur_client.username,members.member)){
+  //   js.client.message='that user is not your child';
+  //   js.resp.send(js.client);
+  //   return;
+  // }
   // gets all member which has parent name : username
   var maxlevel=js.client.data.user.memberlevel;
   // if(js.client.data.user.memberlevel>4)
@@ -399,6 +408,7 @@ app.post('/get_default_binary_tree',function(req,res){
       break;
     }
   }
+  //console.log(cur_usr);
   maxlevel+=cur_usr.memberlevel;
   console.log('max level'+maxlevel);
   //find children
@@ -429,11 +439,19 @@ app.post('/get_default_binary_tree',function(req,res){
   // console.log("mem:"+mem.length);
   // console.log("bmem:"+bmem.length);
   //console.log('Ready');
+  //console.log(bmem);
   js.client.data.user=mem;
   js.client.data.userbinary=bmem;
   js.resp.send(js.client);
 });
-
+function isAChild(username,members){
+  for (var index = 0; index < members.length; index++) {
+    var element = members[index];
+    if(element.aboveparents.indexOf(username)>=0)
+      return true;
+    return false;
+  }
+}
 
 
 
@@ -3646,6 +3664,7 @@ function addBinaryTree(js, parent) {
     updateddate: convertTZ(new Date()),
     luser: "",
     ruser: "",
+    parent:parent.username,
     level: parent.memberlevel + 1,
     gui: uuidV4()
   };
@@ -3657,6 +3676,7 @@ function addBinaryTree(js, parent) {
     luser: "",
     ruser: "",
     level: 0,
+    parent:'',
     gui: uuidV4()
   };
   //js.db=create_db('userbinary');

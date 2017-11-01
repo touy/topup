@@ -115,45 +115,43 @@
             if(!b.length){
                 return [];
             }
-            // if(b.length==1){
-            //     var nx={
-            //     username: '',
-            //     createddate:'',
-            //     updateddate:'',
-            //     luser: '',
-            //     ruser: '',
-            //     level: u.level+1,
-            //     //parent:u.username,
-            //     gui:''
-            //     };                
-            //     b1.push(nx);
-            //     b1.push(nx);
-            //     u.luser=nx;
-            //     u.ruser=nx;
-            // }
-            // else if(b.length==15){
-            //     // fill up
-            //     var p=u;
-            //     for (var index = 0; index < b.length; index++) {
-            //         var l=getBinaryDataByMemberLevel((u.memberlevel+index),b).length;                      
-            //         if(!l==Math.pow(2,index)){
-            //             for (var i = 0; i < Math.pow(2,index); i++) {
-            //                 var element = array[index];
-
-            //             }
-            //         }                      
-            //     }
-                
-            // }
-            //else{
-                // fill up and extend 1 level   
+            // fill up    
             console.log("before"+b.length)             
-            if(b.length<15){
+            if(b.length<15){                
                 var max=findMaxLevel(u.level,b);
-                console.log(max+"max");
-                console.log(u.level+"u level");
+                // console.log(max+"max");
+                // console.log(u.level+"u level");
                 var n=max-u.level;
                 console.log(n+"n");
+                // check every level and fill up 
+                b1=b;
+                while(true){
+                    for (var index = 0; index < b.length; index++) {
+                        var element = b[index];
+                        u1=getBinaryDataByMemberLevel(u.level+index,b);
+                        if(u.length!=Math.pow(2,index)){
+                            needmore=Math.pow(2,index)-u.length;
+                            for (var i = 0; i < needmore; i++) {
+                                b1.push({
+                                username: makeid(10,1),
+                                createddate:'',
+                                updateddate:'',
+                                luser: '',
+                                ruser: '',
+                                level: u.level+index,
+                                isdummy:'isdummy',
+                                parent:u.username,
+                                gui:''
+                                });                                
+                            }
+                        }
+                    }
+                    //extend more lelve
+                    if(b.length<15){
+                        
+                    }
+                }
+                
                 u1=getBinaryDataByMemberLevel(max,b); 
                 console.log(u1.length); 
                 //extended and fill up
@@ -213,8 +211,8 @@
             //console.log("1 arr length:"+arr.lenghth);
             if (lusername) {
                 if (res = findTreeByUsername(c, lusername)) {   
-                    if(needlevel<res.level)
-                        return;                 
+                    // if(needlevel<res.level)
+                    //     return;                 
                     //var x=0;                                        
                     var x = (2 * i) + 1;
                     if (i == -1) x = 0; // root
@@ -237,8 +235,8 @@
             //if (x)
             if (rusername) {
                 if (body = findTreeByUsername(c, rusername)) {
-                    if(needlevel<body.level)
-                        return;
+                    // if(needlevel<body.level)
+                    //     return;
                     var y = (2 * i) + 2;
                     body.index = y;
                     body.request = "rusrname:" + rusername;

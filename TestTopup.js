@@ -368,8 +368,8 @@ app.get('/get_default_binary_tree',function(req,res){
         } 
       }
     }
-  // console.log("mem:"+mem.length);
-  // console.log("bmem:"+bmem.length);
+  console.log("mem:"+mem);
+  console.log("bmem:"+bmem);
   console.log('Ready');
   js.client.data.user=mem;
   js.client.data.userbinary=bmem;
@@ -412,13 +412,13 @@ app.post('/get_default_binary_tree',function(req,res){
   maxlevel+=cur_usr.memberlevel;
   console.log('max level'+maxlevel);
   //find children
+  //console.log(members.member)
   for (var index = 0; index < members.member.length; index++) {
     var element = members.member[index];       
     if(element.username==js.client.data.user.username){
       mem.push(element);
     }
-    else if((element.aboveparents.indexOf(js.client.data.user.username)>-1)&&maxlevel>element.memberlevel){       
-            
+    else if((element.aboveparents.indexOf(js.client.data.user.username)>-1)&&maxlevel>element.memberlevel){                   
       mem.push(element);
     }    
   }
@@ -434,10 +434,10 @@ app.post('/get_default_binary_tree',function(req,res){
         } 
       }
     }
-    console.log("found mem:"+mem.length); 
-    console.log("found bmem:"+bmem.length); 
-  // console.log("mem:"+mem.length);
-  // console.log("bmem:"+bmem.length);
+    //console.log(mem); 
+    //console.log(bmem); 
+  console.log("mem:"+mem.length);
+  console.log("bmem:"+bmem.length);
   //console.log('Ready');
   //console.log(bmem);
   js.client.data.user=mem;

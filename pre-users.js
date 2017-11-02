@@ -134,7 +134,7 @@ module.exports = function (m) {
                 m.password = 'LEADER';
                 m.email='';
                 m.phone1='';
-                if (index == range - 1) {} else {
+                if (index == 62) {} else {
                     m.maxpaid = 350000;
                     m.maxproduct = 15;
                     m.packagename = 'Close Friend';
@@ -178,7 +178,7 @@ module.exports = function (m) {
         console.log("UB: "+ubin.length);
         for (var index = 0; index < ubin.length; index++) {
             var element = ubin[index];
-            console.log("username:"+element.username+", l:"+element.luser+", r:"+element.ruser+" parent:"+element.parent+" index:"+element.index+" level"+element.level);
+         //   console.log("username:"+element.username+", l:"+element.luser+", r:"+element.ruser+" parent:"+element.parent+" index:"+element.index+" level"+element.level);
         }
 
         return {member:cm,binarytree:ubin};

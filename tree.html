@@ -183,10 +183,10 @@
                         console.log("b length:" + b.length);
                         //continue;
                         u1 = getBinaryDataByMemberLevel(u.level + index, b);
-
+                        if(((u.level+ index + 1)>u.level+maxrange-1)) continue;
                         for (var i = 0; i < u1.length; i++) {
                             var element = u1[i];
-                            if (!element.luser && b.length < 15) {
+                            if (!element.luser) {
                                 element.luser = makeid(6, 1);
                                 var isdummy = 'isdummy';
                                 if (element.isdummy == undefined)
@@ -197,14 +197,14 @@
                                     updateddate: '',
                                     luser: '',
                                     ruser: '',
-                                    level: u.level+ index + i,
+                                    level: u.level+ index+1,
                                     isdummy: isdummy,
                                     parent: element.username,
                                     gui: makeid(6, 1)
                                 });
                                 updateUserBinaryByUsername(element.username, b, element)
                             }
-                            if (!element.ruser && b.length < 15) {
+                            if (!element.ruser) {
                                 element.ruser = makeid(6, 1);
                                 var isdummy = 'isdummy';
                                 if (element.isdummy == undefined)
@@ -215,7 +215,7 @@
                                     updateddate: '',
                                     luser: '',
                                     ruser: '',
-                                    level: u.level+ index + i,
+                                    level: u.level+ index +1,
                                     isdummy: isdummy,
                                     parent: element.username,
                                     gui: makeid(6, 1)

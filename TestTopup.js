@@ -396,6 +396,8 @@ app.post('/get_default_binary_tree', function (req, res) {
    bmem = [];
   preDelete2('fd0005',members.member);//TESTING
   preDelete('fd0005',members.binarytree)//TESTING
+  preDelete2('fd0009',members.member);//TESTING
+  preDelete('fd0009',members.binarytree)//TESTING
 
   console.log("O mem:" + members.member.length + ", bmem" + members.binarytree.length);
 

@@ -395,7 +395,7 @@ app.post('/save_default_binary_tree_user_to_file',function(req,res){
   const fs = require('fs');  
   now=new Date();
   nowstr=now.getFullYear()+("0"+(now.getMonth()+1)).slice(-2)+("0"+(now.getDate()+1)).slice(-2)+("0"+now.getHours()).slice(-2)+("0"+now.getMinutes()).slice(-2)+("0"+now.getSeconds()).slice(-2);
-  fs.writeFile("backup/bmem"+nowstr+".js", JSON.stringify(bmem), 'utf8', function (err) {
+  fs.writeFile("backup/bmem"+nowstr+".js", JSON.stringify(members.binarytree), 'utf8', function (err) {
       if (err) {          
           console.log(err);
           res.send(err);
@@ -404,7 +404,7 @@ app.post('/save_default_binary_tree_user_to_file',function(req,res){
   });
   now=new Date();
   nowstr=now.getFullYear()+("0"+(now.getMonth()+1)).slice(-2)+("0"+(now.getDate()+1)).slice(-2)+("0"+now.getHours()).slice(-2)+("0"+now.getMinutes()).slice(-2)+("0"+now.getSeconds()).slice(-2);
-  fs.writeFile("backup/mem"+nowstr+".js", JSON.stringify(mem), 'utf8', function (err) {
+  fs.writeFile("backup/mem"+nowstr+".js", JSON.stringify(members.member), 'utf8', function (err) {
       if (err) {
           console.log(err);
           res.send(err);

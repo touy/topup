@@ -618,9 +618,10 @@
             }
         }        
         function save(){
+            console.log("saving");
             jsonPost(getHost()+"/save_default_binary_tree_user_to_file",client,function(res){
                 console.log("save "+res);
-                $('#savemsg').text(res);
+                $('#savemsg').html("saved "+res);
             });
         }
     </script>

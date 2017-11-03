@@ -124,21 +124,21 @@
                 return [];
             }
             // fill up    
-            console.log("before" + b.length)
+            //console.log("before" + b.length)
             if (b.length < 15) {
                 var max = findMaxLevel(u.level, b);
                 //var n=max-u.level;
-                console.log(maxrange + "maxrange / level:" + u.level);
+                //console.log(maxrange + "maxrange / level:" + u.level);
                 //b=[];
                 //return;
                 for (var index =0; index < maxrange; index++) {
                     u1 = getBinaryDataByMemberLevel(u.level + index, b);
-                    console.log("u1."+u1.length);
+                    //console.log("u1."+u1.length);
                     //return;
                     if (u1.length) {
                         needmore = Math.pow(2, index) - u1.length;
-                        console.log("index: "+index);
-                        console.log(b.length+" b.length,needmore:" + needmore + " 2^n" + Math.pow(2, index));
+                        // console.log("index: "+index);
+                        // console.log(b.length+" b.length,needmore:" + needmore + " 2^n" + Math.pow(2, index));
                         if (needmore > 0 && needmore < Math.pow(2, index))
                             for (var i = 0; i < needmore; i++) {
                                 console.log("i:" + i);
@@ -179,8 +179,8 @@
                                     gui: makeid(6, 1)
                                 });
                             }
-                        console.log('extending' + index);
-                        console.log("b length:" + b.length);
+                        // console.log('extending' + index);
+                        // console.log("b length:" + b.length);
                         //continue;
                         u1 = getBinaryDataByMemberLevel(u.level + index, b);
                         if(((u.level+ index + 1)>u.level+maxrange-1)) continue;
@@ -260,17 +260,6 @@
                     indexingJson(arr[x].luser, arr[x].ruser, c, needlevel, x, res.parent);
                 }
             }
-            // else {
-            //     var x = (2 * i) + 1;
-            //     if (i == -1) x = 0; // root
-            //     res = {};
-            //     res.parent = parent;
-            //     res.luser = '';
-            //     res.ruser = '';
-            //     arr[x] = res;
-            //     indexingJson(arr[x].luser, arr[x].ruser, c, needlevel, x, '');
-            // }
-            //if (x)
             if (rusername) {
                 if (body = findTreeByUsername(c, rusername)) {
                     // if(needlevel<body.level)
@@ -287,17 +276,7 @@
                     indexingJson(arr[y].luser, arr[y].ruser, c, needlevel, y, body.parent);
                 }
             }
-            return;
-            // else {                
-            //     if (i == -1) return; // root
-            //     var y = (2 * i) + 1;
-            //     res = {};
-            //     res.parent = parent;
-            //     res.luser = '';
-            //     res.ruser = '';
-            //     arr[y] = res;
-            //     indexingJson(arr[y].luser, arr[y].ruser, c, needlevel, y, '');
-            // }
+            return;            
         }
 
         function compare(a, b) {
@@ -342,12 +321,15 @@
         }
         // loading data       
         var currentUsername = '';
-
+        var selection=[];
         function prepareBinaryData(username, needlevel) {
             if (username == '') {
                 username = 'souk@TheFriendd'
                 //return;
             }
+            selection.push(username);
+            console.log('back member');
+            console.log(selection);
             if (currentUsername == username)
                 $("#topname").empty().text(currentUsername);
             else
@@ -357,14 +339,18 @@
             //var needlevel = 4; // current user memberlevel + needed level   
             //  console.log(username);            
             //console.log('preparing user' + username);
+            
             getBinaryDataByUser(username, needlevel, function (res) {
                 client.data = {};
                 client.data.user = {};
                 client.data.userbinary = {};
                 client.data.user = res.data.user;
                 client.data.userbinary = res.data.userbinary;
+                
+
                 console.log(res.data.userbinary);
                 console.log(res.data.user);
+                
                 arr = [];
                 var f_userbinary = client.data.userbinary;
                 f_userbinary = fillUpMembers(username, needlevel, client.data.userbinary);
@@ -606,6 +592,37 @@
                 }
             });
         });
+        function goBack(){
+            if(selection.length){
+                var username=selection[selection.length-2];
+                console.log("back to "+username);
+                selection.splice(selection.length-1,1);
+                selection.splice(selection.length-1,1);
+                prepareBinaryData(username,4);                
+            }
+        }
+        function deleteUser(){            
+            selected=$("#topname").text().split('/')[1];
+            if(!confirm("Are you deleting user: "+selected)) return;
+            var client={};client.data={};client.data.user={};            
+            if(currentUsername!=selected&&selected){
+                client.data.user.username=selected;
+                jsonPost(getHost()+"/delete_default_binary_tree",client,function(res){
+                    save();
+                    //alert(res);
+                    prepareBinaryData(currentUsername,maxrange);
+                });
+            }
+            else{
+                alert('Could not delete yourself');
+            }
+        }        
+        function save(){
+            jsonPost(getHost()+"/save_default_binary_tree_user_to_file",client,function(res){
+                console.log("save "+res);
+                $('#savemsg').text(res);
+            });
+        }
     </script>
 
 </head>
@@ -618,8 +635,12 @@
     </div> -->
     <input id='searchtext' placeholder="Search.." />
     <!-- <button id='search' type="submit" onclick="search()" value='search'></button> -->
-    <button id='gototop' onclick="toTop()">Top</button>
+    <button id='gototop' onclick="toTop()">Top</button>    
+    <button id='deleteuser' onclick="deleteUser()">Delete</button>
+    -----------------------------------------------------<button id='goback' onclick="goBack()"><==</button>
+    -----------------------------------------------------<button id='save' onclick="save()">SAVE</button>
     <div id='topname'></div>
+    <div id='savemsg'></div>
     <div id="treeDiv" class="center" style="overflow: hidden;text-align: center; border-style: solid; border-color: #b49393;width:800px;height: 600px">
     </div>
 

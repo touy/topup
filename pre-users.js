@@ -5,7 +5,7 @@ module.exports = function (m) {
     var M = [];
     var ubin = [];
     var cm = [];
-    var maxlevel = 10; // 11 levels
+    var maxlevel = 10; // 12 levels
     if(m) maxlevel=m;
     //console.log("m: "+maxlevel);
     //members , company level
@@ -66,7 +66,15 @@ module.exports = function (m) {
         "maxproduct": 100000,
         "maxpaid": 9007199254740992
     }
-
+    var names=['souk','touy','noy','vanh','seng','sone','teng','bua','kham','thong','tia','my','mou','xay','vone','veng','vong','terng','done',
+    'kai','phet','pa','keo','nang','mone','deth','na','vieng','chan','vi','hieng','dao','da','duang','xieng','pone','thid','phone',
+    'hom','boun','ki','ky','noi','mai','la','yai','joy','hong','lit','ngeun','od','lek','xang'];
+    function getName(){
+        //var name='';
+        r1=Math.floor((Math.random() * (names.length-1)) + 1);
+        r2=Math.floor((Math.random() * (names.length-1)) + 1);
+        return names[r1]+names[r2]+makeid(3,3);
+    }
     function autoAssignment(js) {
         for (var attributename in __obj) {
             js[attributename] = __obj[attributename];
@@ -128,13 +136,13 @@ module.exports = function (m) {
             m.gui = m._id;
             m.generatorid = index;
             if (level > 4) {
-                var name='us' + makeid(4, 1);
+                var name=getName();
                 name = checkExistUsername(name,cm);
                 m.username = name;
                 m.password = 'LEADER';
                 m.email='';
                 m.phone1='';
-                if (index == 62) {} else {
+                if (index == 62||index==125||index==126) {} else {
                     m.maxpaid = 350000;
                     m.maxproduct = 15;
                     m.packagename = 'Close Friend';
@@ -390,7 +398,7 @@ module.exports = function (m) {
         };
     }
 
-    function makeid(length, type = 0) {
+    function makeid(length, type) {
         var text = "";
         var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         if (type == 1) {

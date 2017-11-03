@@ -4,7 +4,7 @@ const app = express();
 const uuidV4 = require('uuid/v4');
 const nano = require('nano')('http://admin:admin@localhost:5984');
 const LTCSERVICE = require('./ltctopup')();
-var preUser = require('./pre-users')(11);
+var preUser = require('./pre-users')(10);
 //const nano = require('nano')('http://localhost:5984');
 const cors = require('cors');
 const base64 = require('file-base64');
@@ -384,7 +384,47 @@ app.get('/get_default_binary_tree', function (req, res) {
 });
 var members = ''; // would be __current_user
 var bmem='';
-
+var mem='';
+app.get('/show_default_users',function(req,res){
+  res.send(displayJson(mem));
+});
+app.get('/show_default_binary_tree',function(req,res){
+  res.send(displayJson(bmem));
+});
+app.post('/save_default_binary_tree_user_to_file',function(req,res){
+  const fs = require('fs');  
+  now=new Date();
+  nowstr=now.getFullYear()+("0"+(now.getMonth()+1)).slice(-2)+("0"+(now.getDate()+1)).slice(-2)+("0"+now.getHours()).slice(-2)+("0"+now.getMinutes()).slice(-2)+("0"+now.getSeconds()).slice(-2);
+  fs.writeFile("backup/bmem"+nowstr+".js", JSON.stringify(bmem), 'utf8', function (err) {
+      if (err) {          
+          console.log(err);
+          res.send(err);
+      }
+      console.log("The file was saved! "+bmem.length);      
+  });
+  now=new Date();
+  nowstr=now.getFullYear()+("0"+(now.getMonth()+1)).slice(-2)+("0"+(now.getDate()+1)).slice(-2)+("0"+now.getHours()).slice(-2)+("0"+now.getMinutes()).slice(-2)+("0"+now.getSeconds()).slice(-2);
+  fs.writeFile("backup/mem"+nowstr+".js", JSON.stringify(mem), 'utf8', function (err) {
+      if (err) {
+          console.log(err);
+          res.send(err);
+      }
+      console.log("The file was saved! mem:"+mem.length);      
+  }); 
+  res.send('saved '+mem.length+" bmem:"+bmem.length);
+});
+app.post('/delete_default_binary_tree', function (req, res) {
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  if(js.client.data.user.username){
+    var m="";
+    m+=(js.client.data.user.username+", deleted user "+preDelete2(js.client.data.user.username,members.member));//TESTING
+    m+=(js.client.data.user.username+", deleted binary tree "+preDelete(js.client.data.user.username,members.binarytree));//TESTING
+    js.client.data.message=m;
+    js.resp.send(js.client);
+  }  
+});
 app.post('/get_default_binary_tree', function (req, res) {
   var js = {};
   js.client = req.body;
@@ -394,10 +434,10 @@ app.post('/get_default_binary_tree', function (req, res) {
   var m = {};
    mem = [];
    bmem = [];
-  preDelete2('fd0005',members.member);//TESTING
-  preDelete('fd0005',members.binarytree)//TESTING
-  preDelete2('fd0009',members.member);//TESTING
-  preDelete('fd0009',members.binarytree)//TESTING
+  // preDelete2('fd0005',members.member);//TESTING
+  // preDelete('fd0005',members.binarytree)//TESTING
+  // preDelete2('fd0009',members.member);//TESTING
+  // preDelete('fd0009',members.binarytree)//TESTING
 
   console.log("O mem:" + members.member.length + ", bmem" + members.binarytree.length);
 
@@ -462,17 +502,29 @@ app.post('/get_default_binary_tree', function (req, res) {
   js.resp.send(js.client);
 });
 function preDelete2(username,b){
+  var count=0;
   for (var index = 0; index < b.length; index++) {
     var element = b[index];
     if(element.username==username){
        // console.log(isleft+"-delete"+username);
+        members.member.splice(index,1);   
+        count++;                                       
+    }
+    if(element.parentname==username)
+    {
+        members.member.splice(index,1);   
+      count++;
+    }
+    if(i=element.aboveparents.indexOf(username)>-1){
         members.member.splice(index,1);
-        return;                    
+      count++;
     }
   }
+  return count;
 }
 function preDelete(username,b,isleft){
   isdone=false;
+  var count=0;
   for (var index = 0; index < b.length; index++) {
       var element = b[index];
       if(element.username==username){
@@ -480,18 +532,22 @@ function preDelete(username,b,isleft){
           members.binarytree.splice(index,1);
           preDelete(element.luser,b,'True');
           preDelete(element.ruser,b,'False');
-          isdone=true;                    
+          isdone=true;   
+          count++;                 
       }
       if(element.luser==username){
         element.luser='';
         isdone=true;
+        count++;
       }
       if(element.ruser==username){
         element.ruser='';
         isdone=true;
+        count++;
       }
       //if(isdone)return;
   }
+  return count;
 }
 function isAChild(username, members) {
   for (var index = 0; index < members.length; index++) {

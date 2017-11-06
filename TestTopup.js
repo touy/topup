@@ -634,6 +634,7 @@ app.post('/get_default_binary_tree', function (req, res) {
 });
 function preDelete2(username){
   var count=0;
+  if(members.member)
   for (var index = 0; index < members.member.length; index++) {
     var element = members.member[index];
     if(element.username==username){
@@ -659,6 +660,7 @@ function preDelete2(username){
 function preDelete(username){
   //isdone=false;
   var count=0;
+  if(members.binarytree)
   for (var index = 0; index < members.binarytree.length; index++) {
       var element = members.binarytree[index];
       if(element.username==username){

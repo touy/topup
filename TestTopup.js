@@ -385,59 +385,188 @@ app.get('/get_default_binary_tree', function (req, res) {
 var members = ''; // would be __current_user
 var bmem='';
 var mem='';
+app.post('/add_member_from_root',function(req,res){
+  var js={};
+  js.client=req.body;
+  rootname=js.client.data.rootname;
+  parentname=js.client.data.parentname;
+  var root={};
+  var broot={};
+  // console.log('rootname:'+rootname);
+  for (var index = 0; index < members.member.length; index++) {
+    var element = members.member[index];
+    if(element.username==rootname){
+      // console.log("found! mem");
+      root=element;
+      break;
+    }      
+  }
+  for (var index = 0; index < members.binarytree.length; index++) {
+    var element = members.binarytree[index];
+    if(element.username==rootname){
+//      console.log("found! binary");
+      broot=element;
+      break;
+    }      
+  } 
+  // console.log("member length "+members.member.length);
+  // console.log("binarytree length "+members.binarytree.length);
+
+  // console.log("root length"+root.length);
+  var m=preUser.addMemberFromRoot(root,broot);
+  
+  console.log("root name"+root.username);
+  //console.log(m.curuser);
+  //return;
+  //console.log(m.member);
+  //console.log(m.binarytree);
+  // console.log('----------------------')
+  // console.log(m.member);
+
+  //return;
+  members.member=members.member.concat(m.member);
+  members.binarytree=members.binarytree.concat(m.binarytree);
+  for (var index = 0; index < members.binarytree.length; index++) {
+    var element = members.binarytree[index];
+    if(element.username==rootname){
+      members.binarytree[index]=m.b;
+      break;
+    }
+  }
+  
+  // console.log("member length "+members.member.length);
+  // console.log("binarytree length "+members.binarytree.length);
+
+  // for (var index = 0; index < members.member.length; index++) {
+  //   var element = members.member[index];
+  //   if(element.username==m.curuser.username){
+  //     members.member[index]=m.curuser;
+  //    // console.log('found');
+  //     break;
+  //   }      
+  // } 
+
+  // for (var index = 0; index < members.binarytree.length; index++) {
+  //   var element = members.binarytree[index];
+  //   if(element.username==m.curtree.username){
+  //     members.binarytree[index]=curtree;
+  //     //console.log('found');
+  //     broot=element;break;
+  //   }
+  // }
+
+  // console.log("mem length"+members.member.length);
+  // console.log("bmem length"+members.binarytree.length);
+  res.send('OK');
+});
+app.get('/get_backup_list',function(req,res){
+  var dir='backup/';
+  var files=fs.readdir(dir, function(err, files){
+    files = files.map(function (fileName) {
+      return {
+        name: fileName,
+        time: fs.statSync(dir+'/' + fileName).mtime.getTime()
+      };
+    })
+    .sort(function (a, b) {
+      return a.time - b.time; })
+    .map(function (v) {
+      return v.name; });
+      var js={};
+      js.client=req.body;
+      js.client.data={};
+      js.client.data.files=files;
+      console.log(files);
+      res.send(js.client);
+  });
+});
 app.get('/show_default_users',function(req,res){
   res.send(displayJson(mem));
 });
 app.get('/show_default_binary_tree',function(req,res){
   res.send(displayJson(bmem));
 });
+function restoreBackupFile(bakfile){
+  var fs = require('fs');
+  filename=bakfile;
+  if(filename)
+    fs.readFile('backup/'+filename, 'utf8', function (err, data) {
+        if (err) throw err; // we'll not consider error handling for now
+        console.log("restore data :"+data.length);
+        members = JSON.parse(data);
+        // filename=binarytreefile;
+        // if(filename)
+        // fs.readFile('backup/'+filename, 'utf8', function (err, data) {
+        //     if (err) throw err; // we'll not consider error handling for now
+        //     console.log("restore bmem :"+data.length);
+        //     members.binarytree = JSON.parse(data);
+        // });        
+    });
+}
+
 app.post('/save_default_binary_tree_user_to_file',function(req,res){
   const fs = require('fs');  
   now=new Date();
   nowstr=now.getFullYear()+("0"+(now.getMonth()+1)).slice(-2)+("0"+(now.getDate()+1)).slice(-2)+("0"+now.getHours()).slice(-2)+("0"+now.getMinutes()).slice(-2)+("0"+now.getSeconds()).slice(-2);
-  fs.writeFile("backup/bmem"+nowstr+".js", JSON.stringify(members.binarytree), 'utf8', function (err) {
+  fs.writeFile("backup/d"+nowstr+".js", JSON.stringify(members), 'utf8', function (err) {
       if (err) {          
           console.log(err);
           res.send(err);
       }
-      console.log("The file was saved! "+bmem.length);      
-  });
-  now=new Date();
-  nowstr=now.getFullYear()+("0"+(now.getMonth()+1)).slice(-2)+("0"+(now.getDate()+1)).slice(-2)+("0"+now.getHours()).slice(-2)+("0"+now.getMinutes()).slice(-2)+("0"+now.getSeconds()).slice(-2);
-  fs.writeFile("backup/mem"+nowstr+".js", JSON.stringify(members.member), 'utf8', function (err) {
-      if (err) {
-          console.log(err);
-          res.send(err);
-      }
-      console.log("The file was saved! mem:"+mem.length);      
-  }); 
-  res.send('saved '+mem.length+" bmem:"+bmem.length);
+      console.log("The file was saved! "+members.binarytree.length);      
+      // //now=new Date();
+      // nowstr=now.getFullYear()+("0"+(now.getMonth()+1)).slice(-2)+("0"+(now.getDate()+1)).slice(-2)+("0"+now.getHours()).slice(-2)+("0"+now.getMinutes()).slice(-2)+("0"+now.getSeconds()).slice(-2);
+      // fs.writeFile("backup/mem"+nowstr+".js", JSON.stringify(members.member), 'utf8', function (err) {
+      //     if (err) {
+      //         console.log(err);
+      //         res.send(err);
+      //     }
+      //     console.log("The file was saved! mem:"+mem.length);      
+      // }); 
+      res.send('saved '+mem.length+" bmem:"+members.binarytree.length);
+    });  
 });
+
 app.post('/delete_default_binary_tree', function (req, res) {
   var js = {};
   js.client = req.body;
   js.resp = res;
   if(js.client.data.user.username){
     var m="";
-    m+=(js.client.data.user.username+", deleted user "+preDelete2(js.client.data.user.username,members.member));//TESTING
-    m+=(js.client.data.user.username+", deleted binary tree "+preDelete(js.client.data.user.username,members.binarytree));//TESTING
+    m+=(js.client.data.user.username+", deleted user "+preDelete2(js.client.data.user.username));//TESTING
+    m+=(js.client.data.user.username+", deleted binary tree "+preDelete(js.client.data.user.username));//TESTING
     js.client.data.message=m;
     js.resp.send(js.client);
   }  
+});
+app.post('/reset_default_users',function(req,res){
+  members='';
+  if(members==''){
+    console.log('resetted');
+    res.send('OK');
+  }    
 });
 app.post('/get_default_binary_tree', function (req, res) {
   var js = {};
   js.client = req.body;
   js.resp = res;
+  var m = {};
+  mem = [];
+  bmem = [];
+
+  console.log(js.client.data);
   if (!members)
     members = preUser.generateMembers();
-  var m = {};
-   mem = [];
-   bmem = [];
-  // preDelete2('fd0005',members.member);//TESTING
-  // preDelete('fd0005',members.binarytree)//TESTING
-  // preDelete2('fd0009',members.member);//TESTING
-  // preDelete('fd0009',members.binarytree)//TESTING
+  
+    
+  if(js.client.data.isrestore==true){
+    bakfile=js.client.data.bakfile;
+    restoreBackupFile(bakfile);
+  }
+ // preDelete2('fd0005');//TESTING
+  //preDelete('fd0005')//TESTING
+ // preDelete2('fd0009');//TESTING
+  //preDelete('fd0009')//TESTING
 
   console.log("O mem:" + members.member.length + ", bmem" + members.binarytree.length);
 
@@ -456,6 +585,7 @@ app.post('/get_default_binary_tree', function (req, res) {
   var cur_usr = {}; 
   for (var index = 0; index < members.member.length; index++) {
     var element = members.member[index];
+    //console.log(index);
     if (element.username == js.client.data.user.username) {
       cur_usr = element;
       break;
@@ -486,6 +616,7 @@ app.post('/get_default_binary_tree', function (req, res) {
       var element = members.binarytree[index];
       if (e.username == element.username) {        
         bmem.push(element);
+
       }
     }
   }
@@ -501,48 +632,51 @@ app.post('/get_default_binary_tree', function (req, res) {
   js.client.data.userbinary = bmem;
   js.resp.send(js.client);
 });
-function preDelete2(username,b){
+function preDelete2(username){
   var count=0;
-  for (var index = 0; index < b.length; index++) {
-    var element = b[index];
+  for (var index = 0; index < members.member.length; index++) {
+    var element = members.member[index];
     if(element.username==username){
        // console.log(isleft+"-delete"+username);
-        members.member.splice(index,1);   
+        members.member.splice(index,1);  
+        preDelete(username); 
         count++;                                       
     }
     if(element.parentname==username)
-    {
-        members.member.splice(index,1);   
+    { 
+      preDelete(element.username);
+      members.member.splice(index,1);   
       count++;
     }
-    if(i=element.aboveparents.indexOf(username)>-1){
-        members.member.splice(index,1);
+    if(element.aboveparents.indexOf(username)>-1){
+      preDelete(element.username);
+      members.member.splice(index,1);
       count++;
     }
   }
   return count;
 }
-function preDelete(username,b,isleft){
-  isdone=false;
+function preDelete(username){
+  //isdone=false;
   var count=0;
-  for (var index = 0; index < b.length; index++) {
-      var element = b[index];
+  for (var index = 0; index < members.binarytree.length; index++) {
+      var element = members.binarytree[index];
       if(element.username==username){
          // console.log(isleft+"-delete"+username);
           members.binarytree.splice(index,1);
-          preDelete(element.luser,b,'True');
-          preDelete(element.ruser,b,'False');
-          isdone=true;   
+          // preDelete(element.luser,b);
+          // preDelete(element.ruser,b);
+          //isdone=true;   
           count++;                 
       }
       if(element.luser==username){
         element.luser='';
-        isdone=true;
+        //isdone=true;
         count++;
       }
       if(element.ruser==username){
         element.ruser='';
-        isdone=true;
+        //isdone=true;
         count++;
       }
       //if(isdone)return;

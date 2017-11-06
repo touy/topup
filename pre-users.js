@@ -99,6 +99,107 @@ module.exports = function (m) {
         }
         return username;
     }
+    module.addMemberFromRoot=function(root,broot) {
+        var m = {}; // member array 
+        var p = root;
+        //var b=broot;        
+        cm=[];
+        ubin=[];
+        var range = 0;
+        range = calculateRange(3);
+        cm.push(p);
+        //ubin.push(b);        
+        ubin.push(broot);
+        var level = 1;
+        //return console.log(range);
+        for (var index = 1; index < range; index++) {
+            if (calculateRange(level) <= index) {
+                level++;
+            }
+            //console.log('level '+level+'index '+(index));
+            m = getDefault();
+            m = autoAssignment(m);
+            m._id = uuidV4();
+            m.gui = m._id;
+            m.generatorid = index;
+        
+            var name=getName();
+            name = checkExistUsername(name,cm);
+            m.username = name;
+            m.password = 'LEADER';
+            m.email='';
+            m.phone1='';
+            m.maxpaid = 350000;
+            m.maxproduct = 15;
+            m.packagename = 'Close Friend';
+            m.packagevalue = 350000;
+            m.packagegui = 'afb6420f-26e6-4fab-87fd-b1d7a26fdfd5';
+
+            m.usercode = m.username;
+            m.parentgui = p.gui;
+            m.parentname = p.username;
+            m.aboveparents = p.aboveparents;
+            m.memberlevel = level+p.memberlevel;
+            // if (!(index % 2)) {
+            //     m.isleft = false;
+            // } else {
+            //     m.isleft = true;
+            // }
+            cm.push(m);
+            var userbin = {
+                username: m.username,
+                usergui:m.gui,
+                createddate: new Date(),
+                updateddate: new Date(),
+                luser: '',
+                ruser: '',
+                level: level+p.memberlevel,
+                parent:p.parentname,
+                index:0,
+                gui: uuidV4()
+            };
+            ubin.push(userbin);
+            // console.log('member level '+p.memberlevel+" level"+level);
+        }   
+        //console.log("ubin:  "+ubin.length);
+        // console.log("cm: "+cm.length);
+        // console.log("ubin: "+ubin.length);
+        // //assignBinaryTree(cm, ubin);
+        // //console.log('start from '+__master_user.username);
+        // console.log(ubin);
+        autoExtend(p.username,'',-1,p.username);
+        //return;
+        //console.log("M:  "+cm.length);
+        //console.log("UB: "+ubin.length);
+        // for (var index = 0; index < ubin.length; index++) {
+        //     var element = ubin[index];
+        //  //   console.log("username:"+element.username+", l:"+element.luser+", r:"+element.ruser+" parent:"+element.parent+" index:"+element.index+" level"+element.level);
+        // }
+        //curuser=cm[0];
+        //curtree=ubin[0];
+        //console.log(curuser);
+        //console.log(curtree);
+        //cm.splice(0,1);
+        for (var index = 0; index < cm.length; index++) {
+            var element = cm[index];
+            if(element.username==root.username){
+                cm.splice(index,1);
+            }                
+        }
+        var b={};
+        for (var index = 0; index < ubin.length; index++) {
+            var element = ubin[index];
+            if(element.username==root.username){
+                b=ubin[index];
+                ubin.splice(index,1);
+            }                
+        }
+        //ubin.splice(0,1);
+        //return {member:cm,binarytree:ubin,curuser:curuser,curtree:curtree};
+        // console.log("ubin length "+ubin.length);
+        // console.log("cm length "+cm.length);
+        return {member:cm,binarytree:ubin,b:b};
+    }
     module.generateMembers=function() {
         var m = {}; // member array 
         var p = { // master userdata
@@ -177,17 +278,17 @@ module.exports = function (m) {
             };
             ubin.push(userbin);
         }   
-        console.log("ubin:  "+ubin.length);
-        console.log("cm: "+cm.length);
+        //console.log("ubin:  "+ubin.length);
+        //console.log("cm: "+cm.length);
         //assignBinaryTree(cm, ubin);
         //console.log('start from '+__master_user.username);
         autoAsign(__master_user.username,'',-1,__master_user.parentname);
-        console.log("M:  "+cm.length);
-        console.log("UB: "+ubin.length);
-        for (var index = 0; index < ubin.length; index++) {
-            var element = ubin[index];
-         //   console.log("username:"+element.username+", l:"+element.luser+", r:"+element.ruser+" parent:"+element.parent+" index:"+element.index+" level"+element.level);
-        }
+        //console.log("M:  "+cm.length);
+        //console.log("UB: "+ubin.length);
+        // for (var index = 0; index < ubin.length; index++) {
+        //     var element = ubin[index];
+        //  //   console.log("username:"+element.username+", l:"+element.luser+", r:"+element.ruser+" parent:"+element.parent+" index:"+element.index+" level"+element.level);
+        // }
 
         return {member:cm,binarytree:ubin};
     }
@@ -216,8 +317,14 @@ module.exports = function (m) {
     function getUserBinaryByUsername(username){
         for (var index = 0; index < ubin.length; index++) {
             var element = ubin[index];
-            if(username==element.username)
-                return element;
+            if(element==undefined){
+                // console.log('ubin');
+                // console.log(element);
+                continue;
+            }
+            else                
+                if(username==element.username)
+                    return element;
         }
         return null;
     }
@@ -229,12 +336,100 @@ module.exports = function (m) {
         }
         return null;
     }
+    function autoExtend(lusername,rusername,i,parent){
+        if(lusername){
+            var x=(2*i)+1;
+            if(i==-1) x=0;
+            var u=cm[x];
+            //console.log("user: "+lusername+" parent:"+parent+"");
+            //console.log(cm);
+
+
+            var p=getUserByUsername(parent);
+            var ub=getUserBinaryByUsername(lusername);            
+            var pb=getUserBinaryByUsername(parent);
+            // console.log("user: "+lusername+" parent:"+parent+"");
+            if(x){
+                cm[x].aboveparents = [];
+                cm[x].parentname = p.username;
+                cm[x].parentgui = p.gui;
+                cm[x].introductorcode = __master_user.introductorcode;
+                cm[x].introductorgui = __master_user.gui;
+                cm[x].registeredby = 'master';
+                cm[x].isleft=true;
+                cm[x].aboveparents.push(p.username);
+                cm[x].aboveparents = cm[x].aboveparents.concat(p.aboveparents);
+                pb.luser=lusername;                                        
+                updateUserBinaryByUsername(parent,pb); 
+                ub.parent=p.parentname;
+                ub.index=x;  
+                updateUserBinaryByUsername(lusername,ub);
+            }
+            //console.log(cm[x]);                        
+
+            lu='';
+            ru='';
+            //console.log(cm[(2*x)+1]===undefined);
+            if(cm[(2*x)+1]!==undefined)
+                lu=cm[(2*x)+1].username;
+            if(cm[(2*x)+2]!==undefined)
+                ru=cm[(2*x)+2].username;
+            //console.log(lu+"/"+ru);
+            // if(lu==''&&ru=='')
+            //     return;
+            //console.log("l:"+lu+", ru"+ru," user:"+ub.username+" parent"+ub.parent+ " level"+ub.level +" index:"+ub.index);
+            autoExtend(lu,ru,x,u.username);
+        }
+        if(rusername){            
+            var x=(2*i)+2;
+            if(i==-1) x=0;
+            var u=cm[x];
+//            console.log(cm);
+            // console.log("user: "+lusername+" parent:"+parent+"");
+            var p=getUserByUsername(parent);            
+            var ub=getUserBinaryByUsername(rusername);            
+            var pb=getUserBinaryByUsername(parent);
+            if(x){
+                cm[x].aboveparents = [];
+                cm[x].parentname = p.username;
+                cm[x].parentgui = p.gui;
+                cm[x].introductorcode = __master_user.introductorcode;
+                cm[x].introductorgui = __master_user.gui;
+                cm[x].registeredby = 'master';
+                cm[x].isleft=false;
+                cm[x].aboveparents.push(p.username);
+                cm[x].aboveparents = cm[x].aboveparents.concat(p.aboveparents);
+                pb.ruser=rusername;                                        
+                updateUserBinaryByUsername(parent,pb);
+                ub.parent=parent;
+                ub.index=x;
+                updateUserBinaryByUsername(rusername,ub);
+            }
+            //console.log(cm[x]);                        
+            lu='';
+            ru='';
+            //console.log(cm[(2*x)+1]===undefined);
+            if(cm[(2*x)+1]!==undefined)
+                lu=cm[(2*x)+1].username;
+            if(cm[(2*x)+2]!==undefined)
+                ru=cm[(2*x)+2].username;
+            //console.log(lu+"/"+ru);
+
+            // if(lu==''&&ru=='')
+            //     return;
+            //console.log("l:"+lu+", ru"+ru," user:"+ub.username+" parent"+ub.parent+ " level"+ub.level +" index:"+ub.index);
+            autoExtend(lu,ru,x,u.username);
+        }
+        
+    }
     function autoAsign(lusername,rusername,i,parent){
         if(lusername){
             var x=(2*i)+1;
             if(i==-1) x=0;
             var u=cm[x];
-//            console.log(cm);
+            //console.log("user: "+lusername+" parent:"+parent+"");
+            //console.log(cm);
+
             var p=getUserByUsername(parent);
             // console.log("p:"+p.username);
             // console.log("u:"+u.username);
@@ -254,7 +449,7 @@ module.exports = function (m) {
                 updateUserBinaryByUsername(parent,pb);
             }
             //console.log(cm[x]);                        
-            ub.parent=parent;
+            ub.parent=p.parentname;
             ub.index=x;
             updateUserBinaryByUsername(lusername,ub);
             lu='';
@@ -311,61 +506,61 @@ module.exports = function (m) {
             autoAsign(lu,ru,x,u.username);
         }
     }
-    function assignBinaryTree(member, ubin) {
-        var arr = [];
-        var _arr = [];
-        M=[];UB=[];
-        var p = {};        
+    // function assignBinaryTree(member, ubin) {
+    //     var arr = [];
+    //     var _arr = [];
+    //     M=[];UB=[];
+    //     var p = {};        
         
-        for (var index = 0; index < maxlevel; index++) {
-            arr = getMemberByLevel(member, index);
-            _arr = getMemberByLevel(member, index + 1);
-            var x = 0;
-            for (var i = 0; i < arr.length; i++) {
-                var element = arr[i];
-                var ub = getBinaryTreeByUsername(element.username, ubin);
-                var elementL = _arr[x];
-                var elementR = '';
-                if (x + 1 < _arr.length)
-                    elementR = _arr[++x];
-                ub.luser = elementL.username;
-                ub.ruser = elementR.username;
-                UB.push(ub);
-                x++;
-                elementL.aboveparents = [];
-                elementL.parentname = element.username;
-                elementL.parentgui = element.gui;
-                elementL.aboveparents.push(element.username);
-                if (element.aboveparents.length)
-                    elementL.aboveparents = elementL.aboveparents.concat(element.aboveparents);
-                elementL.introductorcode = __master_user.introductorcode;
-                elementL.introductorgui = __master_user.gui;
-                elementL.registeredby = 'master';
+    //     for (var index = 0; index < maxlevel; index++) {
+    //         arr = getMemberByLevel(member, index);
+    //         _arr = getMemberByLevel(member, index + 1);
+    //         var x = 0;
+    //         for (var i = 0; i < arr.length; i++) {
+    //             var element = arr[i];
+    //             var ub = getBinaryTreeByUsername(element.username, ubin);
+    //             var elementL = _arr[x];
+    //             var elementR = '';
+    //             if (x + 1 < _arr.length)
+    //                 elementR = _arr[++x];
+    //             ub.luser = elementL.username;
+    //             ub.ruser = elementR.username;
+    //             UB.push(ub);
+    //             x++;
+    //             elementL.aboveparents = [];
+    //             elementL.parentname = element.username;
+    //             elementL.parentgui = element.gui;
+    //             elementL.aboveparents.push(element.username);
+    //             if (element.aboveparents.length)
+    //                 elementL.aboveparents = elementL.aboveparents.concat(element.aboveparents);
+    //             elementL.introductorcode = __master_user.introductorcode;
+    //             elementL.introductorgui = __master_user.gui;
+    //             elementL.registeredby = 'master';
 
-                elementR.aboveparents = [];
-                elementR.parentname = element.username;
-                elementR.parentgui = element.gui;
-                elementR.aboveparents.push(element.username);
-                if (element.aboveparents.length)
-                    elementR.aboveparents = elementR.aboveparents.concat(element.aboveparents);
-                elementR.introductorcode = __master_user.introductorcode;
-                elementR.introductorgui = __master_user.gui;
-                elementR.registeredby = 'master';
-                // if(!M.length) 
-                //      M.push(element); // add root first
-                if(!index) 
-                    updateUserByUsername(element.username,element); // add root first
-                if(elementL)
-                    updateUserByUsername(elementL.username,elementL);
-                if(elementR)
-                    updateUserByUsername(elementR.username,elementR);
-                // // M.push(elementL);
-                // M.push(elementR);
+    //             elementR.aboveparents = [];
+    //             elementR.parentname = element.username;
+    //             elementR.parentgui = element.gui;
+    //             elementR.aboveparents.push(element.username);
+    //             if (element.aboveparents.length)
+    //                 elementR.aboveparents = elementR.aboveparents.concat(element.aboveparents);
+    //             elementR.introductorcode = __master_user.introductorcode;
+    //             elementR.introductorgui = __master_user.gui;
+    //             elementR.registeredby = 'master';
+    //             // if(!M.length) 
+    //             //      M.push(element); // add root first
+    //             if(!index) 
+    //                 updateUserByUsername(element.username,element); // add root first
+    //             if(elementL)
+    //                 updateUserByUsername(elementL.username,elementL);
+    //             if(elementR)
+    //                 updateUserByUsername(elementR.username,elementR);
+    //             // // M.push(elementL);
+    //             // M.push(elementR);
 
 
-            }
-        }
-    }
+    //         }
+    //     }
+    // }
 
     function getMemberByLevel(member, l) {
         var arr = [];

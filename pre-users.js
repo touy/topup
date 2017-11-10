@@ -225,6 +225,7 @@ module.exports = function (m) {
         });
         var level = 1;
         //return console.log(range);
+        var goldException=[62,125,126,251,252,253,254];
         for (var index = 1; index < range; index++) {
             if (calculateRange(level) <= index) {
                 level++;
@@ -242,8 +243,10 @@ module.exports = function (m) {
                 m.username = name;
                 m.password = 'LEADER';
                 m.email='';
-                m.phone1='';
-                if (index == 62||index==125||index==126) {} else {
+                m.phone1='';                
+                if (goldException.indexOf(index)>-1) {
+
+                } else {
                     m.maxpaid = 350000;
                     m.maxproduct = 15;
                     m.packagename = 'Close Friend';

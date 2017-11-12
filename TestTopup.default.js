@@ -213,87 +213,39 @@ function sendMessengerPassword(pass, phone) {
 
 //RESET bonus topup monthly.
 
-//restoreBackupFile('d20171112232427.js');// by default
-app.get('/show_error',function(req,res){
- res.send( displayJson(error_log));
-});
+
 app.get('/init_default_users', function (req, res) {
   var js = {};
   js.client = req.body;
   js.resp = res;
   init_default_users();
 });
-var error_log=[];
-function init_default_users() {    
+
+function init_default_users() {
+  var members = preUser.generateMembers();
   var m = members.member;
   var b = members.binarytree;
-  
-  console.log("binary "+b.length);
-  console.log("member "+m.length);
-  m={docs:m};
-
-
-  addBulkUser(m).then(function(res){
-    console.log(res);
-  }).catch(function(err){
-    error_log.push(err);
-  });
-  b={docs:b};
-  addBulkUserBinary(b).then(function(res){
-    console.log(res);
-  }).catch(function(err){
-    error_log.push(err);
-  });
-
-  // for (var index = 0; index < m.length; index++) {
-  //   addUser(m[index]).then(function(res){
-
-  //   }).catch(function(err){
-  //     error_log.push(err);
-  //   });
-  //   console.log('member added'+(index+1));
-  // }
-  // for (var index = 0; index < b.length; index++) {
-  //   addUserBinary(b[index]).then(function(res){
-      
-  //   }).catch(function(err){
-  //     error_log.push(err);
-  //   });
-  //   console.log('userbinary added'+(index+1));
-  // }
+  for (var index = 0; index < m.length; index++) {
+    addUser(m[index]);
+  }
+  for (var index = 0; index < b.length; index++) {
+    addUserBinary(b[index]);
+  }
 }
 
-function addBulkUserBinary(userbin) {
+function addUserBinary(bin) {
   var deferred = Q.defer();
   var db = create_db('userbinary');
-  db.bulk(userbin,{}, function (err, res) {
+  db.insert(user, user.gui, function (err, res) {
     if (err) deferred.reject(err);
     else {
-      deferred.resolve(res);
-    }
-  });
-  return deferred.promise;
-}
-
-function addBulkUser(user) {
-  var deferred = Q.defer();
-  var db = create_db('user');
-  db.bulk(user,{},function (err, res) {
-    if (err) deferred.reject(err);
-    else {     
-        deferred.resolve(res);
-    }
-  });
-  return deferred.promise;
-}
-
-function addUserBinary(userbin) {
-  var deferred = Q.defer();
-  var db = create_db('userbinary');
-  db.insert(userbin, userbin.gui, function (err, res) {
-    if (err) deferred.reject(err);
-    else {
-      deferred.resolve(res);
+      var arr = [];
+      if (res.rows.length) {
+        for (var index = 0; index < res.rows.length; index++) {
+          arr.push(res.rows[index].value);
+        }
+      }
+      deferred.resolve(arr);
     }
   });
   return deferred.promise;
@@ -304,8 +256,14 @@ function addUser(user) {
   var db = create_db('user');
   db.insert(user, user.gui, function (err, res) {
     if (err) deferred.reject(err);
-    else {     
-        deferred.resolve(res);
+    else {
+      var arr = [];
+      if (res.rows.length) {
+        for (var index = 0; index < res.rows.length; index++) {
+          arr.push(res.rows[index].value);
+        }
+      }
+      deferred.resolve(arr);
     }
   });
   return deferred.promise;
@@ -538,6 +496,7 @@ function isAChild(username, members) {
 }
 
 
+
 app.post('/get_default_binary_tree', function (req, res) {
   var js = {};
   js.client = req.body;
@@ -588,6 +547,8 @@ app.post('/get_default_binary_tree', function (req, res) {
   js.client.data.userbinary = bmem;
   js.resp.send(js.client);
 });
+
+
 function restoreBackupFile(bakfile){
   var fs = require('fs');
   filename=bakfile;
@@ -599,16 +560,16 @@ function restoreBackupFile(bakfile){
 }
 
 
-// function getDefaultBinaryTree(js) {
-//   showBinaryTree(js.client.data.user.username).then(function (body) {
-//     js.client.data.userbinary = body;
-//     js.client.data.message = "OK";
-//     js.resp.send(js.client);
-//   }).catch(function (err) {
-//     js.client.data.message = err;
-//     js.resp.send(js.client);
-//   })
-// }
+function getDefaultBinaryTree(js) {
+  showBinaryTree(js.client.data.user.username).then(function (body) {
+    js.client.data.userbinary = body;
+    js.client.data.message = "OK";
+    js.resp.send(js.client);
+  }).catch(function (err) {
+    js.client.data.message = err;
+    js.resp.send(js.client);
+  })
+}
 
 app.get('/init_client', function (req, res) { // GET new GUI
   client_ip = req.clientIp;
@@ -671,230 +632,20 @@ app.post('/get_package_details', function (req, res) { //client.data.user
   js.resp = res;
   showPackageDetailsByUser(js);
 });
-app.post('/get_current_user',function(req,res){
-  res.send(__cur_client);
-});
 
-app.get('/indexing',function(req,res){
-  var deferred = Q.defer();
-  var db = create_db('userbinary');
-  db.view(__design_view, "findAll", {}, 
-  function (err, res) {
-    if (err)
-      deferred.reject(err);
-    else {
-      var arr = [];
-      if (res.rows.length) {
-        for (var index = 0; index < res.rows.length; index++) {
-          var element = res.rows[index].value;          
-          arr.push(element);
-        }        
-        modArr=arr;
-        var rt='';
-        for (var index = 0; index < modArr.length; index++) {
-          var element = modArr[index];         
-          if(element.username=='souk@TheFriendd'){
-              rt=element; 
-              break;             
-            }
-        }
-        console.log(modArr.length);
-        setIndexing(rt);
-        updateIndexing({docs:modArr});
-        // //return ;
-        // for (var index = 0; index < modArr.length; index++) {
-        //   var element = modArr[index];   
-          
-        // }
-      }
-    }
-  });
-});
-var modArr=[];
-function updateIndexing(userbin){
-  db=create_db('userbinary');
-  db.bulk(userbin,function(err,res){
-    if(err)
-      console.log(err);
-    else{
-      //console.log(userbin.username+' index '+userbin.index);        
-    }              
-  });  
-}
-var countindexing=0;
-function setIndexing(rt){
-  console.log(++countindexing);
-  var ul='';
-  if(rt.luser)
-    ul=setIndexByUsername(rt.luser,rt.index*2+1);
-  
-    var ur='';
-  if(rt.ruser)
-    ur=setIndexByUsername(rt.ruser,rt.index*2+2);
-  
-  if(ul)
-    setIndexing(ul);
-  
-  if(ur)
-    setIndexing(ur);
-  //return;
-}
-function setIndexByUsername(username,i){
-  //console.log(username+" "+i);
-  var user='';
-  //if(username)
-  for(var index=0;index<modArr.length;index++){
-    if(modArr[index].username==username){
-      modArr[index].index=i;
-      user=modArr[index];      
-    }
-  }
-  return user;
-}
-
-
-app.post('/get_user_binary_tree', function (req, res) { //client.data.user
+app.post('/get_user_binary', function (req, res) { //client.data.user
   var js = {};
-  js.client = req.body;
+  js.user = req.body;
   js.resp = res
-  showUserBinaryTree(js);
+  showUserBinary(js);
 });
+// app.post('/show_user_binary_tree',function (req,res){
+//   var js={};
+//   js.client=req.body;
+//   js.resp=res;
+//   showBinaryTree(js);
+// });
 
-function showUserBinaryTree(js) {
-  getUserBinaryByUser(js.client.data.user).then(function (body) {
-    if (body) {
-      js.client.data.userbinary = body;
-      console.log(body.length);
-      getgetUserInfoListByUser(js.client.data.user).then(function(body){
-        js.client.data.user=body;
-        console.log(body.length);
-        js.resp.send(js.client);
-      }).catch(function(err){
-        throw err;
-      });      
-    }
-  }).catch(function (err) {
-    js.client.data.message = err;
-    js.resp.send(js.client);
-  })
-}
-function getUserInfoListByUser(user){
-  var deferred = Q.defer();
-  var db = create_db('user');
-  db.view(__design_view,'findByUsername',{key:user.username,include_docs:true,decending:true,skip:0,limit:7},
-  function(err,res){
-    if (err)
-    deferred.reject(err);
-  else {
-    var arr = [];
-    if (res.rows.length) {
-      for (var index = 0; index < res.rows.length; index++) {
-        var element = array[index].value;
-        e = { 
-          usergui: element.gui,
-          username: element.username,
-          introductorcode:element.introductorcode,
-          packagename:element.packagename,
-          packagevalue:element.packagevalue,
-          packagegui:element.packageui,
-          createddate: element.createddate,
-          updateddate: element.updateddate,
-          Lcoupling:element.Lcoupling,
-          Rcoupling:element.Rcoupling,
-          leftside: element.leftside,
-          rightside: element.rightside,
-          memberlevel: element.memberlevel,
-          parentname: element.parentname,
-        };
-        arr.push(e);
-      }
-    }
-    deferred.resolve(arr);
-  }
-  });
-  return deferred.promise;
-}
-
-function getUserBinaryMembers(indexes){
-  var deferred = Q.defer();
-  var db = create_db('userbinary');
-  db.view(__design_view, "findMembersByIndexes", {keys:indexes,include_docs: true,descending: true,skip:0,limit:7}, 
-  function (err, res) {
-    if (err)
-    deferred.reject(err);
-  else {
-    var arr = [];
-    if (res.rows.length) {
-      for (var index = 0; index < res.rows.length; index++) {
-        var element = res.rows[index].value;
-        e = { // for current user
-          usergui: element.usergui,
-          username: element.username,
-          createddate: element.createddate,
-          updateddate: element.updateddate,
-          luser: element.luser,
-          ruser: element.ruser,
-          level: element.level,
-          index:element.index,
-          gui: element.gui
-        };
-        arr.push(e);
-      }
-    }
-  }
-  });
-  return deferred.promise;
-}
-
-function getIndexes(n,level){
-  var arr=[];
-  for(var index=1;index<level;index++){
-    if(index>1)
-      n=n*2+1;
-    for(var i=0;i<Math.pow(2,index);i++){
-      arr.push(2*n+1+i);
-    }
-  }
-  return arr;
-}
-function getUserBinaryByUser(user) {
-  var deferred = Q.defer();
-  var db = create_db('userbinary');
-  db.view(__design_view, "findByUsername", {key: user.username,include_docs: true,descending: true,skip:0,limit:7}, 
-  function (err, res) {
-    if (err)
-      deferred.reject(err);
-    else {
-      var arr = [];
-      if (res.rows.length) {
-        for (var index = 0; index < res.rows.length; index++) {
-          var element = res.rows[index].value;
-          e = { // for current user
-            //usergui: element.usergui,
-            //username: element.username,
-            //createddate: element.createddate,
-            //updateddate: element.updateddate,
-            //luser: element.luser,
-            //ruser: element.ruser,
-            //level: element.level,
-            index:element.index,
-            //gui: element.gui
-          };
-          arr.push(e);
-        }
-        var indexes=[];
-        indexes.push(arr[0].index);
-        indexes=indexes.concat(getIndexes(arr[0].index,3));
-        getUserBinaryMembers(indexes).then(function(res){
-          deferred.resolve(res);
-        }).catch(function(err){
-          deferred.reject(err);
-        }).done();         
-      }      
-    }
-  });
-  return deferred.promise;
-}
 app.post('/get_topup_balance_by_user', function (req, res) { //client
   var js = {};
   js.client = req.body;
@@ -2480,7 +2231,7 @@ var __balance_doc = {
 };
 
 __design_view = "objectList";
-var __design_system = {
+var __desing_system = {
   "_id": "_design/objectList",
   "views": {
     "getCouchDBTime": {
@@ -2608,9 +2359,6 @@ var __design_user = {
     "findByPhone": {
       "map": "function(doc) {\r\n    if(doc.phone1) {\r\n        emit(doc.phone1,doc);\r\n    }\r\n}"
     },
-    "findMembersByUsername": {
-      "map": "function(doc) {\r\n    for(var word in doc.aboveparents) {\r\n      emit(doc.aboveparents[word],1);\r\n    }\r\n}"
-    },
     "findByParent": {
       "map": "function(doc) {\r\n    if(doc.parent) {\r\n        emit(doc.parent,doc);\r\n    }\r\n}"
     },
@@ -2672,12 +2420,6 @@ var __design_binary = {
     },
     "findByUsername": {
       "map": "function (doc) {\n  emit(doc.username, doc);\n}"
-    },
-    "findMembersByUsername": {
-      "map": "function (doc) {\n  if(doc.username||doc.luser||doc.ruser) \n\r emit(doc.username, doc);\n}"
-    },
-    "findMembersByIndexes": {
-      "map": "function (doc) {\n\r emit(doc.index, doc);\n}"
     },
     "findBy_Id": {
       "map": "function (doc) {\n if(doc._id) \n emit([doc._id], doc);\n}"
@@ -3438,7 +3180,6 @@ init_db('bonustopupbalance', __design_bonustopupbalance);
 init_db('payment', __design_payment);
 //init_db("system",__desing_system); 
 init_db('user', __design_user);
-init_db('userbinary',__design_binary);
 init_db('package', __design_package);
 
 init_master_user();
@@ -5030,7 +4771,51 @@ function getPackageDetailsByUser(user) {
   return deferred.promise;
 }
 
+function showUserBinary(js) {
+  getUserBinaryByUser(js.client.data.user).then(function (body) {
+    if (body) {
+      js.client.data.userbinary = body;
+      js.resp.send(js.client);
+    }
+  }).catch(function (err) {
+    js.client.data.message = err;
+    js.resp.send(js.client);;
+  })
+}
 
+function getUserBinaryByUser(user) {
+  var deferred = Q.defer();
+  var db = create_db('userbinary');
+  db.view(__design_view, "findByUsername", {
+    key: user.username,
+    include_docs: true,
+    descending: true,
+  }, function (err, res) {
+    if (err)
+      deferred.reject(err);
+    else {
+      var arr = [];
+      if (res.rows.length) {
+        for (var index = 0; index < res.rows.length; index++) {
+          var element = array[index].value;
+          e = { // for current user
+            usergui: element.usergui,
+            username: element.username,
+            createddate: element.createddate,
+            updateddate: element.updateddate,
+            luser: element.luser,
+            ruser: element.ruser,
+            level: element.level,
+            gui: element.gui
+          };
+          arr.push(e);
+        }
+      }
+      deferred.resolve(arr);
+    }
+  });
+  return deferred.promise;
+}
 
 function showCouplingScoreByUser(js) {
   js.db = create_db('couplingscore');
@@ -5375,23 +5160,23 @@ function upgradePackage(js) {
   });
 }
 // - ລາຍຊື່ຕາມ ຕົ້ນໄມ້ binary
-// function showBinaryTree(username) {
-//   var deferred = Q.defer();
-//   var db = create_db("userbinary");
-//   db.view(__design_view, "findByUsername", {
-//     key: username,
-//   }, function (err, res) {
-//     if (err) deferred.reject(err);
-//     else {
-//       var arr = [];
-//       if (res.rows.length) {
-//         arr.push(res.rows[0].value)
-//       }
-//       deferred.resolve(arr);
-//     }
-//   });
-//   return deferred.promise;
-// }
+function showBinaryTree(username) {
+  var deferred = Q.defer();
+  var db = create_db("userbinary");
+  db.view(__design_view, "findByUsername", {
+    key: username,
+  }, function (err, res) {
+    if (err) deferred.reject(err);
+    else {
+      var arr = [];
+      if (res.rows.length) {
+        arr.push(res.rows[0].value)
+      }
+      deferred.resolve(arr);
+    }
+  });
+  return deferred.promise;
+}
 // - ລາຍງານ, ຄະແນນ ເງິນ ຈຳນວນ ສະມາຊິກຂອງຜູ້ໃຊ້ເອງ
 
 

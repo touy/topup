@@ -125,7 +125,7 @@
             }
             // fill up    
             //console.log("before" + b.length)
-            if (b.length < (2*Math.pow(2,maxrange))-1) {
+            if (b.length < 15) {
                 var max = findMaxLevel(u.level, b);
                 //var n=max-u.level;
                 //console.log(maxrange + "maxrange / level:" + u.level);
@@ -292,22 +292,21 @@
         js.client.data.user = {};
         js.client.data.userbinary = {};
         var isrestore=false;
-        var searchCount=0;
         function getBinaryDataByUser(username, needlevel, cb) {
             client.data = {};
             client.data.user = {};
             client.data.user.username = username;
             client.data.user.memberlevel = needlevel
-            // if(isrestore==true){
-            //     if(!$("#bakfile").val()){
-            //         alert("file name must not be empty");
-            //         return;
-            //     } 
-            //     client.data.bakfile=$("#bakfile").val();
-            //     client.data.isrestore=isrestore;
-            //     isrestore=false;
-            // }
-            jsonPost(getHost() + "/get_user_binary_tree", client, cb); // URL : /get_user_binary_tree
+            if(isrestore==true){
+                if(!$("#bakfile").val()){
+                    alert("file name must not be empty");
+                    return;
+                } 
+                client.data.bakfile=$("#bakfile").val();
+                client.data.isrestore=isrestore;
+                isrestore=false;
+            }
+            jsonPost(getHost() + "/get_default_binary_tree", client, cb); // URL : /get_user_binary
         };
         function getRestoreFile(name){
             console.log(name);
@@ -355,23 +354,46 @@
                 username = 'souk@TheFriendd'
                 //return;
             }
-            selection.push(username);            
+            selection.push(username);
+            console.log('back member');
+            console.log(selection);
             if (currentUsername == username)
                 $("#topname").empty().text(currentUsername);
             else
                 $("#topname").empty().text(currentUsername + "/" + username);
+
+            //arr[0] = null;
+            //var needlevel = 4; // current user memberlevel + needed level   
+            //  console.log(username);            
+            //console.log('preparing user' + username);
             
             getBinaryDataByUser(username, needlevel, function (res) {
                 js.client.data = {};
                 js.client.data.user = {};
                 js.client.data.userbinary = {};
                 js.client.data.user = res.data.user;
-                js.client.data.userbinary = res.data.userbinary;                
+                js.client.data.userbinary = res.data.userbinary;
+                
+
+                console.log(res.data.userbinary);
+                console.log(res.data.user);
+                
                 arr = [];
                 var f_userbinary = js.client.data.userbinary;
-                console.log(res);
                 f_userbinary = fillUpMembers(username, needlevel, js.client.data.userbinary);
+                console.log(f_userbinary);
+                console.log("fuser: " + f_userbinary.length);
+                if (f_userbinary.length < 15) {
+                    console.log('could not be show for only ' + f_userbinary.length);
+                    return;
+                }
                 indexingJson(username, '', f_userbinary, needlevel, -1, username);
+                //client.data.userbinary=arr;
+                //console.log("2 arr length:"+arr.length);                
+                //return;
+                //arr.sort(compare);
+                //console.log('sorted')
+
                 arr.splice(0, 0, {}); // ignore the first item                    
                 //console.log(arr.length);
                 var _xarr = [];
@@ -394,7 +416,7 @@
                                     "')><img width='32px' height='32px' src='public/icons/add-user2-512.png'/></span></div>";
                             } else {
                                 h = "<div  style='border-style: unset;' ><span id='" + gui +
-                                    "' onclick=\"prepareBinaryData('" + arr[index].username + "',"+maxrange+")\"  title='" +
+                                    "' onclick=\"prepareBinaryData('" + arr[index].username + "',4)\"  title='" +
                                     arr[index].username + "'>" + arr[index].username;
                                 h += "</span></div>";
                             }
@@ -419,7 +441,9 @@
                 // console.log(_xarr.length);
                 console.log('mapping');
                 var _arr = [];
-                $(function () {                    
+                $(function () {
+                    // from arr mapping to treeDiv            
+                    // 1-8,2-4, 3-12, 4-2,5-6,6-10,7-14,8-1,9-3,10-5,11-7,12-9,13-11,14-13,15-15                    
                     _arr.push(_xarr[8]);
                     _arr.push(_xarr[4]);
                     _arr.push(_xarr[9]);
@@ -438,7 +462,9 @@
                     html = '';
                     $("#treeDiv").html('');
                     for (var index = 0; index < _arr.length; index++) {
-                        $("#treeDiv").append(_arr[index]);                        
+                        //$("#box"+(index+1)).html(_arr[index]);                         
+                        $("#treeDiv").append(_arr[index]);
+                        //console.log(_arr[index]);
                     }
                 });
                 getMoreDetails();
@@ -448,18 +474,21 @@
 
         function getMoreDetails() {
             for (var index = 0; index < js.client.data.user.length; index++) {
-                var element = js.client.data.user[index];                
+                var element = js.client.data.user[index];
+                //console.log(element);
                 if (element || element != {})
                     getUserDetailsByUser(element);
             }
         }
 
-        function getUserBinaryByUsername(username, b) {            
+        function getUserBinaryByUsername(username, b) {
+            //console.log("u:"+username);
             for (var index = 0; index < b.length; index++) {
                 var element = b[index];
-                if (element) {                    
+                if (element) {
+                    //console.log(element.username);                
                     if (username == element.username) {
-                        
+                        //console.log(element.username==username);
                         return element;
                     }
                 }
@@ -504,7 +533,8 @@
             $("#" + b.gui).append("<img title='" + user.username + "' width='48px' height='48px' src='" + imgurl +
                 "'/>");
             $("#" + b.gui).append("<div class='small'>" + user.leftuser + "| " + user.username + " |" + user.rightuser +
-                "<div>" + user.LCoupling + "|" + user.RCoupling + "</div></div>");            
+                "<div>" + user.LCoupling + "|" + user.RCoupling + "</div></div>");
+            //$("#" + user.username).append();
         }
 
         $(function () {
@@ -536,21 +566,18 @@
         function clickme() {
             console.log('nothing here');
         }
-        var maxrange = 3;
+        var maxrange = 4;
 
         function init() {
-            client={};
-            client.data={};
-            client.data.user={};
-            jsonPost(getHost() + '/get_current_user', client, function (res) { 
-                
-                //currentUsername=res.username;
-                console.log(res);
+            jsonPost(getHost() + '/get_current_user', {}, function (res) {
+                // client=res;
+                // currentusername=client.username;
                 currentUsername = "souk@TheFriendd"; //TESTING ONLY
                 prepareBinaryData(currentUsername, maxrange);
             });
             currentUsername = "souk@TheFriendd"; //TESTING ONLY
-            prepareBinaryData(currentUsername, maxrange);            
+            prepareBinaryData(currentUsername, maxrange);
+            
             return;
         }
 
@@ -576,13 +603,13 @@
             client.data.user.username = username;
             jsonPost(url, client, function (res) {
                 //console.log(res);  
-                prepareBinaryData(username, maxrange); // TESTING ONLY
+                prepareBinaryData(username, 4); // TESTING ONLY
                 return;
                 if (res.data.message.indexOf('OK') < 0) {
                     $("#topname").empty().text = 'Not exist';
                 } else {
                     //$("#topname").empty().text=currentUsername+"/"+username;
-                    prepareBinaryData(username, maxrange);
+                    prepareBinaryData(username, 4);
                 }
             });
         }
@@ -600,10 +627,10 @@
                 console.log("back to "+username);
                 selection.splice(selection.length-1,1);
                 selection.splice(selection.length-1,1);
-                prepareBinaryData(username,maxrange);                
+                prepareBinaryData(username,4);                
             }
         }
-       
+        
         function deleteUser(){            
             selected=$("#topname").text().split('/')[1];
             if(!confirm("Are you deleting user: "+selected)) return;
@@ -632,7 +659,7 @@
         }
         function restore(){
            isrestore=true;
-           prepareBinaryData(currentUsername,maxrange);
+           prepareBinaryData(currentUsername,4);
         }
         function addMemberFromRoot(){
             selected=$("#topname").text().split('/')[1];
@@ -641,7 +668,7 @@
             if(selected){
                 if(checkEmptyChildNodes(selected))
                 jsonPost(getHost()+'/add_member_from_root',client,function(res){                
-                    prepareBinaryData(selected,maxrange);
+                    prepareBinaryData(selected,4);
                 });
                 else 
                     alert('Could not extend from this user');
@@ -650,10 +677,10 @@
             alert('select at least 1 member');
         }
         function reset(){
-            jsonGet(getHost()+"/init_default_users",function(res){
+            jsonPost(getHost()+"/reset_default_users",function(res){
                 console.log('resetting');
                 prepareBinaryData(currentUsername,maxrange);
-                alert("inited default users "+res);
+                alert("reset "+res);
             });
         }
         function checkEmptyChildNodes(rootname){
@@ -703,6 +730,148 @@
     
     <div id="treeDiv" class="center" style="overflow: hidden;text-align: center; border-style: solid; border-color: #b49393;width:800px;height: 600px">
     </div>
+
+
+
+    <!-- <div class="tree center" > 
+        <canvas id='my-canvas' width="400" height="400">
+            Your browser doesnot support canvas
+        </canvas>
+    </div>
+    <canvas id="canvas" width="400" height="300">
+            This text is displayed if your browser does not support HTML5 Canvas.
+    </canvas> -->
+    <!-- <script>
+        function loadCanvas(){
+            var s = new CanvasState(document.getElementById('canvas'));
+            s.addShape(new Shape(40,40,50,50)); // The default is gray
+            s.addShape(new Shape(60,140,40,60, 'lightskyblue'));
+            // Lets make some partially transparent
+            s.addShape(new Shape(80,150,60,30, 'rgba(127, 255, 212, .5)'));
+            s.addShape(new Shape(125,80,30,80, 'rgba(245, 222, 179, .7)'));
+            console.log(s);
+        }
+        </script>
+    <script>
+        // Represents the node in the tree. Will be displayed as a small circle in the browser.
+        // x, y -> x, y co-ordinates of the center of circle
+        // r    -> radius of the circle
+        // ctx  -> context of the canvas
+        // data -> data to be displayed (Only number)
+
+        var Node = function(x,y,r, ctx, data) {
+            // left child of a node
+            this.leftNode = null; 
+            // right child of a node
+            this.rightNode = null;
+            
+            // draw function. Responsible for drawing the node
+            this.draw = function() {
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, 2*Math.PI); 
+            ctx.stroke();
+            ctx.closePath();
+            ctx.strokeText(data, x, y);
+            };
+            
+            // Simple getters
+            this.getData = function() { return data; }; 
+            this.getX = function() { return x; };
+            this.getY = function() { return y; };
+            this.getRadius = function() { return r; };
+            
+            // Returns coordinate for the left child
+            // Go back 3 times radius in x axis and 
+            // go down 3 times radius in y axis
+            this.leftCoordinate = function() {
+            return {cx: (x - (3*r)), cy: (y + (3*r))}
+            };
+            // Same concept as above but for right child        
+            this.rightCoordinate = function() {
+            return {cx: (x + (3*r)), cy: (y+(3*r))}
+            };
+        };
+        
+        // Draws a line from one circle(node) to another circle (node) 
+        var Line = function() {
+            // Takes 
+            // x,y      - starting x,y coordinate
+            // toX, toY - ending x,y coordinate
+            this.draw = function(x, y, toX, toY, r, ctx) {
+            var moveToX = x;
+            var moveToY = y + r;
+            var lineToX = toX;
+            var lineToY = toY - r;
+            ctx.beginPath();
+            ctx.moveTo(moveToX, moveToY);
+            ctx.lineTo(lineToX, lineToY);
+            ctx.stroke(); 
+            };
+        };
+        
+        // Represents the btree logic
+        var BTree = function() {
+            var c = document.getElementById('my-canvas');
+            var ctx = c.getContext('2d');
+            var line = new Line();
+            this.root = null;
+            
+            var self = this;
+            
+            // Getter for root
+            this.getRoot = function() { return this.root; };
+            
+            // Adds element to the tree
+            this.add = function( data) {
+            // If root exists, then recursively find the place to add the new node
+            if(this.root) {
+                this.recursiveAddNode(this.root, null, null, data);  
+            } else {
+            // If not, the add the element as a root 
+                this.root = this.addAndDisplayNode(200, 20, 15, ctx, data);
+                return;
+            } 
+            };
+        
+            // Recurively traverse the tree and find the place to add the node
+            this.recursiveAddNode = function(node, prevNode, coordinateCallback, data) {
+            if(!node) {
+                // This is either node.leftCoordinate or node.rightCoordinate
+                var xy = coordinateCallback();
+                var newNode = this.addAndDisplayNode(xy.cx, xy.cy, 15, ctx, data);
+                line.draw(prevNode.getX(), prevNode.getY(), xy.cx, xy.cy, prevNode.getRadius(), ctx)
+                return newNode; 
+            } 
+            else {
+                if(data <= node.getData()) {
+                node.left = this.recursiveAddNode(node.left, node, node.leftCoordinate, data);
+                } 
+                else {
+                node.right = this.recursiveAddNode(node.right, node, node.rightCoordinate, data);
+                }
+                return node;
+            }
+            };
+            
+            // Adds the node to the tree and calls the draw function
+            this.addAndDisplayNode = function(x, y, r, ctx, data) {
+            var node = new Node(x, y, r, ctx, data);
+            node.draw();
+            return node;
+            };
+        };
+        
+        var addToTree = function() {
+            input = document.getElementById('tree-input');
+            value = parseInt(input.value);
+            if(value)
+                btree.add(value);
+            else
+            alert("Wrong input");
+        };
+        
+        var btree = new BTree();
+    </script> -->
 </body>
 
 </html>

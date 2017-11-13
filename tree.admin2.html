@@ -298,8 +298,35 @@
             client.data.user = {};
             client.data.user.username = username;
             client.data.user.memberlevel = needlevel
+            // if(isrestore==true){
+            //     if(!$("#bakfile").val()){
+            //         alert("file name must not be empty");
+            //         return;
+            //     } 
+            //     client.data.bakfile=$("#bakfile").val();
+            //     client.data.isrestore=isrestore;
+            //     isrestore=false;
+            // }
             jsonPost(getHost() + "/get_user_binary_tree", client, cb); // URL : /get_user_binary_tree
         };
+        function getRestoreFile(name){
+            console.log(name);
+            $('#bakfile').val(name);
+        }
+        function getBackupFiles(){
+            client={};
+            client.data={};            
+            jsonGet(getHost()+'/get_backup_list',client,function(res){
+                client=res;
+                $('#backuplist').empty();
+                for (var index = 0; index < client.data.files.length; index++) {
+                    var element = client.data.files[index];
+                    var link='<a href="#" onclick="getRestoreFile(\''+element+'\')">'+element+' </a>, '
+                    $('#backuplist').append(link);
+                }
+                
+            });
+        }
         function getBinaryDataByMemberLevel(level, arr) {
             var ar = [];
             for (var index = 0; index < arr.length; index++) {
@@ -323,53 +350,17 @@
         // loading data       
         var currentUsername = '';
         var selection=[];
-        function getMemberListByParent(p){
-            if(p){
-                c={};
-                c.data={};
-                c.data.user={};
-                c.data.user.username=p;
-                jsonPost(getHost()+'/get_member_list_by_parent_name',c,function(res){
-                    console.log('res');
-                    console.log(res);
-                    if(res){
-                        $("#memberlist").empty();
-                        var str="<p>total: "+(res.data.user.length+1)+"</p>";
-                        str+="<ul>";
-                        res.data.user.insert
-                        for (var index = 0; index < res.data.user.length; index++) {
-                            var element = res.data.user[index];                     
-                            if(index==0){
-                                str+="<li>";
-                                str+=p;
-                                str+="</li>"; 
-                                index=0;
-                                continue;
-                            }
-
-                            str+="<li>";
-                            str+=element;
-                            str+="</li>";                                                        
-                        }
-                        str+="</ul>";
-                        $("#memberlist").html(str);
-                        console.log($("#memberlist").html());
-                    }
-                });
-            }
-        }
         function prepareBinaryData(username, needlevel) {
             if (username == '') {
                 username = 'souk@TheFriendd'
                 //return;
             }
-            maxrange=$('#maxrange').val();
             selection.push(username);            
             if (currentUsername == username)
                 $("#topname").empty().text(currentUsername);
             else
                 $("#topname").empty().text(currentUsername + "/" + username);
-            getMemberListByParent(username);
+            
             getBinaryDataByUser(username, needlevel, function (res) {
                 js.client.data = {};
                 js.client.data.user = {};
@@ -378,7 +369,7 @@
                 js.client.data.userbinary = res.data.userbinary;                
                 arr = [];
                 var f_userbinary = js.client.data.userbinary;
-                //console.log(res);
+                console.log(res);
                 f_userbinary = fillUpMembers(username, needlevel, js.client.data.userbinary);
                 indexingJson(username, '', f_userbinary, needlevel, -1, username);
                 arr.splice(0, 0, {}); // ignore the first item                    
@@ -512,8 +503,8 @@
 
             $("#" + b.gui).append("<img title='" + user.username + "' width='48px' height='48px' src='" + imgurl +
                 "'/>");
-            $("#" + b.gui).append("<div class='small'>" + user.LCoupling + "| " + user.username + " |" + user.RCoupling +
-                "<div>" + user.leftuser + "|" + user.rightuser + "</div></div>");            
+            $("#" + b.gui).append("<div class='small'>" + user.leftuser + "| " + user.username + " |" + user.rightuser +
+                "<div>" + user.LCoupling + "|" + user.RCoupling + "</div></div>");            
         }
 
         $(function () {
@@ -531,7 +522,8 @@
                 borderWidth: 1,
                 horizontal: false,
                 flip: true
-            })[0];        
+            })[0];
+            getBackupFiles();
         }
         function register(p){
             client={};
@@ -544,7 +536,7 @@
         function clickme() {
             console.log('nothing here');
         }
-        var maxrange = 4;
+        var maxrange = 3;
 
         function init() {
             client={};
@@ -577,7 +569,7 @@
         }
 
         function checkExistUser(username) {
-            url = getHost() + "/check_your_member";
+            url = getHost() + "/check_registe_available_username";
             var client = {};
             client.data = {};
             client.data.user = {};
@@ -611,23 +603,105 @@
                 prepareBinaryData(username,maxrange);                
             }
         }
-        
+       
+        function deleteUser(){            
+            selected=$("#topname").text().split('/')[1];
+            if(!confirm("Are you deleting user: "+selected)) return;
+            var client={};client.data={};client.data.user={};            
+            if(currentUsername!=selected&&selected){
+                client.data.user.username=selected;
+                jsonPost(getHost()+"/delete_default_binary_tree",client,function(res){
+                   //save();
+                    //alert(res);
+                    if(selection.length-2>0)
+                        prepareBinaryData(selection[selection.length-2],maxrange);
+                    else
+                        prepareBinaryData(currentUsername,maxrange);
+                });
+            }
+            else{
+                alert('Could not delete yourself');
+            }
+        }        
+        function save(){
+            console.log("saving");
+            jsonPost(getHost()+"/save_default_binary_tree_user_to_file",client,function(res){
+                console.log("save "+res);
+                $('#savemsg').html("saved "+res);
+            });
+        }
+        function restore(){
+           isrestore=true;
+           prepareBinaryData(currentUsername,maxrange);
+        }
+        function addMemberFromRoot(){
+            selected=$("#topname").text().split('/')[1];
+            var client={};client.data={};client.data.user={};
+            client.data.rootname=selected;         
+            if(selected){
+                if(checkEmptyChildNodes(selected))
+                jsonPost(getHost()+'/add_member_from_root',client,function(res){                
+                    prepareBinaryData(selected,maxrange);
+                });
+                else 
+                    alert('Could not extend from this user');
+            }            
+            else
+            alert('select at least 1 member');
+        }
+        function reset(){
+            jsonGet(getHost()+"/init_default_users",function(res){
+                console.log('resetting');
+                prepareBinaryData(currentUsername,maxrange);
+                alert("inited default users "+res);
+            });
+        }
+        function checkEmptyChildNodes(rootname){
+            console.log(js.client);
+            for (var index = 0; index < js.client.data.userbinary.length; index++) {
+                var element = js.client.data.userbinary[index];
+                if(element.username==rootname){
+                    if(element.luser&&element.ruser&&(element.luser!=undefined&&element.ruser!=undefined)){
+                        l=findTreeByUsername(js.client.data.userbinary,element.luser);
+                        r=findTreeByUsername(js.client.data.userbinary,element.ruser);
+                        if(r.isdummy&&l.isdummy)
+                            return true;
+                        return false;       
+                    }
+                        
+                    return true;            
+                }                
+            }
+            return true;
+        }
     </script>
 
 </head>
 
-<body  onload="init()">
-    <div class="center">
+<body onload="init()">
+    <!-- <div class='input-box'>
+        <input id='tree-input' type='number' placeholder='Enter number'>
+        <button id='add-to-tree' onclick="addToTree()">Add To Tree</button>
+        
+    </div> -->
+    <button onclick="reset()">Reset</button>
     <div id='topname'></div>
-    <div >level 3 or 4 <input id='maxrange' value='4'/></div>
-    <input  id='searchtext' placeholder="Search.." />    
-    <button  id='gototop' onclick="toTop()">Top</button>
-    <button  id='goback' onclick="goBack()"><==</button>    
-    </div>
+    <div id='savemsg'></div>
+    <br/>
+    <input id='searchtext' placeholder="Search.." />
+    <!-- <button id='search' type="submit" onclick="search()" value='search'></button> -->
+    <button id='gototop' onclick="toTop()">Top</button>    
+    <button id='deleteuser' onclick="deleteUser()">Delete</button>
+    -----------------------------------------------------<button id='goback' onclick="goBack()"><==</button>
+    -----------------------------------------------------<button id='save' onclick="save()">SAVE</button> 
+    <br/>   
+    restore file:<input id='bakfile'/>
+    <button onclick="restore()" >Restore</button>
+    <div id="backuplist"></div>
+    <br/>
+    <button onclick="addMemberFromRoot()">Add more</button>
+    
     <div id="treeDiv" class="center" style="overflow: hidden;text-align: center; border-style: solid; border-color: #b49393;width:800px;height: 600px">
-    </div>
-    <div id='memberlist'>
-
     </div>
 </body>
 

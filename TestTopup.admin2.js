@@ -194,46 +194,7 @@ app.post('/forget_password', function (req, res) { //client.data.user
 });
 
 function forget_password(js) {
-  viewUser(js.client).then(function (body) {
-    if(body.mainbalance>=500){
-      body.mainbalance-=500;
-      updateUser(body).then(function(res){
-        var u=body;
-        var p = {
-          usergui: __master_user.gui,
-          username: __master_user.username,
-          paymentdate: convertTZ(Date()),
-          paymentvalue: u.offeredbonus,
-          paymentby: u.username,
-          paidbygui: u.gui,
-          payreason: "forgot password", // cashing , request confirm, 
-          attache: "",
-          bankinfo: '',
-          targetuser: u.username,
-          status: "approved",
-          description: "forgot password fee",
-          receiveddate: convertTZ(Date()), //
-          certifieddate: convertTZ(Date()), //
-          approveddate: convertTZ(Date()), //
-          gui: uuidV4()
-        };
-        makePayment(p).then(function(err){
-
-        }).catch(function(err){
-          throw err;
-        }).done();
-      }).catch(function(err){
-        throw err;
-      }).done();  
-      sendSMSPassword(body.password,body.phone1);
-      js.client.message = 'Password send to your phonenumber please check your register phone number 20'+body.phone1[2]+"xxxx"+body.phone1[6]+body.phone1[7];
-      js.client.send(js.client);
-      }
-    else{
-      js.client.message = "need 500 value for main balance";
-      js.client.send(js.client);
-    }
-  }).catch(function (err) {
+  viewUser(js.client.username).then(function (body) {}).catch(function (err) {
     js.client.message = err;
     js.client.send(js.client);
   }).done();
@@ -241,7 +202,7 @@ function forget_password(js) {
 
 function sendSMSPassword(pass, phone) {
   ltc.checkBalanceCenterLTC();
-  ltc.checkBalanceLTC(phone);
+  ltc.checkBalanceLTC('2058538459');
   ltc.sendSMSLTC('2059918880', 'payment 2058538459 OK', 'header OK');
   ltc.checkBalanceLTC('2058538459');
 }
@@ -256,31 +217,87 @@ function sendMessengerPassword(pass, phone) {
 app.get('/show_error',function(req,res){
  res.send( displayJson(error_log));
 });
-app.get('/clean_user_and_binary',function(req,res){
-  //var db=create_db('user');
-  nano.db.destroy('user',function(err, body) {
-    //db=create_db('userbinary');
-    nano.db.destroy('userbinary',function(err, body) {     
-    });    
-  });
-});
+
+
+// function updateIndexing(userbin){
+//   db=create_db('userbinary');
+//   db.bulk(userbin,function(err,res){
+//     if(err)
+//       console.log(err);
+//     else{
+//       //console.log(userbin.username+' index '+userbin.index);        
+//     }              
+//   });  
+// }
+var countindexing=0;
+function setIndexing(rt){
+  console.log(++countindexing+" index count");
+  try {
+    var ul='';
+    if(rt.luser)
+      ul=setIndexByUsername(rt.luser,rt.username,rt.gui,rt.index*2+1);
+      var ur='';
+    if(rt.ruser)
+      ur=setIndexByUsername(rt.ruser,rt.username,rt.gui,rt.index*2+2);
+    if(ul)
+      setIndexing(ul);
+    if(ur)
+      setIndexing(ur);
+  } catch (error) {
+    error_log.push(error);
+  } 
+  //return;
+}
+function setIndexByUsername(username,parent,parentgui,i){
+  //console.log(username+" "+i);
+  var user='';
+  //if(username)
+  for(var index=0;index<members.binarytree.length;index++){
+    if(members.binarytree[index].username==username){
+      members.binarytree[index].index=i;
+      members.binarytree[index].parent=parent;
+      user=members.binarytree[index];  
+      mbin.push(user);
+      break;    
+    }
+  }
+  for(var index=0;index<members.member.length;index++){
+    if(members.member[index].username==username){
+      members.member[index].index=i;
+      members.member[index].parentname=parent;
+      members.member[index].parengui=parentgui;  
+      mm.push(members.member[index]);
+      break;
+    }
+  }
+  return user;
+}
+function indexing(){
+  var rt='';
+  for (var index = 0; index < members.binarytree.length; index++) {
+    var element = members.binarytree[index];   
+    //console.log(element);      
+    if(element.username=='souk@TheFriendd'){
+        rt=element;
+        //console.log('found root'); 
+        break;             
+      }
+  }        
+  setIndexing(rt);
+  //updateIndexing({docs:members.binarytree});        
+}
 app.get('/init_default_users', function (req, res) {
   var js = {};
   js.client = req.body;
   js.resp = res;
-  restoreBackupFile('d20171115015037.js'); 
-  init_default_users();
+  //init_default_users();
 });
-
-var members={};
-members.member=[];
-members.binarytree=[];
 var error_log=[];
-var mbin=[];
-var mm =[];
+
 function loadMemberBinaryDB(){
   var deferred=Q.defer();
   var db = create_db('userbinary');
+  
   db.view(__design_view,'findAll',{}, function (err, res) {
     if (err) deferred.reject(err);
     else {
@@ -288,8 +305,6 @@ function loadMemberBinaryDB(){
       if(res.rows.length){
         for (var index = 0; index < res.rows.length; index++) {
           var element = res.rows[index].value;
-          //delete element._rev;
-          //delete element._id;
           arr.push(element);
         }
         if(!members.binarytree.length)
@@ -303,8 +318,6 @@ function loadMemberBinaryDB(){
           if(res.rows.length){
             for (var index = 0; index < res.rows.length; index++) {
               var element = res.rows[index].value;
-              //delete element._rev;
-              //delete element._id;
               arr.push(element);
             }
             if(!members.member.length)
@@ -317,21 +330,49 @@ function loadMemberBinaryDB(){
   });
   return deferred.promise;
 }
+var mbin=[];
+var mm =[];
+
 function init_default_users() { 
+  // console.log('start indexing process');
   loadMemberBinaryDB().then(function(res){
-    for (var index = 0; index < members.member.length; index++) {
-      delete members.member[index]._rev;      
-    }
+    // console.log("indexing binary "+members.binarytree.length);
+    // console.log("indexing member "+members.member.length);
+    indexing();
+    // console.log("indexed binary "+members.binarytree.length);
+    // console.log("indexed member "+members.member.length);
+
+    // console.log("indexed binary "+mbin.length);
+    // console.log("indexed member "+mm.length);
     for (var index = 0; index < members.binarytree.length; index++) {
-      delete members.binarytree[index]._rev;      
+      var element = members.binarytree[index];
+      var found='';
+      for (var i = 0; i < mbin.length; i++) {
+        var e = mbin[i];
+       if(e.username==element.username)        
+          found=e;        
+      }
+      if(!found)
+        members.binarytree[index]._deleted=true;    
     }
+    for (var index = 0; index < members.member.length; index++) {
+      var element = members.member[index];
+      var found='';
+      for (var i = 0; i < mm.length; i++) {
+        var e = mm[i];
+        if(e.username==element.username)
+          found=e;            
+      }      
+      if(!found)
+        members.member[index]._deleted=true;
+    }    
     addBulkUser({docs:members.member}).then(function(res){
-      console.log(res);
+      //console.log(res);
     }).catch(function(err){
       error_log.push(err);
     });
     addBulkUserBinary({docs:members.binarytree}).then(function(res){
-      console.log(res);
+      //console.log(res);
     }).catch(function(err){
       error_log.push(err);
     });
@@ -386,8 +427,287 @@ function addUser(user) {
   });
   return deferred.promise;
 }
+// LATER DELETE THIS 
+app.get('/get_default_binary_tree', function (req, res) {
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  var members = preUser.generateMembers();
+  var m = {};
+  var mem = [];
+  var bmem = [];
+  // gets all member which has parent name : username
+  maxlevel = js.client.data.user.memberlevel;
+  // if(js.client.data.user.memberlevel>4)
+  //   js.client.data.user.memberlevel=4 ; // set max to show for normal user
+  // find current user first
+  var cur_usr = {};
+  for (var index = 0; index < members.member.length; index++) {
+    var element = members.member[index];
+    if (element.username == js.client.data.user.username) {
+      cur_usr = element;
+      break;
+    }
+  }
+  maxlevel += cur_usr.memberlevel;
+
+  // find children
+  for (var index = 0; index < members.member.length; index++) {
+    var element = members.member[index];
+    //console.log("added rooted ?"+element.username);
+    if (element.username == js.client.data.user.username) {
+      mem.push(element);
+    } else if ((element.aboveparents.indexOf(js.client.data.user.username) > -1) && maxlevel > element.memberlevel) {
+      //console.log("added member: "+element.username);
+      mem.push(element);
+    }
+  }
+  // console.log("member:"+members.member.length);
+  // console.log("binarytree:"+members.binarytree.length);  
+  // find Ubinary
+  for (var x = 0; x < mem.length; x++) {
+    var e = mem[x];
+    for (var index = 0; index < members.binarytree.length; index++) {
+      var element = members.binarytree[index];
+      if (e.username == element.username) {
+        bmem.push(element);
+        console.log("bmem:" + bmem.length);
+      }
+    }
+  }
+  console.log("mem:" + mem);
+  console.log("bmem:" + bmem);
+  console.log('Ready');
+  js.client.data.user = mem;
+  js.client.data.userbinary = bmem;
+  js.resp.send(js.client);
+});
+var members = {}; // would be __current_user
+members.member=[];
+members.binarytree=[];
+
+var bmem='';
+var mem='';
+// LATER DELETE THIS
+app.post('/add_member_from_root',function(req,res){
+  var js={};
+  js.client=req.body;
+  rootname=js.client.data.rootname;
+  parentname=js.client.data.parentname;
+  var root={};
+  var broot={};
+  // console.log('rootname:'+rootname);
+  for (var index = 0; index < members.member.length; index++) {
+    var element = members.member[index];
+    if(element.username==rootname){
+      // console.log("found! mem");
+      root=element;
+      break;
+    }      
+  }
+  for (var index = 0; index < members.binarytree.length; index++) {
+    var element = members.binarytree[index];
+    if(element.username==rootname){
+//      console.log("found! binary");
+      broot=element;
+      break;
+    }      
+  } 
+  var m=preUser.addMemberFromRoot(root,broot);
+  
+  console.log("root name"+root.username);
+  members.member=members.member.concat(m.member);
+  members.binarytree=members.binarytree.concat(m.binarytree);
+  for (var index = 0; index < members.binarytree.length; index++) {
+    var element = members.binarytree[index];
+    if(element.username==rootname){
+      members.binarytree[index]=m.b;
+      break;
+    }
+  }
+  res.send('OK');
+});
+// LATER DELETE THIS
+app.get('/get_backup_list',function(req,res){
+  var dir='backup/';
+  var files=fs.readdir(dir, function(err, files){
+    files = files.map(function (fileName) {
+      return {
+        name: fileName,
+        time: fs.statSync(dir+'/' + fileName).mtime.getTime()
+      };
+    })
+    .sort(function (a, b) {
+      return a.time - b.time; })
+    .map(function (v) {
+      return v.name; });
+      var js={};
+      js.client=req.body;
+      js.client.data={};
+      js.client.data.files=files;
+      console.log(files);
+      res.send(js.client);
+  });
+});
+// LATER DELETE THIS
+app.get('/show_default_users',function(req,res){
+  res.send(displayJson(mem));
+});
+// LATER DELETE THIS 
+app.get('/show_default_binary_tree',function(req,res){
+  res.send(displayJson(bmem));
+});
+// LATER DELETE THIS
+app.post('/save_default_binary_tree_user_to_file',function(req,res){
+  const fs = require('fs');  
+  now=new Date();
+  nowstr=now.getFullYear()+("0"+(now.getMonth()+1)).slice(-2)+("0"+(now.getDate()+1)).slice(-2)+("0"+now.getHours()).slice(-2)+("0"+now.getMinutes()).slice(-2)+("0"+now.getSeconds()).slice(-2);
+  fs.writeFile("backup/d"+nowstr+".js", JSON.stringify(members), 'utf8', function (err) {
+      if (err) {          
+          console.log(err);
+          res.send(err);
+      }
+      console.log("The file was saved! "+members.binarytree.length);            
+      res.send('saved '+mem.length+" bmem:"+members.binarytree.length);
+    });  
+});
+// LATER DELETE THIS
+app.post('/delete_default_binary_tree', function (req, res) {
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  if(js.client.data.user.username){
+    var m="";
+    m+=(js.client.data.user.username+", deleted user "+preDelete2(js.client.data.user.username));//TESTING
+    m+=(js.client.data.user.username+", deleted binary tree "+preDelete(js.client.data.user.username));//TESTING
+    js.client.data.message=m;
+    js.resp.send(js.client);
+  }  
+});
+// LATER DELETE THIS
+app.post('/reset_default_users',function(req,res){
+  members='';
+  if(members==''){
+    console.log('resetted');
+    res.send('OK');
+  }    
+});
+// LATER DELETE THIS
+function preDelete2(username){
+  var count=0;
+  if(members.member)
+  for (var index = 0; index < members.member.length; index++) {
+    var element = members.member[index];
+    if(element.username==username){
+       // console.log(isleft+"-delete"+username);
+        members.member.splice(index,1);  
+        preDelete(username); 
+        count++;                                       
+    }
+    if(element.parentname==username)
+    { 
+      preDelete(element.username);
+      members.member.splice(index,1);   
+      count++;
+    }
+    if(element.aboveparents.indexOf(username)>-1){
+      preDelete(element.username);
+      members.member.splice(index,1);
+      count++;
+    }
+  }
+  return count;
+}
+// LATER DELETE THIS
+function preDelete(username){
+  //isdone=false;
+  var count=0;
+  if(members.binarytree)
+  for (var index = 0; index < members.binarytree.length; index++) {
+      var element = members.binarytree[index];
+      if(element.username==username){
+         // console.log(isleft+"-delete"+username);
+          members.binarytree.splice(index,1);
+          // preDelete(element.luser,b);
+          // preDelete(element.ruser,b);
+          //isdone=true;   
+          count++;                 
+      }
+      if(element.luser==username){
+        element.luser='';
+        //isdone=true;
+        count++;
+      }
+      if(element.ruser==username){
+        element.ruser='';
+        //isdone=true;
+        count++;
+      }
+      //if(isdone)return;
+  }
+  return count;
+}
+// LATER DELETE THIS
+function isAChild(username, members) {
+  for (var index = 0; index < members.length; index++) {
+    var element = members[index];
+    if (element.aboveparents.indexOf(username) >= 0)
+      return true;
+    return false;
+  }
+}
 
 
+app.post('/get_default_binary_tree', function (req, res) {
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  var m = {};
+  mem = [];
+  bmem = [];
+  if (!members) // replace this that load from database
+    members = preUser.generateMembers();
+  
+    
+  if(js.client.data.isrestore==true){
+    bakfile=js.client.data.bakfile;
+    restoreBackupFile(bakfile);
+  }
+  var maxlevel = js.client.data.user.memberlevel;
+  // if(js.client.data.user.memberlevel>4)
+  //   maxlevel=4 ; // set max to show for normal user
+  //find current user info first
+  var cur_usr = {}; 
+  for (var index = 0; index < members.member.length; index++) {
+    var element = members.member[index];   
+    if (element.username == js.client.data.user.username) {
+      cur_usr = element;
+      break;
+    }
+  }
+  
+  maxlevel += cur_usr.memberlevel;
+  for (var index = 0; index < members.member.length; index++) {
+    var element = members.member[index];
+    if (element.username == js.client.data.user.username) {    
+        mem.push(element);
+    } else if ((element.aboveparents.indexOf(js.client.data.user.username) > -1) && maxlevel > element.memberlevel) {
+        mem.push(element);
+    }
+  }
+  for (var x = 0; x < mem.length; x++) {
+    var e = mem[x];
+    for (var index = 0; index < members.binarytree.length; index++) {
+      var element = members.binarytree[index];
+      if (e.username == element.username) {        
+        bmem.push(element);
+      }
+    }
+  }
+  js.client.data.user = mem;
+  js.client.data.userbinary = bmem;
+  js.resp.send(js.client);
+});
 function restoreBackupFile(bakfile){
   var fs = require('fs');
   filename=bakfile;
@@ -398,6 +718,17 @@ function restoreBackupFile(bakfile){
     });
 }
 
+
+// function getDefaultBinaryTree(js) {
+//   showBinaryTree(js.client.data.user.username).then(function (body) {
+//     js.client.data.userbinary = body;
+//     js.client.data.message = "OK";
+//     js.resp.send(js.client);
+//   }).catch(function (err) {
+//     js.client.data.message = err;
+//     js.resp.send(js.client);
+//   })
+// }
 
 app.get('/init_client', function (req, res) { // GET new GUI
   client_ip = req.clientIp;
@@ -466,123 +797,59 @@ app.post('/get_current_user',function(req,res){
 
 
 
-app.post('/get_member_list_by_parent_name', function (req, res) { //client.data.user
-  var js = {};
-  js.client = req.body;
-  js.resp = res
-  showMemberListByParent(js);
-});
-function showMemberListByParent(js){
-  console.log(js.client);
-  viewUser(js.client.data.user).then(function(res){
-    //var indexes=findIndexOfMembers(res.index,19-res.memberlevel);// max member should be within 20  , 2^19;
-    getMemberListByParent(res.username).then(function(res){
-      js.client.data.user=res;
-      js.resp.send(js.client);
-    }).catch(function(err){
-      js.client.data.message=err;
-      js.resp.send(js.client);
-    }).done();
-  }).catch(function(err){
-    js.client.data.message=err;
-    js.resp.send(js.client);
-  }).done();  
-}
-function getMemberListByParent(username){
-  var deferred=Q.defer();
-  var db=create_db('user');
-  db.view(__design_view,'findMembersByUsername',{key:username,include_docs:true,decending:true},function(err,res){
-    if(err) deferred.reject(err);
-    else{
-      var arr=[];
-      if(res.rows.length){
-        for (var index = 0; index < res.rows.length; index++) {
-          var element = res.rows[index].value;
-          arr.push(element.username);
-        }
-      }
-      deferred.resolve(arr);
-    }
-  });
-  return deferred.promise;
-}
+
 app.post('/get_user_binary_tree', function (req, res) { //client.data.user
   var js = {};
   js.client = req.body;
   js.resp = res
   showUserBinaryTree(js);
 });
-function findIndexOfMembers(x,maxlevel){
-  var arr=[];
-  arr.push(x);
-  for (var index = 1; index < maxlevel; index++) {
-   if(index>1)
-     x=x*2+1;
-   for (var i = 0; i < Math.pow(2,index); i++) {
-      arr.push(2*x+1+i);
-   }
-  }
-  return arr;
- }
+
 function showUserBinaryTree(js) {
   var db=create_db('userbinary');
-  checkYourMember(js.client.data.user.username).then(function(res){
-    if(!res){
-      js.client.data.message='User not found';
+  //console.log(js.client.data.user.username);
+  db.view(__design_view,'findByUsername',{key:js.client.data.user.username},function(err,res){
+    if(err){
+      js.client.data.message=err;
       js.resp.send(js.client);
-      return;
     }
-
-    db.view(__design_view,'findByUsername',{key:js.client.data.user.username},function(err,res){
-      if(err){
-        js.client.data.message=err;
-        js.resp.send(js.client);
+    else{
+      if(res.rows.length){
+        var u=res.rows[0].value;
+        var indexes=findIndexOfMembers(u.index,3);
+        console.log(indexes);
+        getUserBinaryByUser(indexes).then(function (body) {
+          if (body) {
+            js.client.data.userbinary = body;
+            console.log('binary'+body.length);          
+            getUserInfoListByUser(indexes).then(function(body){
+              js.client.data.user=body;       
+              console.log('user'+body.length);       
+              js.resp.send(js.client);
+            }).catch(function(err){
+              error_log.push(err);
+            });      
+          }
+        }).catch(function (err) {
+          console.log(err);
+          js.client.data.message = err;
+          js.resp.send(js.client);
+        });
       }
-      else{
-        if(res.rows.length){
-          var u=res.rows[0].value;
-          
-          var indexes=findIndexOfMembers(u.index,js.client.data.user.memberlevel);
-          indexes=findAvailableIndexes(indexes);
-          console.log(indexes);
-          getUserBinaryByUser(indexes,js.client.data.user.memberlevel).then(function (body) {
-            if (body) {
-              js.client.data.userbinary = body;
-              console.log('binary'+body.length);          
-              getUserInfoListByUser(indexes).then(function(body){
-                js.client.data.user=body;       
-                console.log('user'+body.length);       
-                js.resp.send(js.client);
-              }).catch(function(err){
-                error_log.push(err);
-              });      
-            }
-          }).catch(function (err) {
-            console.log(err);
-            js.client.data.message = err;
-            js.resp.send(js.client);
-          });
-        }
-      }
-    });
-  }).catch(function(err){
-    js.client.data.message=err;
-    js.resp.send(js.client);
-  }).done();
-  
+    }
+  });
 }
- // WHEN RETISTER NEED TO record AVAILABLE INDEX
- var __available_indexes=[];
-function findAvailableIndexes(indexes){
-  var arr=[];
-  for (var index = 0; index < indexes.length; index++) {
-    var element = indexes[index];
-    if(__available_indexes.indexOf(element)>-1)
-      arr.push(element);
+function findIndexOfMembers(x,maxlevel){
+ var arr=[];
+ arr.push(x);
+ for (var index = 1; index < maxlevel; index++) {
+  if(index>1)
+    x=x*2+1;
+  for (var i = 0; i < Math.pow(2,index); i++) {
+     arr.push(2*x+1+i);
   }
-  if(__available_indexes.length==0)
-    return indexes; // THIS IS FOR TESTING
-  return arr;
+ }
+ return arr;
 }
 function getUserInfoListByUser(indexes){
   var deferred = Q.defer();
@@ -664,7 +931,7 @@ function getIndexes(n,level){
   }
   return arr;
 }
-function getUserBinaryByUser(indexes,needlevel) {
+function getUserBinaryByUser(indexes) {
   var deferred = Q.defer();
   var db = create_db('userbinary');
   db.view(__design_view, "findMembersByIndexes", {keys: indexes,include_docs: true}, 
@@ -691,7 +958,7 @@ function getUserBinaryByUser(indexes,needlevel) {
         }
         var indexes=[];
         indexes.push(arr[0].index);
-        indexes=indexes.concat(getIndexes(arr[0].index,needlevel));
+        indexes=indexes.concat(getIndexes(arr[0].index,3));
         getUserBinaryMembers(indexes).then(function(res){
           deferred.resolve(res);
         }).catch(function(err){
@@ -913,7 +1180,7 @@ function sendOffer(js) {
             var __doc = {
               usergui: u.gui,
               username: u.username,
-              paymentdate: convertTZ(Date()),
+              paymentdate: Date(),
               paymentvalue: u.offeredbonus,
               paymentby: __master_user.username,
               paidbygui: __master_user.gui,
@@ -923,9 +1190,9 @@ function sendOffer(js) {
               targetuser: u.username,
               status: "approved",
               description: "",
-              receiveddate: convertTZ(Date()), //
-              certifieddate: convertTZ(Date()), //
-              approveddate: convertTZ(Date()), //
+              receiveddate: Date(), //
+              certifieddate: Date(), //
+              approveddate: Date(), //
               gui: uuidV4()
             };
             makePayment(__doc).then(function (body) {
@@ -1122,7 +1389,7 @@ function sendPaymentRequest(js) {
   var __doc = {
     usergui: __master_user.gui,
     username: __master_user.username,
-    paymentdate: convertTZ(Date()),
+    paymentdate: Date(),
     paymentvalue: js.client.data.payment.paymentvalue,
     paymentby: js.client.data.payment.username,
     paidbygui: js.client.data.payment.usergui,
@@ -1252,7 +1519,7 @@ function sendCashingRequest(js) {
   var __doc = {
     usergui: __master_user.gui,
     username: __master_user.username,
-    paymentdate: convertTZ(Date()),
+    paymentdate: Date(),
     paymentvalue: -js.client.data.payment.paymentvalue,
     paymentby: js.client.data.payment.username,
     paidbygui: js.client.data.payment.usergui,
@@ -1968,30 +2235,8 @@ app.get('/default_master', function (req, res) {
   init_default_master_user(js);
 });
 ///*********************** */
-app.post('/check_your_member',function(req,res){
-  var js = {};
-  js.client = req.body;
-  js.resp = res;
-  checkYourMember(js.client.data.user.username).then(function(res){
-    js.client.data.message='OK';
-    js.resp.send(js.client);
-  }).catch(function(err){
-    js.client.data.message=err;
-    js.resp.send(js.client);
-  }).done();
-});
-function checkYourMember(username){
-  var deferred=Q.defer();
-  var db=create_db('user');
-  var cu=__cur_client.username;
-  //.... need to FIND here
-  deferred.resolve(username);
-
-  return deferred.promise;
-}
-
 // FOR REGISTER CHECKING PROCESS
-app.post('/check_register_available_username', function (req, res) { //js.client.data.user,js.client.data.package , js.client.data.user.ismember, js.client.data.user.month ,js.client.data.user.year
+app.post('/check_registe_available_username', function (req, res) { //js.client.data.user,js.client.data.package , js.client.data.user.ismember, js.client.data.user.month ,js.client.data.user.year
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -2438,7 +2683,7 @@ var __design_user = {
       "map": "function(doc) {\r\n    if(doc.phone1) {\r\n        emit(doc.phone1,doc);\r\n    }\r\n}"
     },
     "findMembersByUsername": {
-      "map": "function(doc) {\r\n    for(var word in doc.aboveparents) {\r\n      emit(doc.aboveparents[word],doc);\r\n    }\r\n}"
+      "map": "function(doc) {\r\n    for(var word in doc.aboveparents) {\r\n      emit(doc.aboveparents[word],1);\r\n    }\r\n}"
     },
     "findByParent": {
       "map": "function(doc) {\r\n    if(doc.parent) {\r\n        emit(doc.parent,doc);\r\n    }\r\n}"
@@ -2856,14 +3101,14 @@ var __design_useracceslog = {
 //insertTest();
 //fetchTest();
 function createTodayRange() {
-  var dateobj = convertTZ(Date());
+  var dateobj = new Date();
   var day = dateobj.getDate();
   var year = dateobj.getFullYear();
   var month = dateobj.getMonth() + 1;
   console.log(dateobj);
   var startTime = [year, month, day];
   console.log(startTime);
-  return convertTZ(Date());
+  return new Date();
 }
 
 function insertTest() {
@@ -3095,7 +3340,7 @@ function authentication_path(path) {
       return 2;
     case "/check_main_balance_by_user":
       return 2;
-    case "/check_register_available_username":
+    case "/check_registe_available_username":
       return 2;
     case "/check_register_max_phone":
       return 2;
@@ -3306,7 +3551,7 @@ function init_default_master_user(js) {
     } else {
       var l = {
         log: ("error %s", JSON.stringify(err)),
-        logdate: convertTZ(Date()),
+        logdate: new Date(),
         type: "error",
         gui: uuidV4()
       };
@@ -3404,7 +3649,7 @@ function init_default_package() {
             packagename: "The Best Friend",
             packagevalue: 1750000,
             isactive: true,
-            createddate: convertTZ(Date()),
+            createddate: new Date(),
           });
           p.push({
             _id: "afb6420f-26e6-4fab-87fd-b1d7a26fdfd5",
@@ -3412,7 +3657,7 @@ function init_default_package() {
             packagename: "Close Friend",
             packagevalue: 350000,
             isactive: true,
-            createddate: convertTZ(Date()),
+            createddate: new Date(),
           });
           p.push({
             _id: "f8d36fb4-575e-4aaa-bd85-099031077699",
@@ -3420,7 +3665,7 @@ function init_default_package() {
             packagename: "The Friend",
             packagevalue: 100000,
             isactive: true,
-            createddate: convertTZ(Date()),
+            createddate: new Date(),
           });
 
           db.bulk({
@@ -3925,7 +4170,7 @@ function register(register /*,needbalance*/ , resp) { //needbalance={main:0.5,bu
     username: "", // show *
     password: "", //show*
     usercode: "",
-    createddate: convertTZ(new Date()), //not show
+    createddate: new convertTZ(new Date()), //not show
     gui: uuidV4(), //not show
     email: "", //show *
     phone1: "", //show *
@@ -4173,7 +4418,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
           var __doc = {
             usergui: js.user.gui,
             username: js.user.username,
-            paymentdate: convertTZ(Date()),
+            paymentdate: Date(),
             paymentvalue: js.user.firstbalance,
             paymentby: __master_user.username,
             paidbygui: __master_user.gui,
@@ -4183,9 +4428,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
             status: "approved",
             attache: "",
             description: "",
-            receiveddate: convertTZ(Date()),
-            certifieddate: convertTZ(Date()),
-            approveddate: convertTZ(Date()),
+            receiveddate: Date(),
+            certifieddate: Date(),
+            approveddate: Date(),
             gui: uuidV4()
           };
           makePayment(__doc).then(function (body) {
@@ -4207,7 +4452,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
               var __doc = {
                 usergui: introductor.gui,
                 username: introductor.username,
-                paymentdate: convertTZ(Date()),
+                paymentdate: Date(),
                 paymentvalue: introductionvalue,
                 paymentby: __master_user.username,
                 paidbygui: __master_user.gui,
@@ -4217,9 +4462,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                 status: "approved",
                 attache: "",
                 description: "",
-                receiveddate: convertTZ(Date()),
-                certifieddate: convertTZ(Date()),
-                approveddate: convertTZ(Date()),
+                receiveddate: Date(),
+                certifieddate: Date(),
+                approveddate: Date(),
                 gui: uuidV4()
               };
               makePayment(__doc);
@@ -4242,7 +4487,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                 var __doc = {
                   usergui: js.topuser.gui,
                   username: js.topuser.username,
-                  paymentdate: convertTZ(Date()),
+                  paymentdate: Date(),
                   paymentvalue: fee,
                   paymentby: __master_user.username,
                   paidbygui: __master_user.gui,
@@ -4252,9 +4497,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                   status: "approved",
                   attache: "",
                   description: "",
-                  receiveddate: convertTZ(Date()),
-                  certifieddate: convertTZ(Date()),
-                  approveddate: convertTZ(Date()),
+                  receiveddate: Date(),
+                  certifieddate: Date(),
+                  approveddate: Date(),
                   gui: uuidV4()
                 };
                 makePayment(__doc);
@@ -4303,7 +4548,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                           var __doc = {
                             usergui: js.topuser.gui,
                             username: js.topuser.username,
-                            paymentdate: convertTZ(Date()),
+                            paymentdate: Date(),
                             paymentvalue: theRestValue,
                             paymentby: __master_user.username,
                             paidbygui: __master_user.gui,
@@ -4313,9 +4558,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                             status: "approved",
                             payreason: "system rest",
                             description: "",
-                            receiveddate: convertTZ(Date()),
-                            certifieddate: convertTZ(Date()),
-                            approveddate: convertTZ(Date()),
+                            receiveddate: Date(),
+                            certifieddate: Date(),
+                            approveddate: Date(),
                             gui: uuidV4()
                           };
                           makePayment(__doc);
@@ -4358,7 +4603,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                   var __doc = {
                                     usergui: js.topuser.gui,
                                     username: js.topuser.username,
-                                    paymentdate: convertTZ(Date()),
+                                    paymentdate: Date(),
                                     paymentvalue: averageValue,
                                     paymentby: __master_user.username,
                                     paidbygui: __master_user.gui,
@@ -4368,9 +4613,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                     targetuser: js.topuser.username,
                                     status: "approved",
                                     description: "",
-                                    receiveddate: convertTZ(Date()),
-                                    certifieddate:convertTZ(Date()),
-                                    approveddate: convertTZ(Date()),
+                                    receiveddate: Date(),
+                                    certifieddate: Date(),
+                                    approveddate: Date(),
                                     gui: uuidV4()
                                   };
                                   makePayment(__doc);
@@ -4388,7 +4633,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                       var __doc = {
                                         usergui: qp[index].gui,
                                         username: qp[index].username,
-                                        paymentdate: convertTZ(Date()),
+                                        paymentdate: Date(),
                                         paymentvalue: 0,
                                         paymentby: __master_user.username,
                                         paidbygui: __master_user.gui,
@@ -4398,9 +4643,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                         targetuser: qp[index].username,
                                         status: "approved",
                                         description: "",
-                                        receiveddate: convertTZ(Date()),
-                                        certifieddate: convertTZ(Date()),
-                                        approveddate: convertTZ(Date()),
+                                        receiveddate: Date(),
+                                        certifieddate: Date(),
+                                        approveddate: Date(),
                                         gui: uuidV4()
                                       };
                                       makePayment(__doc);
@@ -4431,7 +4676,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                   var __doc = {
                                     usergui: js.topuser.gui,
                                     username: js.topuser.username,
-                                    paymentdate: convertTZ(Date()),
+                                    paymentdate: Date(),
                                     paymentvalue: averageValue2,
                                     paymentby: __master_user.username,
                                     paidbygui: __master_user.gui,
@@ -4441,9 +4686,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                     targetuser: js.topuser.username,
                                     status: "approved",
                                     description: "",
-                                    receiveddate: convertTZ(Date()),
-                                    certifieddate: convertTZ(Date()),
-                                    approveddate: convertTZ(Date()),
+                                    receiveddate: Date(),
+                                    certifieddate: Date(),
+                                    approveddate: Date(),
                                     gui: uuidV4()
                                   };
                                   makePayment(__doc);
@@ -4461,7 +4706,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                       var __doc = {
                                         usergui: qp[index].gui,
                                         username: qp[index].username,
-                                        paymentdate: convertTZ(Date()),
+                                        paymentdate: Date(),
                                         paymentvalue: js.balance,
                                         paymentby: __master_user.username,
                                         paidbygui: __master_user.gui,
@@ -4471,9 +4716,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                         targetuser: qp[index].username,
                                         status: "approved",
                                         description: "",
-                                        receiveddate: convertTZ(Date()),
-                                        certifieddate: convertTZ(Date()),
-                                        approveddate: convertTZ(Date()),
+                                        receiveddate: Date(),
+                                        certifieddate: Date(),
+                                        approveddate: Date(),
                                         gui: uuidV4()
                                       };
                                       makePayment(__doc);
@@ -4502,7 +4747,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                   var __doc = {
                                     usergui: qp[index].gui,
                                     username: qp[index].username,
-                                    paymentdate: convertTZ(Date()),
+                                    paymentdate: Date(),
                                     paymentvalue: js.balance,
                                     paymentby: __master_user.username,
                                     paidbygui: __master_user.gui,
@@ -4512,9 +4757,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                     targetuser: qp[index].username,
                                     status: "approved",
                                     description: "",
-                                    receiveddate: convertTZ(Date()),
-                                    certifieddate: convertTZ(Date()),
-                                    approveddate: convertTZ(Date()),
+                                    receiveddate: Date(),
+                                    certifieddate: Date(),
+                                    approveddate: Date(),
                                     gui: uuidV4()
                                   };
                                   makePayment(__doc);
@@ -4580,7 +4825,7 @@ function deductBalanceForRegister(js) {
       var __doc = {
         usergui: js.registra.gui,
         username: js.registra.username,
-        paymentdate: convertTZ(Date()),
+        paymentdate: Date(),
         paymentvalue: js.balance.diffbalance,
         paymentby: __master_user.username,
         paidbygui: __master_user.gui,
@@ -4590,9 +4835,9 @@ function deductBalanceForRegister(js) {
         targetuser: js.registra.username,
         status: "approved",
         description: "",
-        receiveddate: convertTZ(Date()),
-        certifieddate: convertTZ(Date()),
-        approveddate: convertTZ(Date()),
+        receiveddate: Date(),
+        certifieddate: Date(),
+        approveddate: Date(),
         gui: uuidV4()
       };
       makePayment(__doc);
@@ -5668,12 +5913,12 @@ function showOperatorLogCenterBalanceOnline(sd, ed) {
   // sd=sd.getTime()-(2*60*60*1000);
   // var ed=new Date();
   var deferred = Q.defer();
-  ltc.queryDetailsLTC(convertTZ(new Date(sd)).toISOString(), ed.toISOString()).then(function (body) {
+  ltc.queryDetailsLTC(new Date(sd).toISOString(), ed.toISOString()).then(function (body) {
     deferred.resolve(body);
   }).catch(function (err) {
     var l = {
       log: ("error %s", JSON.stringify(err)),
-      logdate: convertTZ(Date()),
+      logdate: new Date(),
       type: "error",
       gui: uuidV4()
     };
@@ -5700,7 +5945,7 @@ function operatorCenterBalance() { // record operator centerbalance 's balance
   }).catch(function (err) {
     var l = {
       log: ("error %s", JSON.stringify(err)),
-      logdate: convertTZ(Date()),
+      logdate: new Date(),
       type: "error",
       gui: uuidV4()
     };
@@ -5712,9 +5957,9 @@ function operatorCenterBalance() { // record operator centerbalance 's balance
 
 function operatorLogCenterBalance() { // record operator query details by 15 minutes
   var deferred = Q.defer();
-  var sd = convertTZ(Date());
+  var sd = new Date();
   sd = sd.getTime() - (15 * 1000); //run every 15 minutes
-  var ed = convertTZ(Date());
+  var ed = new Date();
   var db = create_db('operatorlogcenterbalance');
   ltc.queryDetailsLTC(new Date(sd).toISOString(), ed.toISOString()).then(function (body) {
     var o = body;
@@ -5730,7 +5975,7 @@ function operatorLogCenterBalance() { // record operator query details by 15 min
   }).catch(function (err) {
     var l = {
       log: ("error %s", JSON.stringify(err)),
-      logdate: convertTZ(Date()),
+      logdate: new Date(),
       type: "error",
       gui: uuidV4()
     };
@@ -5949,7 +6194,7 @@ function processTopUp(js) {
                                     var __doc = {
                                       usergui: __master_user.gui,
                                       username: __master_user.username,
-                                      paymentdate: convertTZ(Date()),
+                                      paymentdate: Date(),
                                       paymentvalue: t.diffbalance,
                                       paymentby: t.username,
                                       paidbygui: t.gui,
@@ -5959,9 +6204,9 @@ function processTopUp(js) {
                                       targetuser: __master_user.username,
                                       status: "approved",
                                       description: "",
-                                      receiveddate: convertTZ(Date()), //
-                                      certifieddate:convertTZ(Date()), //
-                                      approveddate: convertTZ(Date()), //
+                                      receiveddate: Date(), //
+                                      certifieddate: Date(), //
+                                      approveddate: Date(), //
                                       gui: uuidV4()
                                     };
                                     makePayment(__doc);
@@ -6380,7 +6625,7 @@ function viewUser(user) {
       if (err) {
         var l = {
           log: ("error %s", JSON.stringify(err)),
-          logdate: convertTZ(Date()),
+          logdate: new Date(),
           type: "error",
           gui: uuidV4()
         };
@@ -6407,7 +6652,7 @@ function updateUser(user) {
       if (res.rows.length) {
         var l = {
           log: ("update user %s was completed", user.username),
-          logdate: convertTZ(Date()) ,
+          logdate: new Date(),
           type: "info",
           gui: uuidV4()
         };
@@ -6418,7 +6663,7 @@ function updateUser(user) {
       } else {
         var l = {
           log: ("update user %s was not completed", user.username),
-          logdate: convertTZ(Date()),
+          logdate: new Date(),
           type: "info",
           gui: uuidV4()
         };

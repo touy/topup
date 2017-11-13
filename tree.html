@@ -283,6 +283,10 @@
             var x = a.name < b.name ? -1 : 1;
             return x;
         }
+        function compareIndex(a,b){
+            var x = a.index < b.index ? -1 : 1;
+            return x; 
+        }
         var myTree;
         var arr = [];
         var dbu = [];
@@ -332,28 +336,23 @@
                 jsonPost(getHost()+'/get_member_list_by_parent_name',c,function(res){
                     console.log('res');
                     console.log(res);
+                    res.data.user.sort(compareIndex);
                     if(res){
                         $("#memberlist").empty();
-                        var str="<p>total: "+(res.data.user.length+1)+"</p>";
-                        str+="<ul>";
-                        res.data.user.insert
+                        var str="<p>member List total: "+(res.data.user.length+1)+"</p>";
+                        str+="<ul>";      
+                        str+="<li>";
+                        str+=p;
+                        str+="</li>";                   
                         for (var index = 0; index < res.data.user.length; index++) {
-                            var element = res.data.user[index];                     
-                            if(index==0){
-                                str+="<li>";
-                                str+=p;
-                                str+="</li>"; 
-                                index=0;
-                                continue;
-                            }
-
+                            var element = res.data.user[index].username;  
                             str+="<li>";
                             str+=element;
                             str+="</li>";                                                        
                         }
                         str+="</ul>";
                         $("#memberlist").html(str);
-                        console.log($("#memberlist").html());
+                        //console.log($("#memberlist").html());
                     }
                 });
             }

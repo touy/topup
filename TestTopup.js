@@ -498,7 +498,7 @@ function getMemberListByParent(username){
       if(res.rows.length){
         for (var index = 0; index < res.rows.length; index++) {
           var element = res.rows[index].value;
-          arr.push(element.username);
+          arr.push({username:element.username,index:element.index});
         }
       }
       deferred.resolve(arr);

@@ -257,7 +257,7 @@ app.get('/show_error',function(req,res){
  res.send( displayJson(error_log));
 });
 app.get('/clean_user_and_binary',function(req,res){
-  //var db=create_db('user');
+  //var db=create_db('user'); 
   nano.db.destroy('user',function(err, body) {
     //db=create_db('userbinary');
     nano.db.destroy('userbinary',function(err, body) {     

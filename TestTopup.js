@@ -3473,8 +3473,10 @@ function login(js) {
       js.client.data.message = "NO this Username and password";
       js.resp.send(js.client);
     }
-  }).catch(function (err) {
+  }).catch(function (err) {    
     console.log(err);
+    js.client.data.message=err;
+    js.resp.send(js.client);
   }).done();
 }
 

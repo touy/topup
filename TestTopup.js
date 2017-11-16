@@ -3013,6 +3013,7 @@ function set_client(js) {
       //client.logintoken=uuidV4();
     }
     delete js.client.data;
+    js.client.data={};
     //js.client.clientuid=uuidV4();
     js.client.logintoken = uuidV4();
     r_client.setAsync(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken, JSON.stringify(js.client), 'EX', 15 * 60).then(function (res) {
@@ -3229,7 +3230,7 @@ function heartbeat(js) {
         js.client.lastaccess = convertTZ(new Date());
         //set_client(client,resp);
         set_client(js);
-        js.resp.send(js.client);
+        //js.resp.send(js.client);
       } else {
         js.client.data = {};
         js.client.data.message = "NO this Username and password";
@@ -3462,14 +3463,14 @@ function login(js) {
       //set_client(client,resp);
       js.client.lastaccess = convertTZ(new Date());
       set_client(js);
-      js.resp.send(js.client);
+      //js.resp.send(js.client);
     } else {
       js.client.username = "";
       js.client.logintime = "";
       js.client.logintoken = "";
       js.client.data = {};
       js.client.lastaccess = convertTZ(new Date());
-      set_client(js);
+      //set_client(js);
       js.client.data.message = "NO this Username and password";
       js.resp.send(js.client);
     }

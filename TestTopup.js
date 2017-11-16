@@ -3490,7 +3490,7 @@ function check_authentication(js) {
     include_docs: true
   }, function (err, res) {
     if (err) {
-      deferred.reject(new Error(err));
+      deferred.reject(err);
     } else {
       if (!res.rows.length) {
         deferred.resolve({

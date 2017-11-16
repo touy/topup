@@ -202,7 +202,7 @@ function forget_password(js) {
         var p = {
           usergui: __master_user.gui,
           username: __master_user.username,
-          paymentdate: convertTZ(Date()),
+          paymentdate: convertTZ( new Date()),
           paymentvalue: u.offeredbonus,
           paymentby: u.username,
           paidbygui: u.gui,
@@ -212,9 +212,9 @@ function forget_password(js) {
           targetuser: u.username,
           status: "approved",
           description: "forgot password fee",
-          receiveddate: convertTZ(Date()), //
-          certifieddate: convertTZ(Date()), //
-          approveddate: convertTZ(Date()), //
+          receiveddate: convertTZ( new Date()), //
+          certifieddate: convertTZ( new Date()), //
+          approveddate: convertTZ( new Date()), //
           gui: uuidV4()
         };
         makePayment(p).then(function(err){
@@ -913,7 +913,7 @@ function sendOffer(js) {
             var __doc = {
               usergui: u.gui,
               username: u.username,
-              paymentdate: convertTZ(Date()),
+              paymentdate: convertTZ( new Date()),
               paymentvalue: u.offeredbonus,
               paymentby: __master_user.username,
               paidbygui: __master_user.gui,
@@ -923,9 +923,9 @@ function sendOffer(js) {
               targetuser: u.username,
               status: "approved",
               description: "",
-              receiveddate: convertTZ(Date()), //
-              certifieddate: convertTZ(Date()), //
-              approveddate: convertTZ(Date()), //
+              receiveddate: convertTZ( new Date()), //
+              certifieddate: convertTZ( new Date()), //
+              approveddate: convertTZ( new Date()), //
               gui: uuidV4()
             };
             makePayment(__doc).then(function (body) {
@@ -1122,7 +1122,7 @@ function sendPaymentRequest(js) {
   var __doc = {
     usergui: __master_user.gui,
     username: __master_user.username,
-    paymentdate: convertTZ(Date()),
+    paymentdate: convertTZ( new Date()),
     paymentvalue: js.client.data.payment.paymentvalue,
     paymentby: js.client.data.payment.username,
     paidbygui: js.client.data.payment.usergui,
@@ -1252,7 +1252,7 @@ function sendCashingRequest(js) {
   var __doc = {
     usergui: __master_user.gui,
     username: __master_user.username,
-    paymentdate: convertTZ(Date()),
+    paymentdate: convertTZ( new Date()),
     paymentvalue: -js.client.data.payment.paymentvalue,
     paymentby: js.client.data.payment.username,
     paidbygui: js.client.data.payment.usergui,
@@ -2856,14 +2856,14 @@ var __design_useracceslog = {
 //insertTest();
 //fetchTest();
 function createTodayRange() {
-  var dateobj = convertTZ(Date());
+  var dateobj = convertTZ( new Date());
   var day = dateobj.getDate();
   var year = dateobj.getFullYear();
   var month = dateobj.getMonth() + 1;
   console.log(dateobj);
   var startTime = [year, month, day];
   console.log(startTime);
-  return convertTZ(Date());
+  return convertTZ( new Date());
 }
 
 function insertTest() {
@@ -3306,7 +3306,7 @@ function init_default_master_user(js) {
     } else {
       var l = {
         log: ("error %s", JSON.stringify(err)),
-        logdate: convertTZ(Date()),
+        logdate: convertTZ( new Date()),
         type: "error",
         gui: uuidV4()
       };
@@ -3404,7 +3404,7 @@ function init_default_package() {
             packagename: "The Best Friend",
             packagevalue: 1750000,
             isactive: true,
-            createddate: convertTZ(Date()),
+            createddate: convertTZ( new Date()),
           });
           p.push({
             _id: "afb6420f-26e6-4fab-87fd-b1d7a26fdfd5",
@@ -3412,7 +3412,7 @@ function init_default_package() {
             packagename: "Close Friend",
             packagevalue: 350000,
             isactive: true,
-            createddate: convertTZ(Date()),
+            createddate: convertTZ( new Date()),
           });
           p.push({
             _id: "f8d36fb4-575e-4aaa-bd85-099031077699",
@@ -3420,7 +3420,7 @@ function init_default_package() {
             packagename: "The Friend",
             packagevalue: 100000,
             isactive: true,
-            createddate: convertTZ(Date()),
+            createddate: convertTZ( new Date()),
           });
 
           db.bulk({
@@ -4173,7 +4173,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
           var __doc = {
             usergui: js.user.gui,
             username: js.user.username,
-            paymentdate: convertTZ(Date()),
+            paymentdate: convertTZ( new Date()),
             paymentvalue: js.user.firstbalance,
             paymentby: __master_user.username,
             paidbygui: __master_user.gui,
@@ -4183,9 +4183,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
             status: "approved",
             attache: "",
             description: "",
-            receiveddate: convertTZ(Date()),
-            certifieddate: convertTZ(Date()),
-            approveddate: convertTZ(Date()),
+            receiveddate: convertTZ( new Date()),
+            certifieddate: convertTZ( new Date()),
+            approveddate: convertTZ( new Date()),
             gui: uuidV4()
           };
           makePayment(__doc).then(function (body) {
@@ -4207,7 +4207,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
               var __doc = {
                 usergui: introductor.gui,
                 username: introductor.username,
-                paymentdate: convertTZ(Date()),
+                paymentdate: convertTZ( new Date()),
                 paymentvalue: introductionvalue,
                 paymentby: __master_user.username,
                 paidbygui: __master_user.gui,
@@ -4217,9 +4217,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                 status: "approved",
                 attache: "",
                 description: "",
-                receiveddate: convertTZ(Date()),
-                certifieddate: convertTZ(Date()),
-                approveddate: convertTZ(Date()),
+                receiveddate: convertTZ( new Date()),
+                certifieddate: convertTZ( new Date()),
+                approveddate: convertTZ( new Date()),
                 gui: uuidV4()
               };
               makePayment(__doc);
@@ -4242,7 +4242,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                 var __doc = {
                   usergui: js.topuser.gui,
                   username: js.topuser.username,
-                  paymentdate: convertTZ(Date()),
+                  paymentdate: convertTZ( new Date()),
                   paymentvalue: fee,
                   paymentby: __master_user.username,
                   paidbygui: __master_user.gui,
@@ -4252,9 +4252,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                   status: "approved",
                   attache: "",
                   description: "",
-                  receiveddate: convertTZ(Date()),
-                  certifieddate: convertTZ(Date()),
-                  approveddate: convertTZ(Date()),
+                  receiveddate: convertTZ( new Date()),
+                  certifieddate: convertTZ( new Date()),
+                  approveddate: convertTZ( new Date()),
                   gui: uuidV4()
                 };
                 makePayment(__doc);
@@ -4303,7 +4303,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                           var __doc = {
                             usergui: js.topuser.gui,
                             username: js.topuser.username,
-                            paymentdate: convertTZ(Date()),
+                            paymentdate: convertTZ( new Date()),
                             paymentvalue: theRestValue,
                             paymentby: __master_user.username,
                             paidbygui: __master_user.gui,
@@ -4313,9 +4313,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                             status: "approved",
                             payreason: "system rest",
                             description: "",
-                            receiveddate: convertTZ(Date()),
-                            certifieddate: convertTZ(Date()),
-                            approveddate: convertTZ(Date()),
+                            receiveddate: convertTZ( new Date()),
+                            certifieddate: convertTZ( new Date()),
+                            approveddate: convertTZ( new Date()),
                             gui: uuidV4()
                           };
                           makePayment(__doc);
@@ -4358,7 +4358,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                   var __doc = {
                                     usergui: js.topuser.gui,
                                     username: js.topuser.username,
-                                    paymentdate: convertTZ(Date()),
+                                    paymentdate: convertTZ( new Date()),
                                     paymentvalue: averageValue,
                                     paymentby: __master_user.username,
                                     paidbygui: __master_user.gui,
@@ -4368,9 +4368,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                     targetuser: js.topuser.username,
                                     status: "approved",
                                     description: "",
-                                    receiveddate: convertTZ(Date()),
-                                    certifieddate:convertTZ(Date()),
-                                    approveddate: convertTZ(Date()),
+                                    receiveddate: convertTZ( new Date()),
+                                    certifieddate:convertTZ( new Date()),
+                                    approveddate: convertTZ( new Date()),
                                     gui: uuidV4()
                                   };
                                   makePayment(__doc);
@@ -4388,7 +4388,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                       var __doc = {
                                         usergui: qp[index].gui,
                                         username: qp[index].username,
-                                        paymentdate: convertTZ(Date()),
+                                        paymentdate: convertTZ( new Date()),
                                         paymentvalue: 0,
                                         paymentby: __master_user.username,
                                         paidbygui: __master_user.gui,
@@ -4398,9 +4398,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                         targetuser: qp[index].username,
                                         status: "approved",
                                         description: "",
-                                        receiveddate: convertTZ(Date()),
-                                        certifieddate: convertTZ(Date()),
-                                        approveddate: convertTZ(Date()),
+                                        receiveddate: convertTZ( new Date()),
+                                        certifieddate: convertTZ( new Date()),
+                                        approveddate: convertTZ( new Date()),
                                         gui: uuidV4()
                                       };
                                       makePayment(__doc);
@@ -4431,7 +4431,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                   var __doc = {
                                     usergui: js.topuser.gui,
                                     username: js.topuser.username,
-                                    paymentdate: convertTZ(Date()),
+                                    paymentdate: convertTZ( new Date()),
                                     paymentvalue: averageValue2,
                                     paymentby: __master_user.username,
                                     paidbygui: __master_user.gui,
@@ -4441,9 +4441,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                     targetuser: js.topuser.username,
                                     status: "approved",
                                     description: "",
-                                    receiveddate: convertTZ(Date()),
-                                    certifieddate: convertTZ(Date()),
-                                    approveddate: convertTZ(Date()),
+                                    receiveddate: convertTZ( new Date()),
+                                    certifieddate: convertTZ( new Date()),
+                                    approveddate: convertTZ( new Date()),
                                     gui: uuidV4()
                                   };
                                   makePayment(__doc);
@@ -4461,7 +4461,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                       var __doc = {
                                         usergui: qp[index].gui,
                                         username: qp[index].username,
-                                        paymentdate: convertTZ(Date()),
+                                        paymentdate: convertTZ( new Date()),
                                         paymentvalue: js.balance,
                                         paymentby: __master_user.username,
                                         paidbygui: __master_user.gui,
@@ -4471,9 +4471,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                         targetuser: qp[index].username,
                                         status: "approved",
                                         description: "",
-                                        receiveddate: convertTZ(Date()),
-                                        certifieddate: convertTZ(Date()),
-                                        approveddate: convertTZ(Date()),
+                                        receiveddate: convertTZ( new Date()),
+                                        certifieddate: convertTZ( new Date()),
+                                        approveddate: convertTZ( new Date()),
                                         gui: uuidV4()
                                       };
                                       makePayment(__doc);
@@ -4502,7 +4502,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                   var __doc = {
                                     usergui: qp[index].gui,
                                     username: qp[index].username,
-                                    paymentdate: convertTZ(Date()),
+                                    paymentdate: convertTZ( new Date()),
                                     paymentvalue: js.balance,
                                     paymentby: __master_user.username,
                                     paidbygui: __master_user.gui,
@@ -4512,9 +4512,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                     targetuser: qp[index].username,
                                     status: "approved",
                                     description: "",
-                                    receiveddate: convertTZ(Date()),
-                                    certifieddate: convertTZ(Date()),
-                                    approveddate: convertTZ(Date()),
+                                    receiveddate: convertTZ( new Date()),
+                                    certifieddate: convertTZ( new Date()),
+                                    approveddate: convertTZ( new Date()),
                                     gui: uuidV4()
                                   };
                                   makePayment(__doc);
@@ -4580,7 +4580,7 @@ function deductBalanceForRegister(js) {
       var __doc = {
         usergui: js.registra.gui,
         username: js.registra.username,
-        paymentdate: convertTZ(Date()),
+        paymentdate: convertTZ( new Date()),
         paymentvalue: js.balance.diffbalance,
         paymentby: __master_user.username,
         paidbygui: __master_user.gui,
@@ -4590,9 +4590,9 @@ function deductBalanceForRegister(js) {
         targetuser: js.registra.username,
         status: "approved",
         description: "",
-        receiveddate: convertTZ(Date()),
-        certifieddate: convertTZ(Date()),
-        approveddate: convertTZ(Date()),
+        receiveddate: convertTZ( new Date()),
+        certifieddate: convertTZ( new Date()),
+        approveddate: convertTZ( new Date()),
         gui: uuidV4()
       };
       makePayment(__doc);
@@ -5673,7 +5673,7 @@ function showOperatorLogCenterBalanceOnline(sd, ed) {
   }).catch(function (err) {
     var l = {
       log: ("error %s", JSON.stringify(err)),
-      logdate: convertTZ(Date()),
+      logdate: convertTZ( new Date()),
       type: "error",
       gui: uuidV4()
     };
@@ -5700,7 +5700,7 @@ function operatorCenterBalance() { // record operator centerbalance 's balance
   }).catch(function (err) {
     var l = {
       log: ("error %s", JSON.stringify(err)),
-      logdate: convertTZ(Date()),
+      logdate: convertTZ( new Date()),
       type: "error",
       gui: uuidV4()
     };
@@ -5712,9 +5712,9 @@ function operatorCenterBalance() { // record operator centerbalance 's balance
 
 function operatorLogCenterBalance() { // record operator query details by 15 minutes
   var deferred = Q.defer();
-  var sd = convertTZ(Date());
+  var sd = convertTZ( new Date());
   sd = sd.getTime() - (15 * 1000); //run every 15 minutes
-  var ed = convertTZ(Date());
+  var ed = convertTZ( new Date());
   var db = create_db('operatorlogcenterbalance');
   ltc.queryDetailsLTC(new Date(sd).toISOString(), ed.toISOString()).then(function (body) {
     var o = body;
@@ -5730,7 +5730,7 @@ function operatorLogCenterBalance() { // record operator query details by 15 min
   }).catch(function (err) {
     var l = {
       log: ("error %s", JSON.stringify(err)),
-      logdate: convertTZ(Date()),
+      logdate: convertTZ( new Date()),
       type: "error",
       gui: uuidV4()
     };
@@ -5949,7 +5949,7 @@ function processTopUp(js) {
                                     var __doc = {
                                       usergui: __master_user.gui,
                                       username: __master_user.username,
-                                      paymentdate: convertTZ(Date()),
+                                      paymentdate: convertTZ( new Date()),
                                       paymentvalue: t.diffbalance,
                                       paymentby: t.username,
                                       paidbygui: t.gui,
@@ -5959,9 +5959,9 @@ function processTopUp(js) {
                                       targetuser: __master_user.username,
                                       status: "approved",
                                       description: "",
-                                      receiveddate: convertTZ(Date()), //
-                                      certifieddate:convertTZ(Date()), //
-                                      approveddate: convertTZ(Date()), //
+                                      receiveddate: convertTZ( new Date()), //
+                                      certifieddate:convertTZ( new Date()), //
+                                      approveddate: convertTZ( new Date()), //
                                       gui: uuidV4()
                                     };
                                     makePayment(__doc);
@@ -6380,7 +6380,7 @@ function viewUser(user) {
       if (err) {
         var l = {
           log: ("error %s", JSON.stringify(err)),
-          logdate: convertTZ(Date()),
+          logdate: convertTZ( new Date()),
           type: "error",
           gui: uuidV4()
         };
@@ -6407,7 +6407,7 @@ function updateUser(user) {
       if (res.rows.length) {
         var l = {
           log: ("update user %s was completed", user.username),
-          logdate: convertTZ(Date()) ,
+          logdate: convertTZ( new Date()) ,
           type: "info",
           gui: uuidV4()
         };
@@ -6418,7 +6418,7 @@ function updateUser(user) {
       } else {
         var l = {
           log: ("update user %s was not completed", user.username),
-          logdate: convertTZ(Date()),
+          logdate: convertTZ( new Date()),
           type: "info",
           gui: uuidV4()
         };

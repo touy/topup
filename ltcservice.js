@@ -28,7 +28,7 @@ ltc.checkBalanceCenterLTC();
 // ltc.checkBalanceLTC('2055280960');
 // ltc.checkBalanceLTC('2055280971');
 // ltc.checkBalanceLTC('2055280962');
-ltc.checkBalanceLTC('2058313239');
+ltc.checkBalanceLTC('2052834494');
 //generate number
 
 // var os = require("os");

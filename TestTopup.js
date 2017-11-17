@@ -112,8 +112,8 @@ __master_user = {
   "maxproduct": 100000,
   "maxpaid": 9007199254740992
 }
-var __balance= {
-  username:"",
+var __balance = {
+  username: "",
   usergui: "",
   gui: uuidV4(),
   balance: 0,
@@ -121,36 +121,36 @@ var __balance= {
   diffbalance: 0,
   type: "topup first balance"
 };
-var __client={
-  username:"",
-  logintoken:"",
-  logintime:null,
-  logintimeout:null,
+var __client = {
+  username: "",
+  logintoken: "",
+  logintime: null,
+  logintimeout: null,
   //clientuid:null,
-  registeruid:null,
-  confirmregisteruid:null,
-  browserinfo:"",
-  ip:"",
-  other:"",
-  lastaccess:null,
-  isexist:false,
-  clientjs:"",
-  fingerprint:"",
-  data:{
-    user:{},
-    balance:{},
-    couplingscore:{},
-    balance:{},
-    package:{},
-    packagedetails:{},
-    payment:{},
-    userbinary:{},
-    message:''
+  registeruid: null,
+  confirmregisteruid: null,
+  browserinfo: "",
+  ip: "",
+  other: "",
+  lastaccess: null,
+  isexist: false,
+  clientjs: "",
+  fingerprint: "",
+  data: {
+    user: {},
+    balance: {},
+    couplingscore: {},
+    balance: {},
+    package: {},
+    packagedetails: {},
+    payment: {},
+    userbinary: {},
+    message: ''
   },
-  gui:uuidV4()
-  }
- 
-var __userbinary={
+  gui: uuidV4()
+}
+
+var __userbinary = {
   "username": "fd0001",
   "usergui": "515b9d4a-8160-45ac-b25a-4686461f06b2",
   "createddate": "2017-11-10T05:02:24.816Z",
@@ -162,7 +162,7 @@ var __userbinary={
   "index": 1,
   "gui": "4ce4bfed-0338-4ab0-9431-ae5f0e63f787"
 }
-var __payment={
+var __payment = {
   usergui: "",
   username: "",
   paymentdate: convertTZ(new Date()),
@@ -172,7 +172,7 @@ var __payment={
   payreason: "forgot password", // cashing , request confirm, 
   attache: "",
   bankinfo: '',
-  targetuser:"",
+  targetuser: "",
   status: "approved",
   description: "forgot password fee",
   receiveddate: convertTZ(new Date()), //
@@ -180,49 +180,49 @@ var __payment={
   approveddate: convertTZ(new Date()), //
   gui: uuidV4()
 };
-var __package={
+var __package = {
   gui: "4f095522-f461-4a0b-afc4-0ad7cf05c722",
   packagename: "The Best Friend",
   packagevalue: 1750000,
   isactive: true,
   createddate: convertTZ(new Date()),
 }
-var __packageDetails={
-  gui:uuidV4(),
-  userui:"",
-  packageui:"",
-  registerdate:new Date(),
-  updateddate:new Date(),
-  isactive:true,
-  notactivedate:null,
-  };
-var __couplingScore={
-  usergui:"",
-  username:"",
-  Lscore:0,
-  Rscore:0,
-  createddate:new Date(),
-  gui:uuidV4()
-  };
-var __obj_json=[];
-__couplingScore._property_name='coupling Score';
+var __packageDetails = {
+  gui: uuidV4(),
+  userui: "",
+  packageui: "",
+  registerdate: new Date(),
+  updateddate: new Date(),
+  isactive: true,
+  notactivedate: null,
+};
+var __couplingScore = {
+  usergui: "",
+  username: "",
+  Lscore: 0,
+  Rscore: 0,
+  createddate: new Date(),
+  gui: uuidV4()
+};
+var __obj_json = [];
+__couplingScore._property_name = 'coupling Score';
 __obj_json.push(__couplingScore);
-__packageDetails._property_name='Package details';
+__packageDetails._property_name = 'Package details';
 __obj_json.push(__packageDetails);
-__package._property_name='Package';
+__package._property_name = 'Package';
 __obj_json.push(__package);
-__payment._property_name='payment'
+__payment._property_name = 'payment'
 __obj_json.push(__payment);
-__userbinary._property_name='user binary';
+__userbinary._property_name = 'user binary';
 __obj_json.push(__userbinary);
-__client._property_name='client';
+__client._property_name = 'client';
 __obj_json.push(__client);
-__obj_json._property_name='balance';
+__obj_json._property_name = 'balance';
 __obj_json.push(__balance);
-__obj_json._property_name='user';
+__obj_json._property_name = 'user';
 __obj_json.push(__master_user);
 // 
-__master_user.parentname=__master_user.username;
+__master_user.parentname = __master_user.username;
 
 // create_db('user').insert(__master_user,__master_user.gui,function(err,res){
 //   if(err)
@@ -264,7 +264,7 @@ app.get('/tree', function (req, res) {
 });
 
 // CHANGE PASSWORD
-app.post('/change_password', function (req, res) { 
+app.post('/change_password', function (req, res) {
   //client.data.user
   //client.oldpassword1==client.oldpassword2;
   //client.data.user.phone1=client.secret;
@@ -277,6 +277,7 @@ app.post('/change_password', function (req, res) {
   delete js.client.data.user.secret;
   change_password(js);
 });
+
 function change_password(js) {
   if (js.client.data.user.password1 == js.client.data.user.password2) {
     delete js.client.data.user.password2;
@@ -289,13 +290,13 @@ function change_password(js) {
         js.resp.send(js.client);
       }
     }).done();
-  }
-  else{
-    js.client.data.message ='Confirmed password not match';
+  } else {
+    js.client.data.message = 'Confirmed password not match';
     js.resp.send(js.client);
   }
 
 }
+
 function changePassword(js) {
   var deferred = Q.defer();
   var db = create_db('user');
@@ -310,7 +311,7 @@ function changePassword(js) {
     if (err) deferred.reject(err);
     else {
       if (res.rows.length) {
-        u = res.rows[0].value;        
+        u = res.rows[0].value;
         u.password = js.client.data.user.password1;
         db.insert(u, u._id, function (err, res) {
           if (err) deferred.reject(err);
@@ -327,7 +328,7 @@ function changePassword(js) {
 }
 
 // CHANGE DEFAULT USER INFO
-app.post('/change_default_user_info',function(req,res){
+app.post('/change_default_user_info', function (req, res) {
   //client.data.user
   //client.data.user.oldusername;  // old username
   //client.data.user.oldphone1; // old phone
@@ -340,8 +341,9 @@ app.post('/change_default_user_info',function(req,res){
   js.resp = res;
   changeUserNameAndPhoneNumber(js);
 });
+
 function changeUserNameAndPhoneNumber(js) {
-  if (js.client.data.user.oldusername && js.client.data.user.oldphone1&&js.client.data.user.username && js.client.data.user.phone1) {
+  if (js.client.data.user.oldusername && js.client.data.user.oldphone1 && js.client.data.user.username && js.client.data.user.phone1) {
     changeDefaultInfo(js).then(function (body) {
       js.client.data.message = body;
       js.resp.send(js.client);
@@ -351,18 +353,18 @@ function changeUserNameAndPhoneNumber(js) {
         js.resp.send(js.client);
       }
     }).done();
-  }
-  else{
-    js.client.data.message ='Confirmed password not match';
+  } else {
+    js.client.data.message = 'Confirmed password not match';
     js.resp.send(js.client);
   }
 
 }
+
 function changeDefaultInfo(js) {
   var deferred = Q.defer();
   var db = create_db('user');
   var username = js.client.data.user.oldusername;
-  var phone1 = js.client.data.user.oldphone1;    
+  var phone1 = js.client.data.user.oldphone1;
   db.view(__design_view, 'findUserByUsernameAndPhone1', {
     key: [username, phone1],
     include_docs: true
@@ -370,28 +372,28 @@ function changeDefaultInfo(js) {
     if (err) deferred.reject(err);
     else {
       if (res.rows.length) {
-        u = res.rows[0].value;        
+        u = res.rows[0].value;
         u.username = js.client.data.user.username;
-        u.phone1=js.client.data.user.phone1;
-        findUserByUserName(u).then(function(res){
-          if(res.length)
+        u.phone1 = js.client.data.user.phone1;
+        findUserByUserName(u).then(function (res) {
+          if (res.length)
             deferred.reject('User existed');
-          else if(!res.length)
-          findMaxPhoneNumber(u).then(function(res){
-            if(res.length>3) deferred.reject(new Error('this phonenumber has more than 3 in the database'));
-            else
-            db.insert(u, u._id, function (err, res) {
-              if (err) deferred.reject(err);
-              else {
-                deferred.resolve('OK');
-              }
-            });
-          }).catch(function(err){
-            deferred.reject(err);
-          }).done(); 
-        }).catch(function(err){
+          else if (!res.length)
+            findMaxPhoneNumber(u).then(function (res) {
+              if (res.length > 3) deferred.reject(new Error('this phonenumber has more than 3 in the database'));
+              else
+                db.insert(u, u._id, function (err, res) {
+                  if (err) deferred.reject(err);
+                  else {
+                    deferred.resolve('OK');
+                  }
+                });
+            }).catch(function (err) {
+              deferred.reject(err);
+            }).done();
+        }).catch(function (err) {
           deferred.reject(err);
-        }).done();       
+        }).done();
       } else {
         deferred.reject(new Error("User not found"));
       }
@@ -401,7 +403,7 @@ function changeDefaultInfo(js) {
 }
 
 // FORGET PASSWORD
-app.post('/forget_password', function (req, res) { 
+app.post('/forget_password', function (req, res) {
   //client.data.user
   //client.data.user.phone1
   //client.data.user.email
@@ -417,7 +419,7 @@ app.post('/forget_password', function (req, res) {
 
 function forget_password(js) {
   viewUser(js.client).then(function (body) {
-    var fee=500;
+    var fee = 500;
     if (body.mainbalance >= fee) {
       body.mainbalance -= fee;
       updateUser(body).then(function (res) {
@@ -459,22 +461,23 @@ function forget_password(js) {
     js.client.send(js.client);
   }).done();
 }
+
 function sendSMSPassword(pass, phone) {
-  if(phone.length<8)
+  if (phone.length < 8)
     throw new Error('number is not 8 digit and start with 020');
-  if(phone.slice(1,phone.length).indexOf('205')==0){
+  if (phone.slice(1, phone.length).indexOf('205') == 0) {
     ltc.checkBalanceCenterLTC().then(getCenterBalance);
     ltc.checkBalanceLTC(phone).then(getPhoneBalance);
-    ltc.sendSMSLTC(phone, 'your password is: '+pass, '').then(getSMSResult);
+    ltc.sendSMSLTC(phone, 'your password is: ' + pass, '').then(getSMSResult);
     ltc.checkBalanceLTC(phone).then(getPhoneBalance);
-  }  
-  if(phone.slice(1,phone.length).indexOf('209')==0){
+  }
+  if (phone.slice(1, phone.length).indexOf('209') == 0) {
 
   }
-  if(phone.slice(1,phone.length).indexOf('207')==0){
+  if (phone.slice(1, phone.length).indexOf('207') == 0) {
 
   }
-  if(phone.slice(1,phone.length).indexOf('202')==0){
+  if (phone.slice(1, phone.length).indexOf('202') == 0) {
 
   }
 }
@@ -509,6 +512,7 @@ members.binarytree = [];
 var error_log = [];
 var mbin = [];
 var mm = [];
+
 function loadMemberBinaryDB() {
   var deferred = Q.defer();
   var db = create_db('userbinary');
@@ -575,6 +579,7 @@ function init_default_users() {
     error_log.push(err);
   });
 }
+
 function restoreBackupFile(bakfile) {
   var fs = require('fs');
   filename = bakfile;
@@ -597,6 +602,7 @@ function addBulkUserBinary(userbin) {
   });
   return deferred.promise;
 }
+
 function addBulkUser(user) {
   var deferred = Q.defer();
   var db = create_db('user');
@@ -636,7 +642,7 @@ function addUser(user) {
 
 // INIT CLIENT GET CIENT GUI
 app.get('/init_client', function (req, res) { // GET new GUI
-    //return client
+  //return client
   // client.data.message='OK';
   client_ip = req.clientIp;
   __client_ip = client_ip
@@ -645,6 +651,7 @@ app.get('/init_client', function (req, res) { // GET new GUI
   else
     res.send(get_init_client(client_ip)); // TESTING ONLY
 });
+
 function get_init_client(client_ip) {
   var c = {
     username: "",
@@ -663,8 +670,8 @@ function get_init_client(client_ip) {
     fingerprint: "",
     data: ""
   };
-  c.data={};
-  c.data.message='OK';
+  c.data = {};
+  c.data.message = 'OK';
   __cur_client = c;
   return c;
 }
@@ -682,6 +689,7 @@ app.post('/login', function (req, res) { //client.data.user
   js.resp = res;
   login(js);
 });
+
 function check_authentication(js) {
   var deferred = Q.defer();
   var db = create_db("user");
@@ -709,51 +717,53 @@ function check_authentication(js) {
   });
   return deferred.promise;
 }
+
 function set_client(js) {
-    /*
-      client.data={
-        user:"",
-        couplingscore:"",
-        balance:"",
-        package:"",
-        packagedetails:"",
-        payment:"",
-        userbinary:"",
-      };
-      client.data.message:"ERROR, OK, GOOD, SUCCESS";
-    */
-    var keyword = __login_kw;
-    console.log("client.clientuid" + js.client.clientuid)
-  
-    if (js.client.clientuid == "" || js.client.logintoken == "") {
-      js.client.clientuid = "";
-      keyword = "NOBODY";
-      throw new Error("Client not init, please check");
-    }
-    r_client.getAsync(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken).then(function (res) {
-      //console.log("res"+JSON.stringify(res));
-      if (res) {
-        r_client.del(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken);
-        js.client.clientuid = uuidV4();
-        //client.logintoken=uuidV4();
-      }
-      delete js.client.data;
-      js.client.data = {};
-      //js.client.clientuid=uuidV4();
-      js.client.logintoken = uuidV4();
-      r_client.setAsync(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken, JSON.stringify(js.client), 'EX', 15 * 60).then(function (res) {
-        if (js.resp && res) {
-          __cur_client = js.client;
-          js.client.data.message = 'OK';
-          js.resp.send(js.client);
-        }
-      });
-    }).catch(function (err) {
-      js.client.data.message = err;
-      js.resp.send(js.client);
-    }).done();
-  
+  /*
+    client.data={
+      user:"",
+      couplingscore:"",
+      balance:"",
+      package:"",
+      packagedetails:"",
+      payment:"",
+      userbinary:"",
+    };
+    client.data.message:"ERROR, OK, GOOD, SUCCESS";
+  */
+  var keyword = __login_kw;
+  console.log("client.clientuid" + js.client.clientuid)
+
+  if (js.client.clientuid == "" || js.client.logintoken == "") {
+    js.client.clientuid = "";
+    keyword = "NOBODY";
+    throw new Error("Client not init, please check");
   }
+  r_client.getAsync(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken).then(function (res) {
+    //console.log("res"+JSON.stringify(res));
+    if (res) {
+      r_client.del(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken);
+      js.client.clientuid = uuidV4();
+      //client.logintoken=uuidV4();
+    }
+    delete js.client.data;
+    js.client.data = {};
+    //js.client.clientuid=uuidV4();
+    js.client.logintoken = uuidV4();
+    r_client.setAsync(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken, JSON.stringify(js.client), 'EX', 15 * 60).then(function (res) {
+      if (js.resp && res) {
+        __cur_client = js.client;
+        js.client.data.message = 'OK';
+        js.resp.send(js.client);
+      }
+    });
+  }).catch(function (err) {
+    js.client.data.message = err;
+    js.resp.send(js.client);
+  }).done();
+
+}
+
 function login(js) {
   console.log("HI LOGIN");
   //var js=client.data;
@@ -791,13 +801,14 @@ function login(js) {
 }
 //LOG OUT
 app.post('/logout', function (req, res) { //client
-    //return client
+  //return client
   // client.data.message='OK';
   var js = {};
   js.client = req.body;
   js.resp = res;
   logout(js);
 });
+
 function logout(js, resp) {
   var keyword = __login_kw;
   r_client.getAsync(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken).then(function (res) {
@@ -808,7 +819,7 @@ function logout(js, resp) {
         js.client.logintime = "";
         js.client.username = "";
         js.client.data = {};
-        js.client.data.message='OK';
+        js.client.data.message = 'OK';
         __cur_client = js.client;
         js.resp.send(js.client);
       });
@@ -827,6 +838,7 @@ app.post('/heartbeat', function (req, res) { //client
   js.resp = res;
   heartbeat(js);
 });
+
 function heartbeat(js) {
   // UPDATE HEARTBEAT
   var keyword = __login_kw
@@ -865,7 +877,7 @@ app.post('/get_userdata', function (req, res) { //client
   var js = {};
   js.client = req.body;
   js.resp = res;
-  showUserInfo(js,true);
+  showUserInfo(js, true);
 });
 // show user data for view only
 app.post('/show_userdata', function (req, res) { //client
@@ -876,9 +888,10 @@ app.post('/show_userdata', function (req, res) { //client
   var js = {};
   js.client = req.body;
   js.resp = res;
-  showUserInfo(js,false);
+  showUserInfo(js, false);
 });
-function showUserInfo(js,isedit) {
+
+function showUserInfo(js, isedit) {
   var user = {
     username: js.client.username
   };
@@ -887,8 +900,8 @@ function showUserInfo(js,isedit) {
       js.client.data.message = 'OK';
       js.client.data.user = body;
       js.client.data.user.password = "";
-      if(!isedit)
-        js.client.data.user._rev = '';      
+      if (!isedit)
+        js.client.data.user._rev = '';
       js.resp.send(js.client);
     }
   }).catch(function (err) {
@@ -896,6 +909,7 @@ function showUserInfo(js,isedit) {
     js.resp.send(js.client);
   }).done();
 }
+
 function viewUser(user) {
   var deferred = Q.defer();
   db = create_db("user");
@@ -923,7 +937,7 @@ function viewUser(user) {
   return deferred.promise;
 }
 // UPDATE CURRENT USER INFO
-app.post('/update_userdata',function(req,res){
+app.post('/update_userdata', function (req, res) {
   //client
   // client.data.user // client.data.user._rev
   // "ID": "",
@@ -943,47 +957,49 @@ app.post('/update_userdata',function(req,res){
   js.resp = res;
   editUser(js);
 });
-function editUser(js){
-  viewUser(js.client.data.user).then(function(res){
-    var u=res;
-    var ju=js.client.data.user;
-    u.ID=ju.ID;
-    u.fullname=ju.fullname;
-    u.birthdate=ju.birthdate;
-    u.gender=ju.gender;
-    u.address=ju.address;
-    u.bankaccount=ju.bankaccount;
-    u.bank=ju.bank;
-    u.email=ju.email;
-    u.phone2=ju.phone2;
-    u.photo=ju.photo;
-    updateUser(u).then(function(res){
-      js.client.data.message='OK';
+
+function editUser(js) {
+  viewUser(js.client.data.user).then(function (res) {
+    var u = res;
+    var ju = js.client.data.user;
+    u.ID = ju.ID;
+    u.fullname = ju.fullname;
+    u.birthdate = ju.birthdate;
+    u.gender = ju.gender;
+    u.address = ju.address;
+    u.bankaccount = ju.bankaccount;
+    u.bank = ju.bank;
+    u.email = ju.email;
+    u.phone2 = ju.phone2;
+    u.photo = ju.photo;
+    updateUser(u).then(function (res) {
+      js.client.data.message = 'OK';
       js.resp.send(js.client);
-    }).catch(function(err){
-      js.client.data.message=err;
+    }).catch(function (err) {
+      js.client.data.message = err;
       js.resp.send(js.client);
     }).done();
-  }).catch(function(err){
-    js.client.data.message=err;
+  }).catch(function (err) {
+    js.client.data.message = err;
     js.resp.send(js.client);
   }).done();
 }
+
 function updateUser(user) {
   var deferred = Q.defer();
   db = create_db("user");
   db.insert(user, user.gui, function (err, res) {
     if (err) {
       deferred.reject(err);
-    } else {      
-        var l = {
-          log: ("update user %s was completed", user.username),
-          logdate: convertTZ(new Date()),
-          type: "info",
-          gui: uuidV4()
-        };
-        logging(l);
-        deferred.resolve('OK');      
+    } else {
+      var l = {
+        log: ("update user %s was completed", user.username),
+        logdate: convertTZ(new Date()),
+        type: "info",
+        gui: uuidV4()
+      };
+      logging(l);
+      deferred.resolve('OK');
     }
   });
   return deferred.promise;
@@ -994,7 +1010,7 @@ app.post('/get_current_user', function (req, res) {
   res.send(__cur_client);
 });
 // CHECK MAX PHONE ALLOW FOR REGISTRATION
-app.post('/check_register_max_phone', function (req, res) { 
+app.post('/check_register_max_phone', function (req, res) {
   //client
   //client.data.user.phone1
   //return client
@@ -1004,6 +1020,7 @@ app.post('/check_register_max_phone', function (req, res) {
   js.resp = res;
   checkRegisterMaxphone(js);
 });
+
 function checkRegisterMaxphone(js) {
   findMaxPhoneNumber(js.client.data.user).then(function (body) {
     if (body.length > 3) {
@@ -1019,7 +1036,7 @@ function checkRegisterMaxphone(js) {
   });
 }
 // CHECK AVAILABLE USER NAME
-app.post('/check_register_available_username', function (req, res) { 
+app.post('/check_register_available_username', function (req, res) {
   //js.client.data.user.username
   //return client
   //client.data.message='OK'
@@ -1054,6 +1071,7 @@ app.post('/get_package', function (req, res) { //
   js.resp = res;
   showPackages(js);
 });
+
 function showPackages(js) {
   if (__default_package) {
     js.resp.send(__default_package);
@@ -1062,7 +1080,7 @@ function showPackages(js) {
     getPackage().then(function (body) {
       if (body) {
         js.client.data.package = body;
-        js.client.data.message='OK';
+        js.client.data.message = 'OK';
         js.resp.send(js.client);
       }
     }).catch(function (err) {
@@ -1073,6 +1091,7 @@ function showPackages(js) {
 
 
 }
+
 function getPackage() {
   var deferred = Q.defer();
   var db = create_db('package');
@@ -1095,7 +1114,7 @@ function getPackage() {
 }
 // SHOW PACKAGE REGISTERED BY USER, User can have more than 1 package because they 
 // can upgrade from copper to silver and to gold
-app.post('/get_package_details', function (req, res) { 
+app.post('/get_package_details', function (req, res) {
   //client
   //return client
   // client.data.package=[]
@@ -1105,11 +1124,12 @@ app.post('/get_package_details', function (req, res) {
   js.resp = res;
   showPackageDetailsByUser(js);
 });
+
 function showPackageDetailsByUser(js) {
   getPackageDetailsByUser(js.client.data.user).then(function (body) {
     if (body) {
       js.client.data.package = body;
-      js.client.data.message='OK'
+      js.client.data.message = 'OK'
       js.resp.send(js.client);
     }
   }).catch(function (err) {
@@ -1142,8 +1162,12 @@ function getPackageDetailsByUser(user) {
 }
 
 
-
-app.post('/get_member_list_by_parent_name', function (req, res) { //client.data.user
+// show Member list by current user
+app.post('/get_member_list_by_parent_name', function (req, res) { 
+  //client.data.user.username
+  // return client
+  // client.data.user=[]
+  // client.data.message='OK'
   var js = {};
   js.client = req.body;
   js.resp = res
@@ -1151,11 +1175,11 @@ app.post('/get_member_list_by_parent_name', function (req, res) { //client.data.
 });
 
 function showMemberListByParent(js) {
-  console.log(js.client);
   viewUser(js.client.data.user).then(function (res) {
     //var indexes=findIndexOfMembers(res.index,19-res.memberlevel);// max member should be within 20  , 2^19;
     getMemberListByParent(res.username).then(function (res) {
       js.client.data.user = res;
+      js.client.data.message='OK';
       js.resp.send(js.client);
     }).catch(function (err) {
       js.client.data.message = err;
@@ -1192,13 +1216,19 @@ function getMemberListByParent(username) {
   });
   return deferred.promise;
 }
-app.post('/get_user_binary_tree', function (req, res) { //client.data.user
+
+//Show user binary data 
+app.post('/get_user_binary_tree', function (req, res) { 
+  //client.data.user.username
+  // return client
+  // client.data.userbinary=[]
+  // client.data.user=[];
+  // client.data.message='OK'
   var js = {};
   js.client = req.body;
   js.resp = res
   showUserBinaryTree(js);
 });
-
 function findIndexOfMembers(x, maxlevel) {
   var arr = [];
   arr.push(x);
@@ -1211,7 +1241,6 @@ function findIndexOfMembers(x, maxlevel) {
   }
   return arr;
 }
-
 function showUserBinaryTree(js) {
   var db = create_db('userbinary');
   checkYourMember(js.client.data.user.username).then(function (res) {
@@ -1230,17 +1259,14 @@ function showUserBinaryTree(js) {
       } else {
         if (res.rows.length) {
           var u = res.rows[0].value;
-
           var indexes = findIndexOfMembers(u.index, js.client.data.user.memberlevel);
           indexes = findAvailableIndexes(indexes);
-          console.log(indexes);
           getUserBinaryByUser(indexes, js.client.data.user.memberlevel).then(function (body) {
             if (body) {
               js.client.data.userbinary = body;
-              console.log('binary' + body.length);
               getUserInfoListByUser(indexes).then(function (body) {
                 js.client.data.user = body;
-                console.log('user' + body.length);
+                js.client.data.message='OK';
                 js.resp.send(js.client);
               }).catch(function (err) {
                 error_log.push(err);
@@ -1403,20 +1429,125 @@ function getUserBinaryByUser(indexes, needlevel) {
     });
   return deferred.promise;
 }
-app.post('/get_topup_balance_by_user', function (req, res) { //client
+
+// show current user topup balance list
+app.post('/get_topup_balance_by_user', function (req, res) { 
+  //client
+  //client.username, client.data.maxpage , clieng.data.page
+  //return client
+  //client.data.balance // balance.balance , balance.count
+  //client.data.message='OK';
   var js = {};
   js.client = req.body;
   js.resp = res;
   showTopupBalanceByUser(js);
 });
 
+function getCountBalanceByUser(user) {
+  var deferred = Q.defer();
+  var db=create_db('topupbalance');
+  db.view(__design_view, "findCountByUsername", {
+    key: js.client.username
+  }, function (err, res) {
+    if (err) deferred.reject(err);
+    else {
+      var arr = [];
+      if (res.rows.length) {
+        arr.push(res.rows[0].value);
+      }
+      deferred.resolve(arr);
+    }
+  });
+  return deferred.promise;
+}
 
-app.post('/check_main_balance_by_user', function (req, res) { //client
+function showTopupBalanceByUser(js) {
+  var db = create_db("topupbalance");
+  getCountBalanceByUser(js.client.username).then(function (body) {
+    var count = body[0];
+    db.view(__design_view, "findByUsername", {
+      key: js.client.username,
+      descending: true,
+      limit: js.client.data.maxpage,
+      skip: js.client.data.page
+    }, function (err, res) {
+      if (err) {
+        js.client.data.message = err;
+        js.resp.send(js.client);;
+      } else {
+        var arr = [];
+        if (res.rows.length) {
+          for (i = 0; l = res.rows.length, i < l; i++) {
+            arr.push(res.rows[i].value);
+          }
+        }
+        js.client.data.balance = {
+          arr: arr,
+          count: count
+        };
+        js.client.data.message = "OK";
+        js.resp.send(js.client);
+      }
+    });
+  }).catch(function (err) {
+
+  }).done();
+
+}
+
+// show current user main balance list
+app.post('/check_main_balance_by_user', function (req, res) { 
+  //client
+  //return client
+  // client.data.balance
+  //client.data.message='OK'
+  //client.data.balance // balance.balance , balance.count
+  //client.data.message='OK';
   var js = {};
   js.client = req.body;
   js.resp = res;
   checkMainBalanceByUser(js);
 });
+function checkMainBalanceByUser(js) {
+  var db = create_db("mainbalance");
+  db.view(__design_view, "findCountByUsername", {
+    key: js.client.username
+  }, function (err, res) {
+    if (err) {
+      js.client.data.message = err;
+      js.resp.send(js.client);
+    } else {
+      if (res.rows.length) {
+        var count = res.rows[0].value;
+        db.view(__design_view, "findByUsername", {
+          key: js.client.username,
+          descending: true,
+          limi: 1
+        }, function (err, res) {
+          if (err) {
+            js.client.data.message = err;
+            js.resp.send(js.client);;
+          } else {
+            var arr = [];
+            if (res.rows.length) {
+              arr.push(res.rows[0].value);
+              if (arr[0].balance > js.client.data.package.packagevalue)
+                js.client.data.message = "insufficient funds";
+              else {
+                js.client.data.balance = {
+                  arr: arr,
+                  count: count
+                };
+                js.client.data.message = "OK";
+              }
+              js.resp.send(js.client);
+            }
+          }
+        });
+      }
+    }
+  });
+}
 
 app.post('/upgrade', function (req, res) { //client.data.user , client.data.package
   var js = {};
@@ -1848,20 +1979,19 @@ function sendPaymentRequest(js) {
   users.user.username = __doc.targetuser;
   findUserByUserName(users.user).then(function (body) {
     var db = create_db('payment');
-    if(!body.length){
+    if (!body.length) {
       js.client.data.message = 'NO user found';
       js.resp.send(js.client);
-    }
-    else if(body.length)
-    db.insert(__doc, __doc.gui, function (err, res) {
-      if (err) {
-        js.client.data.message = err;
-        js.resp.send(js.client);
-      } else {
-        js.client.data.message = 'OK, request for payment confirmation sent';
-        js.resp.send(js.client);
-      }
-    });
+    } else if (body.length)
+      db.insert(__doc, __doc.gui, function (err, res) {
+        if (err) {
+          js.client.data.message = err;
+          js.resp.send(js.client);
+        } else {
+          js.client.data.message = 'OK, request for payment confirmation sent';
+          js.resp.send(js.client);
+        }
+      });
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
@@ -1987,8 +2117,8 @@ function sendCashingRequest(js) {
   users.user = {};
   users.user.username = js.client.data.payment.username;
   findUserByUserName(users.user).then(function (body) {
-    if(body.length){
-      var u = body[0];    
+    if (body.length) {
+      var u = body[0];
       if (u.bankaccount != __doc.bankinfo) {
         js.client.data.message = new Error('Bank info not the same');
         js.resp.send(js.client);
@@ -2015,8 +2145,7 @@ function sendCashingRequest(js) {
         js.client.data.message = err;
         js.resp.send(js.client);
       }).done();
-    }
-    else {
+    } else {
       js.client.data.message = "user not found"
       js.resp.send(js.client);
     }
@@ -3138,7 +3267,7 @@ var __design_user = {
     },
     "findByPhone": {
       "map": "function(doc) {\r\n    if(doc.phone1) {\r\n        emit(doc.phone1,doc);\r\n    }\r\n}"
-    },    
+    },
     "findUserByUsernameAndPhone1": {
       "map": "function(doc) {\r\n    if(doc.phone1&&user.username) {\r\n        emit([doc.username,doc.phone1],doc);\r\n    }\r\n}"
     },
@@ -5647,46 +5776,7 @@ function upgradePackage(js) {
 // - ລາຍງານ, ຄະແນນ ເງິນ ຈຳນວນ ສະມາຊິກຂອງຜູ້ໃຊ້ເອງ
 
 
-function checkMainBalanceByUser(js) {
-  var db = create_db("mainbalance");
-  db.view(__design_view, "findCountByUsername", {
-    key: js.client.username
-  }, function (err, res) {
-    if (err) {
-      js.client.data.message = err;
-      js.resp.send(js.client);;
-    } else {
-      if (res.rows.length) {
-        var count = res.rows[0].value;
-        db.view(__design_view, "findByUsername", {
-          key: js.client.username,
-          descending: true,
-          limi: 1
-        }, function (err, res) {
-          if (err) {
-            js.client.data.message = err;
-            js.resp.send(js.client);;
-          } else {
-            var arr = [];
-            if (res.rows.length) {
-              arr.push(res.rows[0].value);
-              if (arr[0].balance > js.client.data.package.packagevalue)
-                js.client.data.message = "insufficient funds";
-              else {
-                js.client.data.balance = {
-                  arr: arr,
-                  count: count
-                };
-                js.client.data.message = "OK";
-              }
-              js.resp.send(js.client);
-            }
-          }
-        });
-      }
-    }
-  });
-}
+
 
 function showMainBalance(js) {
   var db = create_db("mainbalance");
@@ -5728,56 +5818,6 @@ function showMainBalance(js) {
   });
 }
 
-function getCountBalanceByUser(user) {
-  var deferred = Q.defer();
-  db.view(__design_view, "findCountByUsername", {
-    key: js.client.username
-  }, function (err, res) {
-    if (err) deferred.reject(err);
-    else {
-      var arr = [];
-      if (res.rows.length) {
-        arr.push(res.rows[0].value);
-      }
-      deferred.resolve(arr);
-    }
-  });
-  return deferred.promise;
-}
-
-function showTopupBalanceByUser(js) {
-  var db = create_db("topupbalance");
-  getCountBalanceByUser(js.client.username).then(function (body) {
-    var count = body[0];
-    db.view(__design_view, "findByUsername", {
-      key: js.client.username,
-      descending: true,
-      limit: js.client.data.maxpage,
-      skip: js.client.data.page
-    }, function (err, res) {
-      if (err) {
-        js.client.data.message = err;
-        js.resp.send(js.client);;
-      } else {
-        var arr = [];
-        if (res.rows.length) {
-          for (i = 0; l = res.rows.length, i < l; i++) {
-            arr.push(res.rows[i].value);
-          }
-        }
-        js.client.data.balance = {
-          arr: arr,
-          count: count
-        };
-        js.client.data.message = "OK";
-        js.resp.send(js.client);
-      }
-    });
-  }).catch(function (err) {
-
-  }).done();
-
-}
 
 function get_member_count_by_year_month(js) {
   getMemberCountByPackageYearMonth(js.client.data.user, js.client.data.package, js.client.data.my.year, js.client.data.my.month).then(function (body) {

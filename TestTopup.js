@@ -112,7 +112,117 @@ __master_user = {
   "maxproduct": 100000,
   "maxpaid": 9007199254740992
 }
-// __master_user.parentname=__master_user.username;
+var __balance= {
+  username:"",
+  usergui: "",
+  gui: uuidV4(),
+  balance: 0,
+  updated: convertTZ(new Date()),
+  diffbalance: 0,
+  type: "topup first balance"
+};
+var __client={
+  username:"",
+  logintoken:"",
+  logintime:null,
+  logintimeout:null,
+  //clientuid:null,
+  registeruid:null,
+  confirmregisteruid:null,
+  browserinfo:"",
+  ip:"",
+  other:"",
+  lastaccess:null,
+  isexist:false,
+  clientjs:"",
+  fingerprint:"",
+  data:{
+    user:{},
+    balance:{},
+    couplingscore:{},
+    balance:{},
+    package:{},
+    packagedetails:{},
+    payment:{},
+    userbinary:{},
+    message:''
+  },
+  gui:uuidV4()
+  }
+ 
+var __userbinary={
+  "username": "fd0001",
+  "usergui": "515b9d4a-8160-45ac-b25a-4686461f06b2",
+  "createddate": "2017-11-10T05:02:24.816Z",
+  "updateddate": "2017-11-10T05:02:24.816Z",
+  "luser": "fd0003",
+  "ruser": "fd0004",
+  "level": 1,
+  "parent": "souk@TheFriendd",
+  "index": 1,
+  "gui": "4ce4bfed-0338-4ab0-9431-ae5f0e63f787"
+}
+var __payment={
+  usergui: "",
+  username: "",
+  paymentdate: convertTZ(new Date()),
+  paymentvalue: 0,
+  paymentby: "",
+  paidbygui: "",
+  payreason: "forgot password", // cashing , request confirm, 
+  attache: "",
+  bankinfo: '',
+  targetuser:"",
+  status: "approved",
+  description: "forgot password fee",
+  receiveddate: convertTZ(new Date()), //
+  certifieddate: convertTZ(new Date()), //
+  approveddate: convertTZ(new Date()), //
+  gui: uuidV4()
+};
+var __package={
+  gui: "4f095522-f461-4a0b-afc4-0ad7cf05c722",
+  packagename: "The Best Friend",
+  packagevalue: 1750000,
+  isactive: true,
+  createddate: convertTZ(new Date()),
+}
+var __packageDetails={
+  gui:uuidV4(),
+  userui:"",
+  packageui:"",
+  registerdate:new Date(),
+  updateddate:new Date(),
+  isactive:true,
+  notactivedate:null,
+  };
+var __couplingScore={
+  usergui:"",
+  username:"",
+  Lscore:0,
+  Rscore:0,
+  createddate:new Date(),
+  gui:uuidV4()
+  };
+var __obj_json=[];
+__couplingScore._property_name='coupling Score';
+__obj_json.push(__couplingScore);
+__packageDetails._property_name='Package details';
+__obj_json.push(__packageDetails);
+__package._property_name='Package';
+__obj_json.push(__package);
+__payment._property_name='payment'
+__obj_json.push(__payment);
+__userbinary._property_name='user binary';
+__obj_json.push(__userbinary);
+__client._property_name='client';
+__obj_json.push(__client);
+__obj_json._property_name='balance';
+__obj_json.push(__balance);
+__obj_json._property_name='user';
+__obj_json.push(__master_user);
+// 
+__master_user.parentname=__master_user.username;
 
 // create_db('user').insert(__master_user,__master_user.gui,function(err,res){
 //   if(err)
@@ -129,20 +239,7 @@ app.get('/', function (req, res) {
 
 // GET sample data 
 app.get('/get_sample', function (req, res) {
-  var arr = [];
-  shop._property_name = 'shop';
-  arr.push(shop);
-  item._property_name = 'item';
-  arr.push(item);
-  approvallist._property_name = 'approvallist';
-  arr.push(approvallist);
-  itemaddon._property_name = 'itemaddon';
-  arr.push(itemaddon);
-  searchkw._property_name = 'searchkw';
-  arr.push(searchkw);
-  doc._property_name = 'doc';
-  arr.push(doc);
-  html = displayJson(arr);
+  html = displayJson(__obj_json);
   return res.send(html);
 });
 app.get('/get_routes', function (req, res) {
@@ -167,24 +264,149 @@ app.get('/tree', function (req, res) {
 });
 
 // CHANGE PASSWORD
-app.post('/change_password', function (req, res) { //client.data.user
-  //js.client.oldpassword1==client.oldpassword2;
-  //js.client.data.user.phone1=client.secret;
-
+app.post('/change_password', function (req, res) { 
+  //client.data.user
+  //client.oldpassword1==client.oldpassword2;
+  //client.data.user.phone1=client.secret;
+  //return client
+  // client.data.message='OK'
   var js = {};
   js.client = req.body;
   js.resp = res;
   js.client.data.user.phone1 = js.client.data.user.secret;
   delete js.client.data.user.secret;
-
   change_password(js);
 });
+function change_password(js) {
+  if (js.client.data.user.password1 == js.client.data.user.password2) {
+    delete js.client.data.user.password2;
+    changePassword(js).then(function (body) {
+      js.client.data.message = body;
+      js.resp.send(js.client);
+    }).catch(function (err) {
+      if (err) {
+        js.client.data.message = err;
+        js.resp.send(js.client);
+      }
+    }).done();
+  }
+  else{
+    js.client.data.message ='Confirmed password not match';
+    js.resp.send(js.client);
+  }
+
+}
+function changePassword(js) {
+  var deferred = Q.defer();
+  var db = create_db('user');
+  var username = js.client.data.user.username;
+  var phone1 = js.client.data.user.phone1;
+  var password = js.client.data.user.oldpassword;
+  delete js.client.data.user.oldpassword;
+  db.view(__design_view, 'changePassword', {
+    key: [username, password, phone1],
+    include_docs: true
+  }, function (err, res) {
+    if (err) deferred.reject(err);
+    else {
+      if (res.rows.length) {
+        u = res.rows[0].value;        
+        u.password = js.client.data.user.password1;
+        db.insert(u, u._id, function (err, res) {
+          if (err) deferred.reject(err);
+          else {
+            deferred.resolve('OK');
+          }
+        });
+      } else {
+        deferred.reject(new Error("User not found"));
+      }
+    }
+  });
+  return deferred.promise;
+}
+
+// CHANGE DEFAULT USER INFO
+app.post('/change_default_user_info',function(req,res){
+  //client.data.user
+  //client.data.user.oldusername;  // old username
+  //client.data.user.oldphone1; // old phone
+  //client.data.user.username;  // old username
+  //client.data.user.phone1; // old phone
+  //return client
+  // client.data.message='OK';
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  changeUserNameAndPhoneNumber(js);
+});
+function changeUserNameAndPhoneNumber(js) {
+  if (js.client.data.user.oldusername && js.client.data.user.oldphone1&&js.client.data.user.username && js.client.data.user.phone1) {
+    changeDefaultInfo(js).then(function (body) {
+      js.client.data.message = body;
+      js.resp.send(js.client);
+    }).catch(function (err) {
+      if (err) {
+        js.client.data.message = err;
+        js.resp.send(js.client);
+      }
+    }).done();
+  }
+  else{
+    js.client.data.message ='Confirmed password not match';
+    js.resp.send(js.client);
+  }
+
+}
+function changeDefaultInfo(js) {
+  var deferred = Q.defer();
+  var db = create_db('user');
+  var username = js.client.data.user.oldusername;
+  var phone1 = js.client.data.user.oldphone1;    
+  db.view(__design_view, 'findUserByUsernameAndPhone1', {
+    key: [username, phone1],
+    include_docs: true
+  }, function (err, res) {
+    if (err) deferred.reject(err);
+    else {
+      if (res.rows.length) {
+        u = res.rows[0].value;        
+        u.username = js.client.data.user.username;
+        u.phone1=js.client.data.user.phone1;
+        findUserByUserName(u).then(function(res){
+          if(res.length)
+            deferred.reject('User existed');
+          else if(!res.length)
+          findMaxPhoneNumber(u).then(function(res){
+            if(res.length>3) deferred.reject(new Error('this phonenumber has more than 3 in the database'));
+            else
+            db.insert(u, u._id, function (err, res) {
+              if (err) deferred.reject(err);
+              else {
+                deferred.resolve('OK');
+              }
+            });
+          }).catch(function(err){
+            deferred.reject(err);
+          }).done(); 
+        }).catch(function(err){
+          deferred.reject(err);
+        }).done();       
+      } else {
+        deferred.reject(new Error("User not found"));
+      }
+    }
+  });
+  return deferred.promise;
+}
 
 // FORGET PASSWORD
-app.post('/forget_password', function (req, res) { //client.data.user
-  //js.client.oldpassword1==client.oldpassword2;
-  //js.client.data.user.phone1=client.secret;
-
+app.post('/forget_password', function (req, res) { 
+  //client.data.user
+  //client.data.user.phone1
+  //client.data.user.email
+  // return client
+  // client.data.message='OK ....' // check SMS on your register phone or check your email
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -195,41 +417,40 @@ app.post('/forget_password', function (req, res) { //client.data.user
 
 function forget_password(js) {
   viewUser(js.client).then(function (body) {
-    if(body.mainbalance>=500){
-      body.mainbalance-=500;
-      updateUser(body).then(function(res){
-        var u=body;
+    var fee=500;
+    if (body.mainbalance >= fee) {
+      body.mainbalance -= fee;
+      updateUser(body).then(function (res) {
+        var u = body;
         var p = {
           usergui: __master_user.gui,
           username: __master_user.username,
-          paymentdate: convertTZ( new Date()),
-          paymentvalue: u.offeredbonus,
+          paymentdate: convertTZ(new Date()),
+          paymentvalue: fee,
           paymentby: u.username,
           paidbygui: u.gui,
           payreason: "forgot password", // cashing , request confirm, 
           attache: "",
           bankinfo: '',
-          targetuser: u.username,
+          targetuser: __master_user.username,
           status: "approved",
           description: "forgot password fee",
-          receiveddate: convertTZ( new Date()), //
-          certifieddate: convertTZ( new Date()), //
-          approveddate: convertTZ( new Date()), //
+          receiveddate: convertTZ(new Date()), //
+          certifieddate: convertTZ(new Date()), //
+          approveddate: convertTZ(new Date()), //
           gui: uuidV4()
         };
-        makePayment(p).then(function(err){
-
-        }).catch(function(err){
+        makePayment(p).then(function (res) {
+          sendSMSPassword(u.password, u.phone1);
+          js.client.message = 'OK, Password send to your phonenumber please check your register phone number 20' + body.phone1[2] + "xxxx" + body.phone1[6] + body.phone1[7];
+          js.client.send(js.client);
+        }).catch(function (err) {
           throw err;
         }).done();
-      }).catch(function(err){
+      }).catch(function (err) {
         throw err;
-      }).done();  
-      sendSMSPassword(body.password,body.phone1);
-      js.client.message = 'Password send to your phonenumber please check your register phone number 20'+body.phone1[2]+"xxxx"+body.phone1[6]+body.phone1[7];
-      js.client.send(js.client);
-      }
-    else{
+      }).done();
+    } else {
       js.client.message = "need 500 value for main balance";
       js.client.send(js.client);
     }
@@ -238,112 +459,137 @@ function forget_password(js) {
     js.client.send(js.client);
   }).done();
 }
-
 function sendSMSPassword(pass, phone) {
-  ltc.checkBalanceCenterLTC();
-  ltc.checkBalanceLTC(phone);
-  ltc.sendSMSLTC('2059918880', 'payment 2058538459 OK', 'header OK');
-  ltc.checkBalanceLTC('2058538459');
+  if(phone.length<8)
+    throw new Error('number is not 8 digit and start with 020');
+  if(phone.slice(1,phone.length).indexOf('205')==0){
+    ltc.checkBalanceCenterLTC().then(getCenterBalance);
+    ltc.checkBalanceLTC(phone).then(getPhoneBalance);
+    ltc.sendSMSLTC(phone, 'your password is: '+pass, '').then(getSMSResult);
+    ltc.checkBalanceLTC(phone).then(getPhoneBalance);
+  }  
+  if(phone.slice(1,phone.length).indexOf('209')==0){
+
+  }
+  if(phone.slice(1,phone.length).indexOf('207')==0){
+
+  }
+  if(phone.slice(1,phone.length).indexOf('202')==0){
+
+  }
 }
 
-function sendMessengerPassword(pass, phone) {
-  
+function sendEmailPassword(pass, email) {
+
 }
 
 //RESET bonus topup monthly.
-
-//restoreBackupFile('d20171113050629.js');// by default
-app.get('/show_error',function(req,res){
- res.send( displayJson(error_log));
+// NEED TO PROPERLY QUERY ERROR FROM DATABASE
+app.get('/show_error', function (req, res) {
+  res.send(displayJson(error_log));
 });
-app.get('/clean_user_and_binary',function(req,res){
+// NEED TO DELETE THIS AFTER BETA
+app.get('/clean_user_and_binary', function (req, res) {
   //var db=create_db('user'); 
-  nano.db.destroy('user',function(err, body) {
+  nano.db.destroy('user', function (err, body) {
     //db=create_db('userbinary');
-    nano.db.destroy('userbinary',function(err, body) {     
-    });    
+    nano.db.destroy('userbinary', function (err, body) {});
   });
 });
 app.get('/init_default_users', function (req, res) {
   var js = {};
   js.client = req.body;
   js.resp = res;
-  restoreBackupFile('d20171115015037.js'); 
+  restoreBackupFile('d20171115015037.js');
   init_default_users();
 });
-
-var members={};
-members.member=[];
-members.binarytree=[];
-var error_log=[];
-var mbin=[];
-var mm =[];
-function loadMemberBinaryDB(){
-  var deferred=Q.defer();
+var members = {};
+members.member = [];
+members.binarytree = [];
+var error_log = [];
+var mbin = [];
+var mm = [];
+function loadMemberBinaryDB() {
+  var deferred = Q.defer();
   var db = create_db('userbinary');
-  db.view(__design_view,'findAll',{}, function (err, res) {
+  db.view(__design_view, 'findAll', {}, function (err, res) {
     if (err) deferred.reject(err);
     else {
-      var arr=[];
-      if(res.rows.length){
+      var arr = [];
+      if (res.rows.length) {
         for (var index = 0; index < res.rows.length; index++) {
           var element = res.rows[index].value;
           //delete element._rev;
           //delete element._id;
           arr.push(element);
         }
-        if(!members.binarytree.length)
-        members.binarytree=arr;
-      }      
-      db=create_db('user');
-      db.view(__design_view,'findAll',{},function(err,res){
-        if(err) deferred.reject(err);
-        else{
-          var arr=[];
-          if(res.rows.length){
+        if (!members.binarytree.length)
+          members.binarytree = arr;
+      }
+      db = create_db('user');
+      db.view(__design_view, 'findAll', {}, function (err, res) {
+        if (err) deferred.reject(err);
+        else {
+          var arr = [];
+          if (res.rows.length) {
             for (var index = 0; index < res.rows.length; index++) {
               var element = res.rows[index].value;
               //delete element._rev;
               //delete element._id;
               arr.push(element);
             }
-            if(!members.member.length)
-            members.member=arr;
-          deferred.resolve('ok');
+            if (!members.member.length)
+              members.member = arr;
+            deferred.resolve('ok');
+          }
         }
-      }
-      });      
+      });
     }
   });
   return deferred.promise;
 }
-function init_default_users() { 
-  loadMemberBinaryDB().then(function(res){
+
+function init_default_users() {
+  loadMemberBinaryDB().then(function (res) {
     for (var index = 0; index < members.member.length; index++) {
-      delete members.member[index]._rev;      
+      delete members.member[index]._rev;
     }
     for (var index = 0; index < members.binarytree.length; index++) {
-      delete members.binarytree[index]._rev;      
+      delete members.binarytree[index]._rev;
     }
-    addBulkUser({docs:members.member}).then(function(res){
+    addBulkUser({
+      docs: members.member
+    }).then(function (res) {
       console.log(res);
-    }).catch(function(err){
+    }).catch(function (err) {
       error_log.push(err);
     });
-    addBulkUserBinary({docs:members.binarytree}).then(function(res){
+    addBulkUserBinary({
+      docs: members.binarytree
+    }).then(function (res) {
       console.log(res);
-    }).catch(function(err){
+    }).catch(function (err) {
       error_log.push(err);
     });
-  }).catch(function(err){
+  }).catch(function (err) {
     error_log.push(err);
   });
 }
+function restoreBackupFile(bakfile) {
+  var fs = require('fs');
+  filename = bakfile;
+  if (filename)
+    fs.readFile('backup/' + filename, 'utf8', function (err, data) {
+      if (err) throw err; // we'll not consider error handling for now        
+      members = JSON.parse(data);
+    });
+}
+
 
 function addBulkUserBinary(userbin) {
   var deferred = Q.defer();
   var db = create_db('userbinary');
-  db.bulk(userbin,{}, function (err, res) {
+  db.bulk(userbin, {}, function (err, res) {
     if (err) deferred.reject(err);
     else {
       deferred.resolve(res);
@@ -354,10 +600,10 @@ function addBulkUserBinary(userbin) {
 function addBulkUser(user) {
   var deferred = Q.defer();
   var db = create_db('user');
-  db.bulk(user,{},function (err, res) {
+  db.bulk(user, {}, function (err, res) {
     if (err) deferred.reject(err);
-    else {     
-        deferred.resolve(res);
+    else {
+      deferred.resolve(res);
     }
   });
   return deferred.promise;
@@ -380,26 +626,18 @@ function addUser(user) {
   var db = create_db('user');
   db.insert(user, user.gui, function (err, res) {
     if (err) deferred.reject(err);
-    else {     
-        deferred.resolve(res);
+    else {
+      deferred.resolve(res);
     }
   });
   return deferred.promise;
 }
 
 
-function restoreBackupFile(bakfile){
-  var fs = require('fs');
-  filename=bakfile;
-  if(filename)
-    fs.readFile('backup/'+filename, 'utf8', function (err, data) {
-        if (err) throw err; // we'll not consider error handling for now        
-        members = JSON.parse(data);       
-    });
-}
-
-
+// INIT CLIENT GET CIENT GUI
 app.get('/init_client', function (req, res) { // GET new GUI
+    //return client
+  // client.data.message='OK';
   client_ip = req.clientIp;
   __client_ip = client_ip
   if (__cur_client.clientuid != req.body.clientuid)
@@ -407,18 +645,36 @@ app.get('/init_client', function (req, res) { // GET new GUI
   else
     res.send(get_init_client(client_ip)); // TESTING ONLY
 });
+function get_init_client(client_ip) {
+  var c = {
+    username: "",
+    logintoken: "",
+    logintime: null,
+    logintimeout: null,
+    clientuid: uuidV4(),
+    registeruid: uuidV4(),
+    confirmregisteruid: uuidV4(),
+    browserinfo: __browser,
+    ip: client_ip,
+    other: "",
+    lastaccess: convertTZ(new Date()),
+    isexist: false,
+    clientjs: "",
+    fingerprint: "",
+    data: ""
+  };
+  c.data={};
+  c.data.message='OK';
+  __cur_client = c;
+  return c;
+}
 
-
-app.post('/register', function (req, res) { //client.data.user
-  var js = {};
-  js.client = req.body;
-  register(js.client.data.user, res);
-});
-
+//LOGIN
 app.post('/login', function (req, res) { //client.data.user
   //client.data.user.username
   //client.data.user.password
-
+  //return client
+  // client.data.message='OK';
   console.log("LOGIN ");
   //var client=req.body;
   var js = {};
@@ -426,43 +682,464 @@ app.post('/login', function (req, res) { //client.data.user
   js.resp = res;
   login(js);
 });
+function check_authentication(js) {
+  var deferred = Q.defer();
+  var db = create_db("user");
+  //console.log(js);
+  db.view(__design_view, "authentication", {
+    key: [js.user.username, js.user.password],
+    include_docs: true
+  }, function (err, res) {
+    if (err) {
+      deferred.reject(err);
+    } else {
+      if (!res.rows.length) {
+        deferred.resolve({
+          user: {
+            username: null,
+            password: null
+          }
+        });
+        //TEST when no record yet
+        //deferred.resolve({username:"nou",password:"123456"});
+      } else {
+        deferred.resolve(res.rows[0].value);
+      }
+    }
+  });
+  return deferred.promise;
+}
+function set_client(js) {
+    /*
+      client.data={
+        user:"",
+        couplingscore:"",
+        balance:"",
+        package:"",
+        packagedetails:"",
+        payment:"",
+        userbinary:"",
+      };
+      client.data.message:"ERROR, OK, GOOD, SUCCESS";
+    */
+    var keyword = __login_kw;
+    console.log("client.clientuid" + js.client.clientuid)
+  
+    if (js.client.clientuid == "" || js.client.logintoken == "") {
+      js.client.clientuid = "";
+      keyword = "NOBODY";
+      throw new Error("Client not init, please check");
+    }
+    r_client.getAsync(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken).then(function (res) {
+      //console.log("res"+JSON.stringify(res));
+      if (res) {
+        r_client.del(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken);
+        js.client.clientuid = uuidV4();
+        //client.logintoken=uuidV4();
+      }
+      delete js.client.data;
+      js.client.data = {};
+      //js.client.clientuid=uuidV4();
+      js.client.logintoken = uuidV4();
+      r_client.setAsync(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken, JSON.stringify(js.client), 'EX', 15 * 60).then(function (res) {
+        if (js.resp && res) {
+          __cur_client = js.client;
+          js.client.data.message = 'OK';
+          js.resp.send(js.client);
+        }
+      });
+    }).catch(function (err) {
+      js.client.data.message = err;
+      js.resp.send(js.client);
+    }).done();
+  
+  }
+function login(js) {
+  console.log("HI LOGIN");
+  //var js=client.data;
+  //console.log(js.client.data);
+  check_authentication(js.client.data).then(function (body) {
+    // console.log("body:"+JSON.stringify(body));
+    // console.log("client.data:"+JSON.stringify(client.data));
+    // console.log(body);
+    // encrypt password and compare here 
+    if (body.username == js.client.data.user.username && body.password == js.client.data.user.password) {
+      js.client.data = {};
+      js.client.username = body.username;
+      js.client.logintime = convertTZ(new Date());
+      js.client.logintoken = uuidV4();
+      js.client.isexist = true;
+      //set_client(client,resp);
+      js.client.lastaccess = convertTZ(new Date());
+      set_client(js);
+      //js.resp.send(js.client);
+    } else {
+      js.client.username = "";
+      js.client.logintime = "";
+      js.client.logintoken = "";
+      js.client.data = {};
+      js.client.lastaccess = convertTZ(new Date());
+      //set_client(js);
+      js.client.data.message = "NO this Username and password";
+      js.resp.send(js.client);
+    }
+  }).catch(function (err) {
+    console.log(err);
+    js.client.data.message = err;
+    js.resp.send(js.client);
+  }).done();
+}
+//LOG OUT
 app.post('/logout', function (req, res) { //client
+    //return client
+  // client.data.message='OK';
   var js = {};
   js.client = req.body;
   js.resp = res;
   logout(js);
 });
-
+function logout(js, resp) {
+  var keyword = __login_kw;
+  r_client.getAsync(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken).then(function (res) {
+    //console.log("res"+JSON.stringify(res));
+    if (res) {
+      r_client.del(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken, function (err, res) {
+        js.client.logintoken = "";
+        js.client.logintime = "";
+        js.client.username = "";
+        js.client.data = {};
+        js.client.data.message='OK';
+        __cur_client = js.client;
+        js.resp.send(js.client);
+      });
+    }
+  }).catch(function (err) {
+    js.client.data.message = err;
+    js.resp.send(js.client);;
+  }).done();
+}
+// HEART BEAT intervaly sync between client server , SOCKET
 app.post('/heartbeat', function (req, res) { //client
+  // return client
+  // client.data.message='OK';
   var js = {};
   js.client = req;
   js.resp = res;
   heartbeat(js);
 });
+function heartbeat(js) {
+  // UPDATE HEARTBEAT
+  var keyword = __login_kw
+  if (js.client.logintoken == __cur_client.logintoken) {
 
+    r_client.getAsync(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken).then(function (body) {
+      if (body.user.username == __cur_client.username) {
 
+        js.client.data = {};
+        js.client.username = body.user.username;
+        //js.client.logintime=convertTZ(new Date());
+        //js.client.logintoken=uuidV4();
+        js.client.lastaccess = convertTZ(new Date());
+        //set_client(client,resp);
+        set_client(js);
+        //js.resp.send(js.client);
+      } else {
+        js.client.data = {};
+        js.client.data.message = "NO this Username and password";
+        js.resp.send(js.client);
+      }
+    }).catch(function (err) {
+      console.log(err);
+      js.client.data.message = err;
+      js.resp.send(js.client);
+    }).done();
+  }
+}
+
+// GET USER DATA FOR EDITING
 app.post('/get_userdata', function (req, res) { //client
+  //client
+  //return client
+  //client.data.user
+  //client.data.message='OK'
   var js = {};
   js.client = req.body;
   js.resp = res;
-  showUserInfo(js);
+  showUserInfo(js,true);
+});
+// show user data for view only
+app.post('/show_userdata', function (req, res) { //client
+  //client
+  //return client
+  //client.data.user
+  //client.data.message='OK'
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  showUserInfo(js,false);
+});
+function showUserInfo(js,isedit) {
+  var user = {
+    username: js.client.username
+  };
+  viewUser(user).then(function (body) {
+    if (body) {
+      js.client.data.message = 'OK';
+      js.client.data.user = body;
+      js.client.data.user.password = "";
+      if(!isedit)
+        js.client.data.user._rev = '';      
+      js.resp.send(js.client);
+    }
+  }).catch(function (err) {
+    js.client.data.message = err;
+    js.resp.send(js.client);
+  }).done();
+}
+function viewUser(user) {
+  var deferred = Q.defer();
+  db = create_db("user");
+  db.view(__design_view, "findByUserName", {
+      key: user.username
+    },
+    function (err, res) {
+      if (err) {
+        var l = {
+          log: ("error %s", JSON.stringify(err)),
+          logdate: convertTZ(new Date()),
+          type: "error",
+          gui: uuidV4()
+        };
+        logging(l);
+        deferred.reject(err);
+      } else {
+        var arr = [];
+        if (res.rows.length) {
+          arr.push(res.rows[0].value);
+        }
+        deferred.resolve(arr[0]);
+      }
+    });
+  return deferred.promise;
+}
+// UPDATE CURRENT USER INFO
+app.post('/update_userdata',function(req,res){
+  //client
+  // client.data.user // client.data.user._rev
+  // "ID": "",
+  // "fullname": "",
+  // "birthdate": "",
+  // "gender": "",
+  // "address": "",
+  // "bankaccount": "",
+  // "bank": "",  
+  // "email": "souk@TheFriendd.com",  
+  // "phone2": "",
+  // "photo": "", // UPLOAD TO SERVER FIRST THEN GET THE LINK AND INSERT HERE
+  //return client
+  //client.data.message='OK ...'
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  editUser(js);
+});
+function editUser(js){
+  viewUser(js.client.data.user).then(function(res){
+    var u=res;
+    var ju=js.client.data.user;
+    u.ID=ju.ID;
+    u.fullname=ju.fullname;
+    u.birthdate=ju.birthdate;
+    u.gender=ju.gender;
+    u.address=ju.address;
+    u.bankaccount=ju.bankaccount;
+    u.bank=ju.bank;
+    u.email=ju.email;
+    u.phone2=ju.phone2;
+    u.photo=ju.photo;
+    updateUser(u).then(function(res){
+      js.client.data.message='OK';
+      js.resp.send(js.client);
+    }).catch(function(err){
+      js.client.data.message=err;
+      js.resp.send(js.client);
+    }).done();
+  }).catch(function(err){
+    js.client.data.message=err;
+    js.resp.send(js.client);
+  }).done();
+}
+function updateUser(user) {
+  var deferred = Q.defer();
+  db = create_db("user");
+  db.insert(user, user.gui, function (err, res) {
+    if (err) {
+      deferred.reject(err);
+    } else {      
+        var l = {
+          log: ("update user %s was completed", user.username),
+          logdate: convertTZ(new Date()),
+          type: "info",
+          gui: uuidV4()
+        };
+        logging(l);
+        deferred.resolve('OK');      
+    }
+  });
+  return deferred.promise;
+}
+// GET CURRENT USER INFO TO CHECK IF IT'S HAS BEEN LOGGING IN 
+// THIS IS FOR TESTING
+app.post('/get_current_user', function (req, res) {
+  res.send(__cur_client);
+});
+// CHECK MAX PHONE ALLOW FOR REGISTRATION
+app.post('/check_register_max_phone', function (req, res) { 
+  //client
+  //client.data.user.phone1
+  //return client
+  // client.data.message='OK'
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  checkRegisterMaxphone(js);
+});
+function checkRegisterMaxphone(js) {
+  findMaxPhoneNumber(js.client.data.user).then(function (body) {
+    if (body.length > 3) {
+      js.client.data.message = ", could not use this phone number";
+    } else {
+      js.client.data.message = "OK";
+    }
+  }).catch(function (err) {
+    js.client.data.message = err;
+    //    js.resp.send(js.client);
+  }).done(function () {
+    js.resp.send(js.client);
+  });
+}
+// CHECK AVAILABLE USER NAME
+app.post('/check_register_available_username', function (req, res) { 
+  //js.client.data.user.username
+  //return client
+  //client.data.message='OK'
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  checkRegisterAvailableUser(js);
 });
 
+function checkRegisterAvailableUser(js) { // client.data.user.username
+  var user = js.client.data.user;
+  findUserByUserName(user).then(function (body) {
+    if (body.length > 0) {
+      js.client.data.message = "exist user";
+    } else
+      js.client.data.message = "OK";
+  }).catch(function (err) {
+    js.client.data.message = err;
+    // js.resp.send(js.client);
+  }).done(function () {
+    js.resp.send(js.client);
+  });
+}
+
+//show PACKAGE , PACKAGE COULD NOT BE EDITED
 app.post('/get_package', function (req, res) { //
+  //CLIENT
+  // return client
+  // client.data.package 
+  // client.data.message='OK'
   var js = {};
   js.resp = res;
   showPackages(js);
 });
+function showPackages(js) {
+  if (__default_package) {
+    js.resp.send(__default_package);
+  } else {
+    js.db = create_db('package')
+    getPackage().then(function (body) {
+      if (body) {
+        js.client.data.package = body;
+        js.client.data.message='OK';
+        js.resp.send(js.client);
+      }
+    }).catch(function (err) {
+      js.client.data.message = err;
+      js.resp.send(js.client);;
+    });
+  }
 
-app.post('/get_package_details', function (req, res) { //client.data.user
+
+}
+function getPackage() {
+  var deferred = Q.defer();
+  var db = create_db('package');
+  db.view(__design_view, "findAll", {
+    include_docs: true,
+  }, function (err, res) {
+    if (err)
+      deferred.reject(err);
+    else {
+      var arr = [];
+      if (res.rows.length) {
+        for (var index = 0; index < res.rows.length; index++) {
+          arr.push(res.rows[index].value);
+        }
+      }
+      deferred.resolve(arr);
+    }
+  });
+  return deferred.promise;
+}
+// SHOW PACKAGE REGISTERED BY USER, User can have more than 1 package because they 
+// can upgrade from copper to silver and to gold
+app.post('/get_package_details', function (req, res) { 
+  //client
+  //return client
+  // client.data.package=[]
+  // client.data.message ='OK';
   var js = {};
   js.user = req.body;
   js.resp = res;
   showPackageDetailsByUser(js);
 });
-app.post('/get_current_user',function(req,res){
-  res.send(__cur_client);
-});
+function showPackageDetailsByUser(js) {
+  getPackageDetailsByUser(js.client.data.user).then(function (body) {
+    if (body) {
+      js.client.data.package = body;
+      js.client.data.message='OK'
+      js.resp.send(js.client);
+    }
+  }).catch(function (err) {
+    js.client.data.message = err;
+    js.resp.send(js.client);;
+  });
+}
+
+function getPackageDetailsByUser(user) {
+  var deferred = Q.defer();
+  var db = create_db('packagedetails');
+  db.view(__design_view, "findByUsername", {
+    key: user.username,
+    include_docs: true,
+    descending: true
+  }, function (err, res) {
+    if (err)
+      deferred.reject(err);
+    else {
+      var arr = [];
+      if (res.rows.length) {
+        for (var index = 0; index < res.rows.length; index++) {
+          arr.push(res.rows[index].value);
+        }
+      }
+      deferred.resolve(arr);
+    }
+  });
+  return deferred.promise;
+}
 
 
 
@@ -472,33 +1149,42 @@ app.post('/get_member_list_by_parent_name', function (req, res) { //client.data.
   js.resp = res
   showMemberListByParent(js);
 });
-function showMemberListByParent(js){
+
+function showMemberListByParent(js) {
   console.log(js.client);
-  viewUser(js.client.data.user).then(function(res){
+  viewUser(js.client.data.user).then(function (res) {
     //var indexes=findIndexOfMembers(res.index,19-res.memberlevel);// max member should be within 20  , 2^19;
-    getMemberListByParent(res.username).then(function(res){
-      js.client.data.user=res;
+    getMemberListByParent(res.username).then(function (res) {
+      js.client.data.user = res;
       js.resp.send(js.client);
-    }).catch(function(err){
-      js.client.data.message=err;
+    }).catch(function (err) {
+      js.client.data.message = err;
       js.resp.send(js.client);
     }).done();
-  }).catch(function(err){
-    js.client.data.message=err;
+  }).catch(function (err) {
+    js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();  
+  }).done();
 }
-function getMemberListByParent(username){
-  var deferred=Q.defer();
-  var db=create_db('user');
-  db.view(__design_view,'findMembersByUsername',{key:username,include_docs:true,decending:true},function(err,res){
-    if(err) deferred.reject(err);
-    else{
-      var arr=[];
-      if(res.rows.length){
+
+function getMemberListByParent(username) {
+  var deferred = Q.defer();
+  var db = create_db('user');
+  db.view(__design_view, 'findMembersByUsername', {
+    key: username,
+    include_docs: true,
+    decending: true
+  }, function (err, res) {
+    if (err) deferred.reject(err);
+    else {
+      var arr = [];
+      if (res.rows.length) {
         for (var index = 0; index < res.rows.length; index++) {
           var element = res.rows[index].value;
-          arr.push({username:element.username,index:element.index});
+          arr.push({
+            username: element.username,
+            index: element.index
+          });
         }
       }
       deferred.resolve(arr);
@@ -512,50 +1198,53 @@ app.post('/get_user_binary_tree', function (req, res) { //client.data.user
   js.resp = res
   showUserBinaryTree(js);
 });
-function findIndexOfMembers(x,maxlevel){
-  var arr=[];
+
+function findIndexOfMembers(x, maxlevel) {
+  var arr = [];
   arr.push(x);
   for (var index = 1; index < maxlevel; index++) {
-   if(index>1)
-     x=x*2+1;
-   for (var i = 0; i < Math.pow(2,index); i++) {
-      arr.push(2*x+1+i);
-   }
+    if (index > 1)
+      x = x * 2 + 1;
+    for (var i = 0; i < Math.pow(2, index); i++) {
+      arr.push(2 * x + 1 + i);
+    }
   }
   return arr;
- }
+}
+
 function showUserBinaryTree(js) {
-  var db=create_db('userbinary');
-  checkYourMember(js.client.data.user.username).then(function(res){
-    if(!res){
-      js.client.data.message='User not found';
+  var db = create_db('userbinary');
+  checkYourMember(js.client.data.user.username).then(function (res) {
+    if (!res) {
+      js.client.data.message = 'User not found';
       js.resp.send(js.client);
       return;
     }
 
-    db.view(__design_view,'findByUsername',{key:js.client.data.user.username},function(err,res){
-      if(err){
-        js.client.data.message=err;
+    db.view(__design_view, 'findByUsername', {
+      key: js.client.data.user.username
+    }, function (err, res) {
+      if (err) {
+        js.client.data.message = err;
         js.resp.send(js.client);
-      }
-      else{
-        if(res.rows.length){
-          var u=res.rows[0].value;
-          
-          var indexes=findIndexOfMembers(u.index,js.client.data.user.memberlevel);
-          indexes=findAvailableIndexes(indexes);
+      } else {
+        if (res.rows.length) {
+          var u = res.rows[0].value;
+
+          var indexes = findIndexOfMembers(u.index, js.client.data.user.memberlevel);
+          indexes = findAvailableIndexes(indexes);
           console.log(indexes);
-          getUserBinaryByUser(indexes,js.client.data.user.memberlevel).then(function (body) {
+          getUserBinaryByUser(indexes, js.client.data.user.memberlevel).then(function (body) {
             if (body) {
               js.client.data.userbinary = body;
-              console.log('binary'+body.length);          
-              getUserInfoListByUser(indexes).then(function(body){
-                js.client.data.user=body;       
-                console.log('user'+body.length);       
+              console.log('binary' + body.length);
+              getUserInfoListByUser(indexes).then(function (body) {
+                js.client.data.user = body;
+                console.log('user' + body.length);
                 js.resp.send(js.client);
-              }).catch(function(err){
+              }).catch(function (err) {
                 error_log.push(err);
-              });      
+              });
             }
           }).catch(function (err) {
             console.log(err);
@@ -565,141 +1254,153 @@ function showUserBinaryTree(js) {
         }
       }
     });
-  }).catch(function(err){
-    js.client.data.message=err;
+  }).catch(function (err) {
+    js.client.data.message = err;
     js.resp.send(js.client);
   }).done();
-  
+
 }
- // WHEN RETISTER NEED TO record AVAILABLE INDEX
- var __available_indexes=[];
-function findAvailableIndexes(indexes){
-  var arr=[];
+// WHEN RETISTER NEED TO record AVAILABLE INDEX
+var __available_indexes = [];
+
+function findAvailableIndexes(indexes) {
+  var arr = [];
   for (var index = 0; index < indexes.length; index++) {
     var element = indexes[index];
-    if(__available_indexes.indexOf(element)>-1)
+    if (__available_indexes.indexOf(element) > -1)
       arr.push(element);
   }
-  if(__available_indexes.length==0)
+  if (__available_indexes.length == 0)
     return indexes; // THIS IS FOR TESTING
   return arr;
 }
-function getUserInfoListByUser(indexes){
+
+function getUserInfoListByUser(indexes) {
   var deferred = Q.defer();
   var db = create_db('user');
-  db.view(__design_view,'findMembersByIndexes',{keys:indexes,include_docs:true,},
-  function(err,res){
-    if (err)
-    deferred.reject(err);
-  else {
-    var arr = [];
-    if (res.rows.length) {
-      for (var index = 0; index < res.rows.length; index++) {
-        var element = res.rows[index].value;
-        e = { 
-          usergui: element.gui,
-          username: element.username,
-          introductorcode:element.introductorcode,
-          packagename:element.packagename,
-          packagevalue:element.packagevalue,
-          packagegui:element.packageui,
-          createddate: element.createddate,
-          updateddate: element.updateddate,
-          Lcoupling:element.Lcoupling,
-          Rcoupling:element.Rcoupling,
-          leftside: element.leftside,
-          rightside: element.rightside,
-          memberlevel: element.memberlevel,
-          parentname: element.parentname,
-        };
-        arr.push(e);
+  db.view(__design_view, 'findMembersByIndexes', {
+      keys: indexes,
+      include_docs: true,
+    },
+    function (err, res) {
+      if (err)
+        deferred.reject(err);
+      else {
+        var arr = [];
+        if (res.rows.length) {
+          for (var index = 0; index < res.rows.length; index++) {
+            var element = res.rows[index].value;
+            e = {
+              usergui: element.gui,
+              username: element.username,
+              introductorcode: element.introductorcode,
+              packagename: element.packagename,
+              packagevalue: element.packagevalue,
+              packagegui: element.packageui,
+              createddate: element.createddate,
+              updateddate: element.updateddate,
+              Lcoupling: element.Lcoupling,
+              Rcoupling: element.Rcoupling,
+              leftside: element.leftside,
+              rightside: element.rightside,
+              memberlevel: element.memberlevel,
+              parentname: element.parentname,
+            };
+            arr.push(e);
+          }
+        }
+        deferred.resolve(arr);
       }
-    }
-    deferred.resolve(arr);
-  }
-  });
+    });
   return deferred.promise;
 }
 
-function getUserBinaryMembers(indexes){
+function getUserBinaryMembers(indexes) {
   var deferred = Q.defer();
   var db = create_db('userbinary');
-  db.view(__design_view, "findMembersByIndexes", {keys:indexes,include_docs: true,}, 
-  function (err, res) {
-    if (err)
-    deferred.reject(err);
-  else {
-    var arr = [];
-    if (res.rows.length) {
-      for (var index = 0; index < res.rows.length; index++) {
-        var element = res.rows[index].value;
-        e = { // for current user
-          usergui: element.usergui,
-          username: element.username,
-          createddate: element.createddate,
-          updateddate: element.updateddate,
-          luser: element.luser,
-          ruser: element.ruser,
-          level: element.level,
-          index:element.index,
-          gui: element.gui
-        };
-        arr.push(e);        
+  db.view(__design_view, "findMembersByIndexes", {
+      keys: indexes,
+      include_docs: true,
+    },
+    function (err, res) {
+      if (err)
+        deferred.reject(err);
+      else {
+        var arr = [];
+        if (res.rows.length) {
+          for (var index = 0; index < res.rows.length; index++) {
+            var element = res.rows[index].value;
+            e = { // for current user
+              usergui: element.usergui,
+              username: element.username,
+              createddate: element.createddate,
+              updateddate: element.updateddate,
+              luser: element.luser,
+              ruser: element.ruser,
+              level: element.level,
+              index: element.index,
+              gui: element.gui
+            };
+            arr.push(e);
+          }
+        }
+        deferred.resolve(arr);
       }
-    }
-    deferred.resolve(arr);
-  }
-  });
+    });
   return deferred.promise;
 }
 
-function getIndexes(n,level){
-  var arr=[];
-  for(var index=1;index<level;index++){
-    if(index>1)
-      n=n*2+1;
-    for(var i=0;i<Math.pow(2,index);i++){
-      arr.push(2*n+1+i);
+function getIndexes(n, level) {
+  var arr = [];
+  for (var index = 1; index < level; index++) {
+    if (index > 1)
+      n = n * 2 + 1;
+    for (var i = 0; i < Math.pow(2, index); i++) {
+      arr.push(2 * n + 1 + i);
     }
   }
   return arr;
 }
-function getUserBinaryByUser(indexes,needlevel) {
+
+function getUserBinaryByUser(indexes, needlevel) {
   var deferred = Q.defer();
   var db = create_db('userbinary');
-  db.view(__design_view, "findMembersByIndexes", {keys: indexes,include_docs: true}, 
-  function (err, res) {
-    if (err)
-      deferred.reject(err);
-    else {
-      var arr = [];
-      if (res.rows.length) {
-        for (var index = 0; index < res.rows.length; index++) {
-          var element = res.rows[index].value;
-          e = { // for current user
-            //usergui: element.usergui,
-            //username: element.username,
-            //createddate: element.createddate,
-            //updateddate: element.updateddate,
-            //luser: element.luser,
-            //ruser: element.ruser,
-            //level: element.level,
-            index:element.index,
-            //gui: element.gui
-          };
-          arr.push(e);
+  db.view(__design_view, "findMembersByIndexes", {
+      keys: indexes,
+      include_docs: true
+    },
+    function (err, res) {
+      if (err)
+        deferred.reject(err);
+      else {
+        var arr = [];
+        if (res.rows.length) {
+          for (var index = 0; index < res.rows.length; index++) {
+            var element = res.rows[index].value;
+            e = { // for current user
+              //usergui: element.usergui,
+              //username: element.username,
+              //createddate: element.createddate,
+              //updateddate: element.updateddate,
+              //luser: element.luser,
+              //ruser: element.ruser,
+              //level: element.level,
+              index: element.index,
+              //gui: element.gui
+            };
+            arr.push(e);
+          }
+          var indexes = [];
+          indexes.push(arr[0].index);
+          indexes = indexes.concat(getIndexes(arr[0].index, needlevel));
+          getUserBinaryMembers(indexes).then(function (res) {
+            deferred.resolve(res);
+          }).catch(function (err) {
+            deferred.reject(err);
+          }).done();
         }
-        var indexes=[];
-        indexes.push(arr[0].index);
-        indexes=indexes.concat(getIndexes(arr[0].index,needlevel));
-        getUserBinaryMembers(indexes).then(function(res){
-          deferred.resolve(res);
-        }).catch(function(err){
-          deferred.reject(err);
-        }).done();         
-      }      
-    }
-  });
+      }
+    });
   return deferred.promise;
 }
 app.post('/get_topup_balance_by_user', function (req, res) { //client
@@ -913,7 +1614,7 @@ function sendOffer(js) {
             var __doc = {
               usergui: u.gui,
               username: u.username,
-              paymentdate: convertTZ( new Date()),
+              paymentdate: convertTZ(new Date()),
               paymentvalue: u.offeredbonus,
               paymentby: __master_user.username,
               paidbygui: __master_user.gui,
@@ -923,9 +1624,9 @@ function sendOffer(js) {
               targetuser: u.username,
               status: "approved",
               description: "",
-              receiveddate: convertTZ( new Date()), //
-              certifieddate: convertTZ( new Date()), //
-              approveddate: convertTZ( new Date()), //
+              receiveddate: convertTZ(new Date()), //
+              certifieddate: convertTZ(new Date()), //
+              approveddate: convertTZ(new Date()), //
               gui: uuidV4()
             };
             makePayment(__doc).then(function (body) {
@@ -1122,7 +1823,7 @@ function sendPaymentRequest(js) {
   var __doc = {
     usergui: __master_user.gui,
     username: __master_user.username,
-    paymentdate: convertTZ( new Date()),
+    paymentdate: convertTZ(new Date()),
     paymentvalue: js.client.data.payment.paymentvalue,
     paymentby: js.client.data.payment.username,
     paidbygui: js.client.data.payment.usergui,
@@ -1145,14 +1846,19 @@ function sendPaymentRequest(js) {
   var users = {};
   users.user = {};
   users.user.username = __doc.targetuser;
-  findUserByUserName(users).then(function (body) {
+  findUserByUserName(users.user).then(function (body) {
     var db = create_db('payment');
+    if(!body.length){
+      js.client.data.message = 'NO user found';
+      js.resp.send(js.client);
+    }
+    else if(body.length)
     db.insert(__doc, __doc.gui, function (err, res) {
       if (err) {
         js.client.data.message = err;
-        js.resp.send(js.client);;
+        js.resp.send(js.client);
       } else {
-        js.client.data.message = 'request for payment confirmation sent';
+        js.client.data.message = 'OK, request for payment confirmation sent';
         js.resp.send(js.client);
       }
     });
@@ -1252,7 +1958,7 @@ function sendCashingRequest(js) {
   var __doc = {
     usergui: __master_user.gui,
     username: __master_user.username,
-    paymentdate: convertTZ( new Date()),
+    paymentdate: convertTZ(new Date()),
     paymentvalue: -js.client.data.payment.paymentvalue,
     paymentby: js.client.data.payment.username,
     paidbygui: js.client.data.payment.usergui,
@@ -1280,34 +1986,40 @@ function sendCashingRequest(js) {
   var users = {};
   users.user = {};
   users.user.username = js.client.data.payment.username;
-  findUserByUserName(js).then(function (body) {
-    var u = body[0];
-    if (u.bankaccount != __doc.bankinfo) {
-      js.client.data.message = new Error('Bank info not the same');
-      js.resp.send(js.client);
-      return;
-    }
-    var b = {
-      username: js.client.data.payment.targetuser,
-      usergui: js.client.data.payment.usergui,
-      gui: uuidV4(),
-      balance: 0,
-      updated: convertTZ(new Date()),
-      diffbalance: -js.client.data.payment.paymentvalue,
-      type: "cashing request"
-    };
-    updateMainBalance(js.client.data.payment, b).then(function (body) {
-      makePayment(__doc).then(function (body) {
-        js.client.data.message = 'send Cashing request completely';
+  findUserByUserName(users.user).then(function (body) {
+    if(body.length){
+      var u = body[0];    
+      if (u.bankaccount != __doc.bankinfo) {
+        js.client.data.message = new Error('Bank info not the same');
         js.resp.send(js.client);
+        return;
+      }
+      var b = {
+        username: js.client.data.payment.targetuser,
+        usergui: js.client.data.payment.usergui,
+        gui: uuidV4(),
+        balance: 0,
+        updated: convertTZ(new Date()),
+        diffbalance: -js.client.data.payment.paymentvalue,
+        type: "cashing request"
+      };
+      updateMainBalance(js.client.data.payment, b).then(function (body) {
+        makePayment(__doc).then(function (body) {
+          js.client.data.message = 'OK send Cashing request completely';
+          js.resp.send(js.client);
+        }).catch(function (err) {
+          js.client.data.message = err;
+          js.resp.send(js.client);
+        }).done();
       }).catch(function (err) {
         js.client.data.message = err;
         js.resp.send(js.client);
       }).done();
-    }).catch(function (err) {
-      js.client.data.message = err;
+    }
+    else {
+      js.client.data.message = "user not found"
       js.resp.send(js.client);
-    }).done();
+    }
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
@@ -1968,41 +2680,31 @@ app.get('/default_master', function (req, res) {
   init_default_master_user(js);
 });
 ///*********************** */
-app.post('/check_your_member',function(req,res){
+app.post('/check_your_member', function (req, res) {
   var js = {};
   js.client = req.body;
   js.resp = res;
-  checkYourMember(js.client.data.user.username).then(function(res){
-    js.client.data.message='OK';
+  checkYourMember(js.client.data.user.username).then(function (res) {
+    js.client.data.message = 'OK';
     js.resp.send(js.client);
-  }).catch(function(err){
-    js.client.data.message=err;
+  }).catch(function (err) {
+    js.client.data.message = err;
     js.resp.send(js.client);
   }).done();
 });
-function checkYourMember(username){
-  var deferred=Q.defer();
-  var db=create_db('user');
-  var cu=__cur_client.username;
+
+function checkYourMember(username) {
+  var deferred = Q.defer();
+  var db = create_db('user');
+  var cu = __cur_client.username;
   //.... need to FIND here
   deferred.resolve(username);
 
   return deferred.promise;
 }
 
-// FOR REGISTER CHECKING PROCESS
-app.post('/check_register_available_username', function (req, res) { //js.client.data.user,js.client.data.package , js.client.data.user.ismember, js.client.data.user.month ,js.client.data.user.year
-  var js = {};
-  js.client = req.body;
-  js.resp = res;
-  checkRegisterAvailableUser(js);
-});
-app.post('/check_register_max_phone', function (req, res) { //js.client.data.user,js.client.data.package , js.client.data.user.ismember, js.client.data.user.month ,js.client.data.user.year
-  var js = {};
-  js.client = req.body;
-  js.resp = res;
-  checkRegisterMaxphone(js);
-});
+
+
 app.post('/check_register_password', function (req, res) { //js.client.data.user,js.client.data.package , js.client.data.user.ismember, js.client.data.user.month ,js.client.data.user.year
   var js = {};
   js.client = req.body;
@@ -2436,6 +3138,9 @@ var __design_user = {
     },
     "findByPhone": {
       "map": "function(doc) {\r\n    if(doc.phone1) {\r\n        emit(doc.phone1,doc);\r\n    }\r\n}"
+    },    
+    "findUserByUsernameAndPhone1": {
+      "map": "function(doc) {\r\n    if(doc.phone1&&user.username) {\r\n        emit([doc.username,doc.phone1],doc);\r\n    }\r\n}"
     },
     "findMembersByUsername": {
       "map": "function(doc) {\r\n    for(var word in doc.aboveparents) {\r\n      emit(doc.aboveparents[word],doc);\r\n    }\r\n}"
@@ -2856,14 +3561,14 @@ var __design_useracceslog = {
 //insertTest();
 //fetchTest();
 function createTodayRange() {
-  var dateobj = convertTZ( new Date());
+  var dateobj = convertTZ(new Date());
   var day = dateobj.getDate();
   var year = dateobj.getFullYear();
   var month = dateobj.getMonth() + 1;
   console.log(dateobj);
   var startTime = [year, month, day];
   console.log(startTime);
-  return convertTZ( new Date());
+  return convertTZ(new Date());
 }
 
 function insertTest() {
@@ -2961,124 +3666,11 @@ function init_db(dbname, design) {
   //return db;
 }
 
-function get_init_client(client_ip) {
-  var c = {
-    username: "",
-    logintoken: "",
-    logintime: null,
-    logintimeout: null,
-    clientuid: uuidV4(),
-    registeruid: uuidV4(),
-    confirmregisteruid: uuidV4(),
-    browserinfo: __browser,
-    ip: client_ip,
-    other: "",
-    lastaccess: convertTZ(new Date()),
-    isexist: false,
-    clientjs: "",
-    fingerprint: "",
-    data: ""
-  };
-  __cur_client = c;
-  return c;
-}
 
-function set_client(js) {
 
-  /*
-    client.data={
-      user:"",
-      couplingscore:"",
-      balance:"",
-      package:"",
-      packagedetails:"",
-      payment:"",
-      userbinary:"",
-    };
-    client.data.message:"ERROR, OK, GOOD, SUCCESS";
-  */
-  var keyword = __login_kw;
-  console.log("client.clientuid" + js.client.clientuid)
 
-  if (js.client.clientuid == "" || js.client.logintoken == "") {
-    js.client.clientuid = "";
-    keyword = "NOBODY";
-    throw new Error("Client not init, please check");
-  }
-  r_client.getAsync(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken).then(function (res) {
-    //console.log("res"+JSON.stringify(res));
-    if (res) {
-      r_client.del(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken);
-      js.client.clientuid = uuidV4();
-      //client.logintoken=uuidV4();
-    }
-    delete js.client.data;
-    js.client.data={};
-    //js.client.clientuid=uuidV4();
-    js.client.logintoken = uuidV4();
-    r_client.setAsync(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken, JSON.stringify(js.client), 'EX', 15 * 60).then(function (res) {
-      if (js.resp && res) {
-        __cur_client = js.client;
-        js.client.data.message = res;
-        js.resp.send(js.client);
-      }
-    });
-  }).catch(function (err) {
-    js.client.data.message = err;
-    js.resp.send(js.client);;
-  }).done();
 
-}
 
-function change_password(js) {
-  if (js.client.data.user.password1 == js.client.data.user.password2) {
-
-    //delete js.client.data.user.password1;
-    delete js.client.data.user.password2;
-    changePassword(js).then(function (body) {
-      js.client.data.message = body;
-      js.resp.send(js.client);
-    }).catch(function (err) {
-      if (err) {
-        js.client.data.message = err;
-        js.resp.send(js.client);;
-      }
-    }).done();
-  }
-}
-
-function changePassword(js) {
-
-  var deferred = Q.defer();
-  var db = create_db('user');
-  var username = js.client.data.user.username;
-  var phone1 = js.client.data.user.phone1;
-  var password = js.client.data.user.oldpassword;
-  delete js.client.data.user.oldpassword;
-  db.view(__design_view, 'changePassword', {
-    key: [username, password, phone1],
-    include_docs: true
-  }, function (err, res) {
-    if (err) deferred.reject(err);
-    else {
-      if (res.rows.length) {
-        u = res.rows[0].value;
-        //delete u._rev;
-        u.password = js.client.data.user.password1;
-
-        db.insert(u, u._id, function (err, res) {
-          if (err) deferred.reject(err);
-          else {
-            deferred.resolve('OK');
-          }
-        });
-      } else {
-        deferred.reject(new Error("User not found"));
-      }
-    }
-  });
-  return deferred.promise;
-}
 
 function authentication_path(path) {
   switch (path) {
@@ -3194,55 +3786,8 @@ function authentication_path(path) {
 
 
 
-function logout(js, resp) {
-  var keyword = __login_kw;
-  r_client.getAsync(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken).then(function (res) {
-    //console.log("res"+JSON.stringify(res));
-    if (res) {
-      r_client.del(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken, function (err, res) {
-        js.client.logintoken = "";
-        js.client.logintime = "";
-        js.client.username = "";
-        js.client.data = {};
-        __cur_client = js.client;
-        js.resp.send(js.client);
 
-      });
-    }
-  }).catch(function (err) {
-    js.client.data.message = err;
-    js.resp.send(js.client);;
-  }).done();
-}
-/**HEARTBEAT */
-function heartbeat(js) {
-  // UPDATE HEARTBEAT
-  var keyword = __login_kw
-  if (js.client.logintoken == __cur_client.logintoken) {
 
-    r_client.getAsync(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken).then(function (body) {
-      if (body.user.username == __cur_client.username) {
-
-        js.client.data = {};
-        js.client.username = body.user.username;
-        //js.client.logintime=convertTZ(new Date());
-        //js.client.logintoken=uuidV4();
-        js.client.lastaccess = convertTZ(new Date());
-        //set_client(client,resp);
-        set_client(js);
-        //js.resp.send(js.client);
-      } else {
-        js.client.data = {};
-        js.client.data.message = "NO this Username and password";
-        js.resp.send(js.client);
-      }
-    }).catch(function (err) {
-      console.log(err);
-      js.client.data.message = err;
-      js.resp.send(js.client);
-    }).done();
-  }
-}
 // function set_heartbeat_interval(client,resp){
 //       client.clientuid=uuidV4();
 
@@ -3250,6 +3795,14 @@ function heartbeat(js) {
 //       set_authentication(client);
 // }
 /** */
+app.post('/register', function (req, res) { //client.data.user
+  var js = {};
+  js.client = req.body;
+  register(js.client.data.user, res);
+});
+
+
+
 init_redis();
 init_db('adminaccesslog', __design_useracceslog);
 init_db('useraccesslog', __design_useracceslog);
@@ -3271,7 +3824,7 @@ init_db('bonustopupbalance', __design_bonustopupbalance);
 init_db('payment', __design_payment);
 //init_db("system",__desing_system); 
 init_db('user', __design_user);
-init_db('userbinary',__design_binary);
+init_db('userbinary', __design_binary);
 init_db('package', __design_package);
 
 init_master_user();
@@ -3307,7 +3860,7 @@ function init_default_master_user(js) {
     } else {
       var l = {
         log: ("error %s", JSON.stringify(err)),
-        logdate: convertTZ( new Date()),
+        logdate: convertTZ(new Date()),
         type: "error",
         gui: uuidV4()
       };
@@ -3405,7 +3958,7 @@ function init_default_package() {
             packagename: "The Best Friend",
             packagevalue: 1750000,
             isactive: true,
-            createddate: convertTZ( new Date()),
+            createddate: convertTZ(new Date()),
           });
           p.push({
             _id: "afb6420f-26e6-4fab-87fd-b1d7a26fdfd5",
@@ -3413,7 +3966,7 @@ function init_default_package() {
             packagename: "Close Friend",
             packagevalue: 350000,
             isactive: true,
-            createddate: convertTZ( new Date()),
+            createddate: convertTZ(new Date()),
           });
           p.push({
             _id: "f8d36fb4-575e-4aaa-bd85-099031077699",
@@ -3421,7 +3974,7 @@ function init_default_package() {
             packagename: "The Friend",
             packagevalue: 100000,
             isactive: true,
-            createddate: convertTZ( new Date()),
+            createddate: convertTZ(new Date()),
           });
 
           db.bulk({
@@ -3445,69 +3998,6 @@ function init_default_package() {
   });
 }
 
-function login(js) {
-  console.log("HI LOGIN");
-  //var js=client.data;
-  //console.log(js.client.data);
-  check_authentication(js.client.data).then(function (body) {
-    // console.log("body:"+JSON.stringify(body));
-    // console.log("client.data:"+JSON.stringify(client.data));
-    // console.log(body);
-    // encrypt password and compare here 
-    if (body.username == js.client.data.user.username && body.password == js.client.data.user.password) {
-      js.client.data = {};
-      js.client.username = body.username;
-      js.client.logintime = convertTZ(new Date());
-      js.client.logintoken = uuidV4();
-      js.client.isexist = true;
-      //set_client(client,resp);
-      js.client.lastaccess = convertTZ(new Date());
-      set_client(js);
-      //js.resp.send(js.client);
-    } else {
-      js.client.username = "";
-      js.client.logintime = "";
-      js.client.logintoken = "";
-      js.client.data = {};
-      js.client.lastaccess = convertTZ(new Date());
-      //set_client(js);
-      js.client.data.message = "NO this Username and password";
-      js.resp.send(js.client);
-    }
-  }).catch(function (err) {    
-    console.log(err);
-    js.client.data.message=err;
-    js.resp.send(js.client);
-  }).done();
-}
-
-function check_authentication(js) {
-  var deferred = Q.defer();
-  var db = create_db("user");
-  //console.log(js);
-  db.view(__design_view, "authentication", {
-    key: [js.user.username, js.user.password],
-    include_docs: true
-  }, function (err, res) {
-    if (err) {
-      deferred.reject(err);
-    } else {
-      if (!res.rows.length) {
-        deferred.resolve({
-          user: {
-            username: null,
-            password: null
-          }
-        });
-        //TEST when no record yet
-        //deferred.resolve({username:"nou",password:"123456"});
-      } else {
-        deferred.resolve(res.rows[0].value);
-      }
-    }
-  });
-  return deferred.promise;
-}
 
 
 function showBonusBalance(js) {
@@ -4036,7 +4526,7 @@ function register(register /*,needbalance*/ , resp) { //needbalance={main:0.5,bu
     // find user  ==>
     var registra = body;
     js.registra = registra;
-    findUserByUserName(js).then(function (body) {
+    findUserByUserName(registra).then(function (body) {
       // find if a new user is qualify for max phone number  ==>
       js.user.password = js.user.password.trim();
       if (body.length > 0)
@@ -4044,7 +4534,7 @@ function register(register /*,needbalance*/ , resp) { //needbalance={main:0.5,bu
       if (!validatePassword(js.user.password))
         throw Error('password must be length >=6');
       // FIND max number can use to register a new account ==>
-      findMaxPhoneNumber(js).then(function (body) {
+      findMaxPhoneNumber(js.user).then(function (body) {
 
         if (body.length > 3) throw new Error("this number could not be registered in more than 3 accounts");
         // find a parent
@@ -4176,7 +4666,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
           var __doc = {
             usergui: js.user.gui,
             username: js.user.username,
-            paymentdate: convertTZ( new Date()),
+            paymentdate: convertTZ(new Date()),
             paymentvalue: js.user.firstbalance,
             paymentby: __master_user.username,
             paidbygui: __master_user.gui,
@@ -4186,9 +4676,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
             status: "approved",
             attache: "",
             description: "",
-            receiveddate: convertTZ( new Date()),
-            certifieddate: convertTZ( new Date()),
-            approveddate: convertTZ( new Date()),
+            receiveddate: convertTZ(new Date()),
+            certifieddate: convertTZ(new Date()),
+            approveddate: convertTZ(new Date()),
             gui: uuidV4()
           };
           makePayment(__doc).then(function (body) {
@@ -4210,7 +4700,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
               var __doc = {
                 usergui: introductor.gui,
                 username: introductor.username,
-                paymentdate: convertTZ( new Date()),
+                paymentdate: convertTZ(new Date()),
                 paymentvalue: introductionvalue,
                 paymentby: __master_user.username,
                 paidbygui: __master_user.gui,
@@ -4220,9 +4710,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                 status: "approved",
                 attache: "",
                 description: "",
-                receiveddate: convertTZ( new Date()),
-                certifieddate: convertTZ( new Date()),
-                approveddate: convertTZ( new Date()),
+                receiveddate: convertTZ(new Date()),
+                certifieddate: convertTZ(new Date()),
+                approveddate: convertTZ(new Date()),
                 gui: uuidV4()
               };
               makePayment(__doc);
@@ -4245,7 +4735,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                 var __doc = {
                   usergui: js.topuser.gui,
                   username: js.topuser.username,
-                  paymentdate: convertTZ( new Date()),
+                  paymentdate: convertTZ(new Date()),
                   paymentvalue: fee,
                   paymentby: __master_user.username,
                   paidbygui: __master_user.gui,
@@ -4255,9 +4745,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                   status: "approved",
                   attache: "",
                   description: "",
-                  receiveddate: convertTZ( new Date()),
-                  certifieddate: convertTZ( new Date()),
-                  approveddate: convertTZ( new Date()),
+                  receiveddate: convertTZ(new Date()),
+                  certifieddate: convertTZ(new Date()),
+                  approveddate: convertTZ(new Date()),
                   gui: uuidV4()
                 };
                 makePayment(__doc);
@@ -4306,7 +4796,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                           var __doc = {
                             usergui: js.topuser.gui,
                             username: js.topuser.username,
-                            paymentdate: convertTZ( new Date()),
+                            paymentdate: convertTZ(new Date()),
                             paymentvalue: theRestValue,
                             paymentby: __master_user.username,
                             paidbygui: __master_user.gui,
@@ -4316,9 +4806,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                             status: "approved",
                             payreason: "system rest",
                             description: "",
-                            receiveddate: convertTZ( new Date()),
-                            certifieddate: convertTZ( new Date()),
-                            approveddate: convertTZ( new Date()),
+                            receiveddate: convertTZ(new Date()),
+                            certifieddate: convertTZ(new Date()),
+                            approveddate: convertTZ(new Date()),
                             gui: uuidV4()
                           };
                           makePayment(__doc);
@@ -4361,7 +4851,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                   var __doc = {
                                     usergui: js.topuser.gui,
                                     username: js.topuser.username,
-                                    paymentdate: convertTZ( new Date()),
+                                    paymentdate: convertTZ(new Date()),
                                     paymentvalue: averageValue,
                                     paymentby: __master_user.username,
                                     paidbygui: __master_user.gui,
@@ -4371,9 +4861,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                     targetuser: js.topuser.username,
                                     status: "approved",
                                     description: "",
-                                    receiveddate: convertTZ( new Date()),
-                                    certifieddate:convertTZ( new Date()),
-                                    approveddate: convertTZ( new Date()),
+                                    receiveddate: convertTZ(new Date()),
+                                    certifieddate: convertTZ(new Date()),
+                                    approveddate: convertTZ(new Date()),
                                     gui: uuidV4()
                                   };
                                   makePayment(__doc);
@@ -4391,7 +4881,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                       var __doc = {
                                         usergui: qp[index].gui,
                                         username: qp[index].username,
-                                        paymentdate: convertTZ( new Date()),
+                                        paymentdate: convertTZ(new Date()),
                                         paymentvalue: 0,
                                         paymentby: __master_user.username,
                                         paidbygui: __master_user.gui,
@@ -4401,9 +4891,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                         targetuser: qp[index].username,
                                         status: "approved",
                                         description: "",
-                                        receiveddate: convertTZ( new Date()),
-                                        certifieddate: convertTZ( new Date()),
-                                        approveddate: convertTZ( new Date()),
+                                        receiveddate: convertTZ(new Date()),
+                                        certifieddate: convertTZ(new Date()),
+                                        approveddate: convertTZ(new Date()),
                                         gui: uuidV4()
                                       };
                                       makePayment(__doc);
@@ -4434,7 +4924,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                   var __doc = {
                                     usergui: js.topuser.gui,
                                     username: js.topuser.username,
-                                    paymentdate: convertTZ( new Date()),
+                                    paymentdate: convertTZ(new Date()),
                                     paymentvalue: averageValue2,
                                     paymentby: __master_user.username,
                                     paidbygui: __master_user.gui,
@@ -4444,9 +4934,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                     targetuser: js.topuser.username,
                                     status: "approved",
                                     description: "",
-                                    receiveddate: convertTZ( new Date()),
-                                    certifieddate: convertTZ( new Date()),
-                                    approveddate: convertTZ( new Date()),
+                                    receiveddate: convertTZ(new Date()),
+                                    certifieddate: convertTZ(new Date()),
+                                    approveddate: convertTZ(new Date()),
                                     gui: uuidV4()
                                   };
                                   makePayment(__doc);
@@ -4464,7 +4954,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                       var __doc = {
                                         usergui: qp[index].gui,
                                         username: qp[index].username,
-                                        paymentdate: convertTZ( new Date()),
+                                        paymentdate: convertTZ(new Date()),
                                         paymentvalue: js.balance,
                                         paymentby: __master_user.username,
                                         paidbygui: __master_user.gui,
@@ -4474,9 +4964,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                         targetuser: qp[index].username,
                                         status: "approved",
                                         description: "",
-                                        receiveddate: convertTZ( new Date()),
-                                        certifieddate: convertTZ( new Date()),
-                                        approveddate: convertTZ( new Date()),
+                                        receiveddate: convertTZ(new Date()),
+                                        certifieddate: convertTZ(new Date()),
+                                        approveddate: convertTZ(new Date()),
                                         gui: uuidV4()
                                       };
                                       makePayment(__doc);
@@ -4505,7 +4995,7 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                   var __doc = {
                                     usergui: qp[index].gui,
                                     username: qp[index].username,
-                                    paymentdate: convertTZ( new Date()),
+                                    paymentdate: convertTZ(new Date()),
                                     paymentvalue: js.balance,
                                     paymentby: __master_user.username,
                                     paidbygui: __master_user.gui,
@@ -4515,9 +5005,9 @@ function completeRegistration(js, parent, package, introductor, client, isfree, 
                                     targetuser: qp[index].username,
                                     status: "approved",
                                     description: "",
-                                    receiveddate: convertTZ( new Date()),
-                                    certifieddate: convertTZ( new Date()),
-                                    approveddate: convertTZ( new Date()),
+                                    receiveddate: convertTZ(new Date()),
+                                    certifieddate: convertTZ(new Date()),
+                                    approveddate: convertTZ(new Date()),
                                     gui: uuidV4()
                                   };
                                   makePayment(__doc);
@@ -4583,7 +5073,7 @@ function deductBalanceForRegister(js) {
       var __doc = {
         usergui: js.registra.gui,
         username: js.registra.username,
-        paymentdate: convertTZ( new Date()),
+        paymentdate: convertTZ(new Date()),
         paymentvalue: js.balance.diffbalance,
         paymentby: __master_user.username,
         paidbygui: __master_user.gui,
@@ -4593,9 +5083,9 @@ function deductBalanceForRegister(js) {
         targetuser: js.registra.username,
         status: "approved",
         description: "",
-        receiveddate: convertTZ( new Date()),
-        certifieddate: convertTZ( new Date()),
-        approveddate: convertTZ( new Date()),
+        receiveddate: convertTZ(new Date()),
+        certifieddate: convertTZ(new Date()),
+        approveddate: convertTZ(new Date()),
         gui: uuidV4()
       };
       makePayment(__doc);
@@ -4605,11 +5095,11 @@ function deductBalanceForRegister(js) {
   });
 }
 
-function findUserByUserName(js) {
+function findUserByUserName(user) {
   var deferred = Q.defer();
   var db = create_db('user');
   db.view(__design_view, "findByUserName", {
-    key: js.user.username,
+    key: user.username,
     include_docs: true
   }, function (err, res) {
     if (err) {
@@ -4629,10 +5119,10 @@ function validatePassword(p) {
   return false;
 }
 
-function findMaxPhoneNumber(js) {
+function findMaxPhoneNumber(user) {
   var deferred = Q.defer();
   js.db.view(__design_view, "findByPhone", {
-    key: js.user.phone1,
+    key: user.phone1,
     include_docs: true
   }, function (err, res) {
     if (err) {
@@ -4789,81 +5279,8 @@ function findByUserGui(js) {
   });
   return deferred.promise;
 }
-/** */
-function showPackages(js) {
-  if (__default_package) {
-    js.resp.send(__default_package);
-  } else {
-    js.db = create_db('package')
-    getPackage().then(function (body) {
-      if (body) {
-        js.client.data.package = body;
-        js.resp.send(js.client);
-      }
-    }).catch(function (err) {
-      js.client.data.message = err;
-      js.resp.send(js.client);;
-    });
-  }
 
 
-}
-
-function getPackage() {
-  var deferred = Q.defer();
-  var db = create_db('package');
-  db.view(__design_view, "findAll", {
-    include_docs: true,
-  }, function (err, res) {
-    if (err)
-      deferred.reject(err);
-    else {
-      var arr = [];
-      if (res.rows.length) {
-        for (var index = 0; index < res.rows.length; index++) {
-          arr.push(res.rows[index].value);
-        }
-      }
-      deferred.resolve(arr);
-    }
-  });
-  return deferred.promise;
-}
-
-function showPackageDetailsByUser(js) {
-  getPackageDetailsByUser(js.client.data.user).then(function (body) {
-    if (body) {
-      js.client.data.package = body;
-      js.resp.send(js.client);
-    }
-  }).catch(function (err) {
-    js.client.data.message = err;
-    js.resp.send(js.client);;
-  });
-}
-
-function getPackageDetailsByUser(user) {
-  var deferred = Q.defer();
-  var db = create_db('packagedetails');
-  db.view(__design_view, "findByUsername", {
-    key: user.username,
-    include_docs: true,
-    descending: true
-  }, function (err, res) {
-    if (err)
-      deferred.reject(err);
-    else {
-      var arr = [];
-      if (res.rows.length) {
-        for (var index = 0; index < res.rows.length; index++) {
-          arr.push(res.rows[index].value);
-        }
-      }
-      deferred.resolve(arr);
-    }
-  });
-  return deferred.promise;
-}
 
 
 
@@ -5676,7 +6093,7 @@ function showOperatorLogCenterBalanceOnline(sd, ed) {
   }).catch(function (err) {
     var l = {
       log: ("error %s", JSON.stringify(err)),
-      logdate: convertTZ( new Date()),
+      logdate: convertTZ(new Date()),
       type: "error",
       gui: uuidV4()
     };
@@ -5703,7 +6120,7 @@ function operatorCenterBalance() { // record operator centerbalance 's balance
   }).catch(function (err) {
     var l = {
       log: ("error %s", JSON.stringify(err)),
-      logdate: convertTZ( new Date()),
+      logdate: convertTZ(new Date()),
       type: "error",
       gui: uuidV4()
     };
@@ -5715,9 +6132,9 @@ function operatorCenterBalance() { // record operator centerbalance 's balance
 
 function operatorLogCenterBalance() { // record operator query details by 15 minutes
   var deferred = Q.defer();
-  var sd = convertTZ( new Date());
+  var sd = convertTZ(new Date());
   sd = sd.getTime() - (15 * 1000); //run every 15 minutes
-  var ed = convertTZ( new Date());
+  var ed = convertTZ(new Date());
   var db = create_db('operatorlogcenterbalance');
   ltc.queryDetailsLTC(new Date(sd).toISOString(), ed.toISOString()).then(function (body) {
     var o = body;
@@ -5733,7 +6150,7 @@ function operatorLogCenterBalance() { // record operator query details by 15 min
   }).catch(function (err) {
     var l = {
       log: ("error %s", JSON.stringify(err)),
-      logdate: convertTZ( new Date()),
+      logdate: convertTZ(new Date()),
       type: "error",
       gui: uuidV4()
     };
@@ -5952,7 +6369,7 @@ function processTopUp(js) {
                                     var __doc = {
                                       usergui: __master_user.gui,
                                       username: __master_user.username,
-                                      paymentdate: convertTZ( new Date()),
+                                      paymentdate: convertTZ(new Date()),
                                       paymentvalue: t.diffbalance,
                                       paymentby: t.username,
                                       paidbygui: t.gui,
@@ -5962,9 +6379,9 @@ function processTopUp(js) {
                                       targetuser: __master_user.username,
                                       status: "approved",
                                       description: "",
-                                      receiveddate: convertTZ( new Date()), //
-                                      certifieddate:convertTZ( new Date()), //
-                                      approveddate: convertTZ( new Date()), //
+                                      receiveddate: convertTZ(new Date()), //
+                                      certifieddate: convertTZ(new Date()), //
+                                      approveddate: convertTZ(new Date()), //
                                       gui: uuidV4()
                                     };
                                     makePayment(__doc);
@@ -6353,118 +6770,12 @@ function showBonusTopupBalanceByYear(js) {
     }
   });
 }
-// - ຂໍ້ມູນຜູ້ໃຊ້
-function showUserInfo(js) {
-  var user = {
-    username: js.client.username
-  };
-  viewUser(user).then(function (body) {
-    if (body) {
-      js.client.data.message = 'OK';
-      js.client.data.user = body;
-      js.client.data.user.password = "";
-      js.client.data.user._rev = '';
-      js.resp.send(js.client);
-    }
-  }).catch(function (err) {
-    js.client.data.message = JSON.stringify(err);
-    js.resp.send(js.client);
-  }).done();
-}
 
-function viewUser(user) {
-  var deferred = Q.defer();
-  db = create_db("user");
-  //console.log("here view user");
-  db.view(__design_view, "findByUserName", {
-      key: user.username
-    },
-    function (err, res) {
-      if (err) {
-        var l = {
-          log: ("error %s", JSON.stringify(err)),
-          logdate: convertTZ( new Date()),
-          type: "error",
-          gui: uuidV4()
-        };
-        logging(l);
-        deferred.reject(err);
-      } else {
-        var arr = [];
-        if (res.rows.length) {
-          arr.push(res.rows[0].value);
-        }
-        deferred.resolve(arr[0]);
-      }
-    });
-  return deferred.promise;
-}
 
-function updateUser(user) {
-  var deferred = Q.defer();
-  db = create_db("user");
-  db.insert(user, user.gui, function (err, res) {
-    if (err) {
-      deferred.reject(err);
-    } else {
-      if (res.rows.length) {
-        var l = {
-          log: ("update user %s was completed", user.username),
-          logdate: convertTZ( new Date()) ,
-          type: "info",
-          gui: uuidV4()
-        };
-        logging(l);
-        deferred.resolve({
-          message: ("update user %s was completed", user.username)
-        });
-      } else {
-        var l = {
-          log: ("update user %s was not completed", user.username),
-          logdate: convertTZ( new Date()),
-          type: "info",
-          gui: uuidV4()
-        };
-        logging(l);
-        deferred.resolve({
-          message: ("update user %s was not completed", user.username)
-        });
-      }
-    }
-  });
-  return deferred.promise;
-}
 
-function checkRegisterAvailableUser(js) { // client.data.user.username
-  var obj = {};
-  obj.user = js.client.data.user;
-  findUserByUserName(obj).then(function (body) {
-    if (body.length > 0) {
-      js.client.data.message = "exist user";
-    } else
-      js.client.data.message = "OK";
-  }).catch(function (err) {
-    js.client.data.message = err;
-    // js.resp.send(js.client);
-  }).done(function () {
-    js.resp.send(js.client);
-  });
-}
 
-function checkRegisterMaxphone(js) {
-  findMaxPhoneNumber(obj).then(function (body) {
-    if (body.length > 3) {
-      js.client.data.message = ", could not use this phone number";
-    } else {
-      js.client.data.message = "OK";
-    }
-  }).catch(function (err) {
-    js.client.data.message = err;
-    //    js.resp.send(js.client);
-  }).done(function () {
-    js.resp.send(js.client);
-  });
-}
+
+
 
 function checkRegisterPassword(js) {
   if (!validatePassword(js.client.data.user.password)) {

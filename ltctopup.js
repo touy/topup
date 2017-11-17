@@ -60,7 +60,7 @@ module.exports = function () {
             soap.createClient(url, function(err, client) {
                 client.Topup(args, function(err, result) {
                     console.log(result);
-                    deffered.resolve(result);
+                    deferred.resolve(result);
                 });
             });
         }).catch(function(err){
@@ -106,6 +106,7 @@ module.exports = function () {
             var args = {message:message,header:header,msisdn:phone,user_id:ltcUser,key:body};
             soap.createClient(url, function(err, client) {
                 client.SendSMS (args, function(err, result) {
+                    deferred.resolve(result);
                     console.log(result);
                 });
             });

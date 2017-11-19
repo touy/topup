@@ -1998,26 +1998,30 @@ function payFirstBalance(js) {
               makePayment(p).then(function(res){                
                 js.client.data.message = "OK Pay first balance completely ";
                 js.resp.send(js.client);
-              }).catch(function(err){                
-                js.client.data.message = err;
-                js.resp.send(js.client);
-              }).done();
-              
-            }).catch(function(err){
-              js.client.data.message = err;
-              js.resp.send(js.client);
-            }).done();            
+              });              
+            });           
           }
         });
-      }).catch(function (err) {
-        js.client.data.message = err;
-        js.resp.send(js.client);
-      }).done();
+      });
     } else {
+      var l={
+        log:  'username not found!',
+        logdate: convertTZ(new Date()),
+        type:"error topup "+ u.phone1,
+        gui: uuidV4(),
+      }
+      logging(l);
       js.client.data.message = 'username not found!';
       js.resp.send(js.client);
     }
   }).catch(function(err){
+    var l={
+      log: err,
+      logdate: convertTZ(new Date()),
+      type:"erro rtopup "+ u.phone1,
+      gui: uuidV4(),
+    }
+    logging(l);
     js.client.data.message=err;
     js.resp.send(js.client);
   }).done();        
@@ -2063,8 +2067,11 @@ function updateTopupBalance(js) {
   });
   return deferred.promise;
 }
-
-app.post('/pay_offer', function (req, res) { //client
+// PAY OFFER 
+app.post('/pay_offer', function (req, res) { 
+  //client
+  // return client 
+  // client.message='OK'
   var js = {};
   js.client = req.body;
   js.resp = res;

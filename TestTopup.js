@@ -292,7 +292,6 @@ function change_password(js) {
       js.client.data.message = body;
       js.resp.send(js.client);
     }).catch(function (err) {
-      if (err) {
         var l={
           log: err,
           logdate: convertTZ(new Date()),
@@ -301,8 +300,7 @@ function change_password(js) {
         }
         logging(l);
         js.client.data.message = err;
-        js.resp.send(js.client);
-      }
+        js.resp.send(js.client);      
     });
   } else {
     var l={
@@ -1368,27 +1366,36 @@ function showMemberListByParent(js) {
     //var indexes=findIndexOfMembers(res.index,19-res.memberlevel);// max member should be within 20  , 2^19;
     if (!res.length) throw new Error('User not found');
     res = res[0];
-    getMemberListByParent(res.username).then(function (res) {
-      js.client.data.user = res;
-      js.client.data.message = 'OK';
-      js.resp.send(js.client);
-    }).catch(function (err) {
-      js.client.data.message = err;
-      js.resp.send(js.client);
-    }).done();
+    getMemberListByParent(res.username,js.client.data.page,js.client.data.maxpage).then(
+      function (res) {
+        getMemberCount(res).then(function(count){
+          js.client.data.user = {arr:res,count:count};
+          js.client.data.message = 'OK';
+          js.resp.send(js.client);
+        });
+    });
   }).catch(function (err) {
+    var l={
+      log: err,
+      logdate: convertTZ(new Date()),
+      type: "error show member list by parent"+js.client.user.username,
+      gui: uuidV4(),
+    }
+    logging(l);
     js.client.data.message = err;
     js.resp.send(js.client);
   }).done();
 }
 
-function getMemberListByParent(username) {
+function getMemberListByParent(username,page,maxpage) {
   var deferred = Q.defer();
   var db = create_db('user');
   db.view(__design_view, 'findMembersByUsername', {
     key: username,
     include_docs: true,
-    decending: true
+    decending: true,
+    skip:page,
+    limit:maxpage
   }, function (err, res) {
     if (err) deferred.reject(err);
     else {
@@ -1711,10 +1718,7 @@ function showMainBalanceByUser(js) {
         arr: res,
         count: count
       });
-    }).catch(function (err) {
-      js.client.data.message = err;
-      js.resp.send(js.client);
-    }).done();
+    });
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
@@ -1788,10 +1792,7 @@ function checkMainBalanceByUser(js) {
         arr: res,
         count: count
       });
-    }).catch(function (err) {
-      js.client.data.message = err;
-      js.resp.send(js.client);
-    }).done();
+    });
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
@@ -1897,12 +1898,16 @@ function upgradePackage(js) {
     if (res.length) {
       res = res[0];
       updatePackageDetails(res,js.client.data.package).then(function (res) {
-        js.client.data.message = res;
+        var l={
+          log: "upgraded completely",
+          logdate: convertTZ(new Date()),
+          type: "upgrade package "+js.client.data.user.username,
+          gui: uuidV4(),
+        }
+        logging(l);
+        js.client.data.message ="OK upgraded completely";
         js.resp.send(js.client);
-      }).catch(function (err) {
-        js.client.data.message = err;
-        js.resp.send(js.client);
-      }).done();
+      });
     }
   }).catch(function (err) {
     js.client.data.message = err;
@@ -1941,12 +1946,8 @@ app.post('/pay_first_balance', function (req, res) {
 // }
 function payFirstBalance(js) {
   viewUser(js.client).then(function(res){
-    var arr=[];
-    if(res.rows.length){
-      for(var i=0;i<res.rows.length;i++){
-        arr.push(res.rows[i].value)
-      }
-      var u=arr[0];
+    if(res.length){
+      var u=res[0];
       js.client.data.user = u;
       js.client.data.topupbalance = {
         username: u.username,
@@ -1959,19 +1960,11 @@ function payFirstBalance(js) {
       };
       updateTopupBalance(js).then(function (body) {
         u.firstbalance = 0;
-        db.insert(u, u.gui, function (err, res) {
-          if (err) {
-            js.client.data.message = err;
-            js.resp.send(js.client);
-          } else {
-            LTCSERVICE.topupLTC(u.phone1, u.firstbalance).then(function(res){
-              var arr=[];
-              if(res.rows.length){
-              for(var i=0;i<res.rows.length;i++)
-                arr.push(res.rows[i].value);
-              }
+        updateUser(u).then(function(res){
+          LTCSERVICE.topupLTC(u.phone1, u.firstbalance).then(function(res){
+            logTelecomTopup(res).then(function(res){
               var l={
-                log: arr,
+                log: res,
                 logdate: convertTZ(new Date()),
                 type:"topup "+ u.phone1,
                 gui: uuidV4(),
@@ -1998,10 +1991,10 @@ function payFirstBalance(js) {
               makePayment(p).then(function(res){                
                 js.client.data.message = "OK Pay first balance completely ";
                 js.resp.send(js.client);
-              });              
-            });           
-          }
-        });
+              });  
+            });                          
+          }); 
+        });        
       });
     } else {
       var l={
@@ -2018,13 +2011,13 @@ function payFirstBalance(js) {
     var l={
       log: err,
       logdate: convertTZ(new Date()),
-      type:"erro rtopup "+ u.phone1,
+      type:"error pay firstbalance "+ js.client.username,
       gui: uuidV4(),
     }
     logging(l);
     js.client.data.message=err;
     js.resp.send(js.client);
-  }).done();        
+  });     
 }
 function updateTopupBalance(js) {
   var deferred = Q.defer();
@@ -2080,84 +2073,381 @@ app.post('/pay_offer', function (req, res) {
 
 function payOffer(js) {
   var db = create_db('user');
-  db.view(__design_view, 'findByUsername', {
-    key: js.client.username
-  }, function (err, res) {
-    if (err) {
-      js.client.data.message = err;
-      js.resp.send(js.client);;
-    } else {
-      if (res.rows.length) {
-        var u = res.rows[0].value;
-        js.client.data.user = u;
-        js.client.data.topupbalance = {
-          username: u.username,
-          usergui: u.gui,
-          gui: uuidV4(),
-          balance: 0,
-          updated: convertTZ(new Date()),
-          diffbalance: u.offeredbonus,
-          type: "topup offered bonus"
-        };
-        updateTopupBalance(js).then(function (body) {
-          u.offeredbonus = 0;
-          db.insert(u, u.gui, function (err, res) {
-            if (err) {
-              js.client.data.message = err;
-              js.resp.send(js.client);;
-            } else {
-              LTCSERVICE.topupLTC(u.phone1, u.offeredbonus);
-              js.client.data.message = "Pay offer bonus completely";
-              js.resp.send(js.client);
-            }
-          });
-        }).catch(function (err) {
-          js.client.data.message = err;
-          js.resp.send(js.client);;
-        }).done();
-      } else {
-        js.client.data.message = 'username not found!';
-        js.resp.send(js.client);
+  viewUser(js.client).then(function(res){  
+    if(res.length){
+      var u = res[0];
+      js.client.data.user = u;
+      js.client.data.topupbalance = {
+        username: u.username,
+        usergui: u.gui,
+        gui: uuidV4(),
+        balance: 0,
+        updated: convertTZ(new Date()),
+        diffbalance: u.offeredbonus,
+        type: "topup offered bonus"
+      };
+      updateTopupBalance(js).then(function (body) {
+        u.offeredbonus = 0;
+        updateUser(u).then(function(res){
+          LTCSERVICE.topupLTC(u.phone1, u.offeredbonus).then(function(res){
+            logTelecomTopup(res).then(function(res){
+              var l={
+                log: res,
+                logdate: convertTZ(new Date()),
+                type:"topup "+ u.phone1,
+                gui: uuidV4(),
+              }
+              logging(l);    
+              var p = {
+                usergui: __master_user.gui,
+                username: __master_user.username,
+                paymentdate: convertTZ(new Date()),
+                paymentvalue: u.offeredbonus,
+                paymentby: u.username,
+                paidbygui: u.gui,
+                payreason: "topup offered bonus", 
+                attache: "",
+                bankinfo: '',
+                targetuser: __master_user.username,
+                status: "approved",
+                description: "",
+                receiveddate: convertTZ(new Date()), //
+                certifieddate: convertTZ(new Date()), //
+                approveddate: convertTZ(new Date()), //
+                gui: uuidV4()
+              };              
+              makePayment(p).then(function(res){                
+                js.client.data.message = "OK Pay offer bonus completely";
+                js.resp.send(js.client);
+              });                            
+            });              
+          });  
+        });
+      });
+    } else {      
+      var l={
+        log: 'Error username not found!',
+        logdate: convertTZ(new Date()),
+        type:"error topup "+ u.phone1,
+        gui: uuidV4(),
       }
+      logging(l);  
+      js.client.data.message = 'Error username not found!';
+      js.resp.send(js.client);
     }
-  });
+  }).catch(function(err){
+    var l={
+      log: err,
+      logdate: convertTZ(new Date()),
+      type:"error payoffer "+ js.client.username,
+      gui: uuidV4(),
+    }
+    logging(l); 
+    js.client.data.message = err;
+    js.resp.send(js.client);
+  });      
 }
 
 
 
 // for admin only
-app.post('/show_offer_list', function (req, res) { //?
+// show offer list ,make target user list and exception list
+app.post('/show_offer_list', function (req, res) { 
+  // client
+  //return client
+  //client.message='OK'
+  //client.data.user={arr:{},count:0};
   var js = {};
   js.client = req.body;
   js.resp = res;
   showOfferList(js);
 });
+function showOfferList(js){
+  js.client.data.user=__master_user;
+  showMemberListByParent(js).then(function(res){
+    js.client.data.user=res;//{arr:{},count:0}
+    js.client.data.message = "OK";
+    js.resp.send(js.client);
+  }).catch(function(err){
+    var l={
+      log: err,
+      logdate: convertTZ(new Date()),
+      type:"error show offer list "+ js.client.username,
+      gui: uuidV4(),
+    }
+    logging(l); 
+    js.client.data.message = err;
+    js.resp.send(js.client);
+  });
+}
+
+
 // for admin only
-app.post('/show_bonus_topup_list', function (req, res) { //?
+// show bonus topup list , member who has top up and showed top up value in that month
+app.post('/show_bonus_topup_list', function (req, res) { 
+  //client
+  //client.data.year , client.data.year ,client.data.page , client.data.maxpage
+  //return client
+  //client.data.bonustopuplist={arr:{},count:0}
+  // client.data.message='OK'
   var js = {};
   js.client = req.body;
   js.resp = res;
   showBonusTopUpList(js);
 });
+function countTopupBalanceSumByAllUser(js){
+  var deferred=Q.defer();
+  var db = create_db('topupbalancesum');
+  db.view(__design_view, "countByYearMonth", {
+      key: [js.client.data.year, js.client.data.month],
+      include_docs: true,
+    },
+    function (err, res) {
+      if (err) {
+        deferred.reject(err);
+      } else {
+        var arr = [];
+        if (res.rows.length)
+          for (var index = 0; index < res.rows.length; index++) {
+            var element = res.rows[index].value;            
+            arr.push(element);
+          }
+        deferred.resolve(arr[0]);
+      }
+    });
+    return deferred.promise;
+}
+function showTopupBalanceSumByAllUser(js) {
+  var deferred=Q.defer();
+  var db = create_db('topupbalancesum');
+  countTopupBalanceSumByAllUser(js).then(function(res){
+    var count=res;
+    db.view(__design_view, "findByYearMonth", {
+      key: [js.client.data.year, js.client.data.month],
+      include_docs: true,
+      skip:js.client.data.page,
+      limit:js.client.data.maxpage
+    },
+    function (err, res) {
+      if (err) {
+        deferred.reject(err);
+      } else {
+        var arr = [];
+        if (res.rows.length)
+          for (var index = 0; index < res.rows.length; index++) {
+            var element = res.rows[index].value;
+            element._rev = "";
+            arr.push(element);
+          }
+        deferred.resolve({arr:arr,count:count});
+      }
+    });
+  });
 
-
-
+  return deferred.promise;
+}
+function getmemberBonusTopUp(js){
+  var deferred=Q.defer();
+  showTopupBalanceSumByAllUser(js).then(function(res){
+    deferred.resolve(res);
+  }).catch(function(err){
+    deferred.reject(err);
+  });
+  return deferred.promise;
+}
+function showBonusTopUpList(js){
+  js.client.data.user=__master_user;
+  getmemberBonusTopUp(js).then(function(res){
+    js.client.data.bonustopuplist=res;//{arr:{},count:0,}
+    js.client.data.message = "OK";
+    js.resp.send(js.client);
+  }).catch(function(err){
+    var l={
+      log: err,
+      logdate: convertTZ(new Date()),
+      type:"error show bonus topup List "+ js.client.username,
+      gui: uuidV4(),
+    }
+    logging(l); 
+    js.client.data.message = err;
+    js.resp.send(js.client);
+  });
+}
 
 //admin only
-app.post('/send_offer', function (req, res) { //js.client.data.user 
+// send offer to all
+app.post('/send_offer', function (req, res) { 
+  //js.client.data.targetuser=[{username:''}] max 1
+  //client.data.targetuser.offeredbonus=0
+  //return client
+  //client.data.message='OK';
   var js = {};
   js.client = req.body;
   js.resp = res;
   sendOffer(js);
 });
+function sendOffer(js) {
+  if(js.client.data.targetuser.length>0&&js.client.data.targetuser.length<1){
+    var db = create_db('user');
+    for (var index = 0; index < js.client.data.targetuser.length; index++) {
+      viewUser(s.client.data.targetuser[index]).then(function(res){
+        if (res.length) {
+          var u = res[0].value;
+          u.offeredbonus = js.client.data.user.offeredbonus;
+          updateUser(u).then(function(res){
+            var __doc = {
+              usergui: u.gui,
+              username: u.username,
+              paymentdate: convertTZ(new Date()),
+              paymentvalue: u.offeredbonus,
+              paymentby: __master_user.username,
+              paidbygui: __master_user.gui,
+              payreason: "system offer", // cashing , request confirm, 
+              attache: "",
+              bankinfo:'',
+              targetuser: u.username,
+              status: "approved",
+              description: "",
+              receiveddate: convertTZ(new Date()), //
+              certifieddate: convertTZ(new Date()), //
+              approveddate: convertTZ(new Date()), //
+              gui: uuidV4()
+            };
+            makePayment(__doc).then(function (body) {
+              js.client.data.message = "OK Send offer bonus completely";
+              js.resp.send(js.client);
+            });
+          });              
+        } else {
+          var l={
+            log: "user not found",
+            logdate: convertTZ(new Date()),
+            type:"error send offer "+ js.client.username,
+            gui: uuidV4(),
+          }
+          logging(l); 
+          js.client.data.message = 'error username not found!';
+          js.resp.send(js.client);
+        }
+      }).catch(function (err) {
+        var l={
+          log: err,
+          logdate: convertTZ(new Date()),
+          type:"error send offer bonus "+ js.client.username,
+          gui: uuidV4(),
+        }
+        logging(l); 
+        js.client.data.message = err;
+        js.resp.send(js.client);;
+      });
+    }       
+  }
+  else{
+    var l={
+      log: 'list is not within 50',
+      logdate: convertTZ(new Date()),
+      type:"error send offer  "+ js.client.username,
+      gui: uuidV4(),
+    }
+    logging(l); 
+    js.client.data.message = 'error the list could not be more than 50 and must be higher than 0';
+    js.resp.send(js.client);
+  }
+}
+
 //admin only
-app.post('/send_bonus_topup', function (req, res) { //js.client.data.user , js.client.data.bonustopupbalance
+// send bonus topup
+app.post('/send_bonus_topup', function (req, res) { 
+  //client.data.user , 
+  //client.data.bonustopupbalance
+  //return client
+  //client.message='OK'
   var js = {};
   js.client = req.body;
   js.resp = res;
-  sendBonusTopUpBalanceByUser(js);
+  sendBonusTopUpBalance(js);
 });
 
+
+// db = create_db("topupbalancesum");
+// db.view(__design_view, "findByUsernameAndYearMonth", {
+//     key: [js.client.data.user.username, js.client.data.year, js.client.data.month]
+//   },
+//   function (err, res) {
+//     if (err) {
+//       js.client.data.message = err;
+//       js.resp.send(js.client);;
+//     } else if (res.rows.length) {
+//       var t = res.rows[0].value;
+//       t.type = "paidbonus";
+//       db.insert(t, t.gui, function (err, res) {
+//         if (err) {
+//           js.client.data.message = err;
+//           js.resp.send(js.client);;
+//         } else {
+//           js.client.data.message = "completed pay bonus topup balance by this user: " + u.username + "/" + js.client.data.bonustopupbalance.sumvalue;
+//           js.resp.send(js.client);
+//         }
+//       });
+//     } else {
+//       js.client.data.message = "could not find this bonus topup balance by this user";
+//       js.resp.send(js.client);
+//     }
+//   });
+function sendBonusTopUpBalance(js) {
+  viewUser(js.client.data.user).then(function(res){
+    if (res.length) {
+      var u = res[0];
+      //update userinfo
+      u.bonustopupbalance += js.client.data.bonustopupbalance;
+      updateUser(u).then(function(res){
+        var p = {
+          usergui: u.gui,
+          username: u.username,
+          paymentdate: convertTZ(new Date()),
+          paymentvalue: u.bonustopupbalance,
+          paymentby: __master_user.username,
+          paidbygui: __master_user.gui,
+          payreason: "topup offered bonus", 
+          attache: "",
+          bankinfo: '',
+          targetuser: u.username,
+          status: "approved",
+          description: "",
+          receiveddate: convertTZ(new Date()), //
+          certifieddate: convertTZ(new Date()), //
+          approveddate: convertTZ(new Date()), //
+          gui: uuidV4()
+        };              
+        makePayment(p).then(function(res){                
+          js.client.data.message='OK'
+          js.resp.send(js.client);
+        });
+      });
+     } 
+     else {
+      var l={
+        log: err,
+        logdate: convertTZ(new Date()),
+        type:"error could not find this user"+ js.client.username,
+        gui: uuidV4(),
+      }
+      logging(l); 
+      js.client.data.message = "could not find this user";
+      js.resp.send(js.client);
+    }
+  }).catch(function(err){
+    var l={
+      log: err,
+      logdate: convertTZ(new Date()),
+      type:"error send bonus topup "+ js.client.username,
+      gui: uuidV4(),
+    }
+    logging(l); 
+    js.client.data.message = err;
+    js.resp.send(js.client);
+  });
+}
 function makePayment(p) {
   var deferred = Q.defer();
   var db = create_db('payment');
@@ -2170,59 +2460,14 @@ function makePayment(p) {
   return deferred.promise;
 }
 
-function sendOffer(js) {
-  var db = create_db('user');
-  db.view(__design_view, 'findByUsername', {
-    key: js.client.data.user.username
-  }, function (err, res) {
-    if (err) {
-      js.client.data.message = err;
-      js.resp.send(js.client);;
-    } else {
-      if (res.rows.length) {
-        var u = res.rows[0].value;
-        u.offeredbonus = js.client.data.user.offeredbonus;
-        db.insert(u, u.gui, function (err, res) {
-          if (err) {
-            js.client.data.message = err;
-            js.resp.send(js.client);;
-          } else {
-            var __doc = {
-              usergui: u.gui,
-              username: u.username,
-              paymentdate: convertTZ(new Date()),
-              paymentvalue: u.offeredbonus,
-              paymentby: __master_user.username,
-              paidbygui: __master_user.gui,
-              payreason: "system offer", // cashing , request confirm, 
-              attache: "",
-              bankinfo: js.client.data.payment.bankinfo,
-              targetuser: u.username,
-              status: "approved",
-              description: "",
-              receiveddate: convertTZ(new Date()), //
-              certifieddate: convertTZ(new Date()), //
-              approveddate: convertTZ(new Date()), //
-              gui: uuidV4()
-            };
-            makePayment(__doc).then(function (body) {
-              js.client.data.message = "Send offer bonus completely";
-              js.resp.send(js.client);
-            }).catch(function (err) {
-              js.client.data.message = err;
-              js.resp.send(js.client);;
-            }).done();
-          }
-        });
-      } else {
-        js.client.data.message = 'username not found!';
-        js.resp.send(js.client);
-      }
-    }
-  });
-}
 
-app.post('/bonus_to_main_balance', function (req, res) { //js.client , js.client.data.balance
+// USER
+// TRANSFER ALL BONUS TO MAIN BALANCE
+app.post('/bonus_to_main_balance', function (req, res) { 
+  //js.client , 
+  //return client
+  // client.message ='OK';
+  //
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -2278,62 +2523,84 @@ function updateMainBalance(user, balance) {
 }
 
 function bonusToMainBalance(js) {
-  var db = create_db('user');
-  db.view(__design_view, 'findByUsername', {
-    key: js.client.username
-  }, function (err, res) {
-    if (err) {
-      js.client.data.message = err;
-      js.resp.send(js.client);;
-    } else {
-      if (res.rows.length) {
-        var u = res.rows[0].value;
-        var __balance_doc = {
-          username: u.username,
-          usergui: u.gui,
-          gui: uuidV4(),
-          balance: 0,
-          updated: convertTZ(new Date()),
-          diffbalance: -js.client.data.balance.diffbalance,
-          type: "bonus to main"
-        };
-        findBonusBalanceByUsername(js.client, 0, 1).then(function (body) {
-          var bonusbalance = body[0];
-          if (u.balancevalue < js.client.data.balance.diffbalance) {
-            js.resp.send('not enough balance');
-            return;
+  viewUser(js.client).then(function(res){
+    if (res.length) {
+      var u = res[0];
+      var __balance_doc = {
+        username: u.username,
+        usergui: u.gui,
+        gui: uuidV4(),
+        balance: 0,
+        updated: convertTZ(new Date()),
+        diffbalance: -js.client.data.balance.diffbalance,
+        type: "bonus to main"
+      };
+      findBonusBalanceByUsername(js.client, 0, 1).then(function (body) {
+        var bonusbalance = body[0];
+        if (u.balancevalue < js.client.data.balance.diffbalance) {
+          var l={
+            log: 'error not enough bonus to main balance',
+            logdate: convertTZ(new Date()),
+            type:"error not enough bonus to main balance "+ js.client.username,
+            gui: uuidV4(),
           }
-          updateBonusBalance(u, __balance_doc).then(function (body) {
-            __balance_doc.diffbalance *= -1;
-            updateMainBalance(u, __balance_doc).then(function (body) {
-              u.balancevalue -= js.client.data.balance.diffbalance;
-              u.mainbalance += js.client.data.balance.diffbalance;
-              db.insert(u, u.gui, function (err, res) {
-                if (err) {
-                  js.client.data.message = err;
-                  js.resp.send(js.client);;
-                } else {
-                  js.client.data.message = "Send offer bonus completely";
-                  js.resp.send(js.client);
-                }
+          logging(l); 
+          return;
+        }
+        updateBonusBalance(u, __balance_doc).then(function (body) {
+          __balance_doc.diffbalance *= -1;
+          updateMainBalance(u, __balance_doc).then(function (body) {
+            u.balancevalue -= js.client.data.balance.diffbalance;
+            u.mainbalance += js.client.data.balance.diffbalance;
+            updateUser(u).then(function(res){
+              var p = {
+                usergui: u.gui,
+                username: u.username,
+                paymentdate: convertTZ(new Date()),
+                paymentvalue: u.bonustopupbalance,
+                paymentby: u.username,
+                paidbygui: u.gui,
+                payreason: "topup offered bonus", 
+                attache: "",
+                bankinfo: '',
+                targetuser: u.username,
+                status: "approved",
+                description: "",
+                receiveddate: convertTZ(new Date()), //
+                certifieddate: convertTZ(new Date()), //
+                approveddate: convertTZ(new Date()), //
+                gui: uuidV4()
+              };              
+              makePayment(p).then(function(res){                
+                js.client.data.message = "OK Bonus to main balance completely";
+                js.resp.send(js.client);
               });
-            }).catch(function (err) {
-              js.client.data.message = err;
-              js.resp.send(js.client);;
-            }).done();
-          }).catch(function (err) {
-            js.client.data.message = err;
-            js.resp.send(js.client);;
-          }).done();
-        }).catch(function (err) {
-          js.client.data.message = err;
-          js.resp.send(js.client);;
-        }).done();
-      } else {
-        js.client.data.message = 'username not found!';
-        js.resp.send(js.client);
+              
+            });
+          });
+        });
+      });
+    } else {
+      var l={
+        log: 'error bonus to main balance',
+        logdate: convertTZ(new Date()),
+        type:"error bonus to main balance "+ js.client.username,
+        gui: uuidV4(),
       }
+      logging(l); 
+      js.client.data.message = 'username not found!';
+      js.resp.send(js.client);
     }
+  }).catch(function(err){
+    var l={
+      log: err,
+      logdate: convertTZ(new Date()),
+      type:"error bonus to main balance "+ js.client.username,
+      gui: uuidV4(),
+    }
+    logging(l); 
+    js.client.data.message = err;
+    js.resp.send(js.client);
   });
 }
 // 17 Oct 2017
@@ -6208,9 +6475,9 @@ function getMemberCountByPackageYearMonth(user, package, year, month) {
         if (err)
           deferred.reject(err);
         else {
-          if (res.rows[0].value.packagevalue == package.packagevalue && user.ismember)
-            deferred.resolve(res.rows[0].value + 1);
-          else
+          // if (res.rows[0].value.packagevalue == package.packagevalue && user.ismember)
+          //   deferred.resolve(res.rows[0].value + 1);
+          // else
             deferred.resolve(res.rows[0].value);
         }
       });
@@ -6248,9 +6515,9 @@ function getMemberCountByPackage(user, package) {
         if (err)
           deferred.reject(err);
         else {
-          if (res.rows[0].value.packagevalue == package.packagevalue && user.ismember)
-            deferred.resolve(res.rows[0].value + 1);
-          else
+          // if (res.rows[0].value.packagevalue == package.packagevalue && user.ismember)
+          //   deferred.resolve(res.rows[0].value + 1);
+          // else
             deferred.resolve(res.rows[0].value);
         }
       });
@@ -6289,9 +6556,9 @@ function getMemberCount(user) {
         if (err)
           deferred.reject(err);
         else {
-          if (user.ismember)
-            deferred.resolve(res.rows[0].value + 1);
-          else
+          // if (user.ismember)
+          //   deferred.resolve(res.rows[0].value + 1);
+          // else
             deferred.resolve(res.rows[0].value);
         }
       });
@@ -6916,30 +7183,7 @@ function showTopupBalanceSumByUsername(js) {
     });
 }
 
-function showTopupBalanceSumByAllUser(js) {
-  var db = create_db('topupbalancesum');
-  db.view(__design_view, "findByYearMonth", {
-      key: [js.client.data.year, js.client.data.month],
-      include_docs: true
-    },
-    function (err, res) {
-      if (err) {
-        js.client.data.message = err;
-        js.resp.send(js.client);;
-      } else {
-        var arr = [];
-        if (res.rows.length)
-          for (var index = 0; index < res.rows.length; index++) {
-            var element = res.rows[index].value;
-            element._rev = "";
-            arr.push(element);
-          }
-        js.client.data.topupbalancesum = arr;
-        js.client.data.message = 'OK';
-        js.resp.send(js.client);
-      }
-    });
-}
+
 
 function showBonusTopupBalanceSumValueByUser(js) {
   var db = create_db("topupbalancesum");
@@ -6982,53 +7226,7 @@ function showBonusTopupBalanceSumValueByUser(js) {
   });
 }
 
-function sendBonusTopUpBalanceByUser(js) {
-  var db = create_db("user");
-  db.view(__design_view, "findByUsername", {
-    key: js.client.data.user.username
-  }, function (err, res) {
-    if (err) {
-      js.client.data.message = err;
-      js.resp.send(js.client);;
-    } else if (res.rows.length) {
-      var u = res.rows[0].value;
-      //update userinfo
-      u.bonustopupbalance += js.client.data.bonustopupbalance.sumvalue;
-      //process topup here
-      topupbalance(u.phone1, js.client.data.bonustopupbalance.sumvalue);
-      //update bonustopupbalancesum
-      db = create_db("topupbalancesum");
-      db.view(__design_view, "findByUsernameAndYearMonth", {
-          key: [js.client.data.user.username, js.client.data.year, js.client.data.month]
-        },
-        function (err, res) {
-          if (err) {
-            js.client.data.message = err;
-            js.resp.send(js.client);;
-          } else if (res.rows.length) {
-            var t = res.rows[0].value;
-            t.type = "paidbonus";
-            db.insert(t, t.gui, function (err, res) {
-              if (err) {
-                js.client.data.message = err;
-                js.resp.send(js.client);;
-              } else {
-                js.client.data.message = "completed pay bonus topup balance by this user: " + u.username + "/" + js.client.data.bonustopupbalance.sumvalue;
-                js.resp.send(js.client);
-              }
-            });
-          } else {
-            js.client.data.message = "could not find this bonus topup balance by this user";
-            js.resp.send(js.client);
-          }
-        });
 
-    } else {
-      js.client.data.message = "could not find this user";
-      js.resp.send(js.client);
-    }
-  });
-}
 
 function showBonusTopupBalanceValueAll(js) {
   var db = create_db("topupbalancesum");

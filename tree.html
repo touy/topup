@@ -333,10 +333,15 @@
                 c.data={};
                 c.data.user={};
                 c.data.user.username=p;
+                c.data.page=0;
+                c.maxpage=10000;
                 jsonPost(getHost()+'/get_member_list_by_parent_name',c,function(res){
-                    console.log('res');
-                    console.log(res);
+                    //console.log('res');
+                    //console.log(res);
+                    var count=res.data.user.count;
+                    res.data.user=res.data.user.arr;
                     res.data.user.sort(compareIndex);
+                    
                     if(res){
                         $("#memberlist").empty();
                         var str="<p>member List total: "+(res.data.user.length+1)+"</p>";

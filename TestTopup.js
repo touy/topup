@@ -1958,6 +1958,9 @@ function payFirstBalance(js) {
         diffbalance: u.firstbalance,
         type: "topup first balance"
       };
+      if(u.offeredbonus<5000){
+        throw new Error('Value must be more than 5000');
+      }
       updateTopupBalance(js).then(function (body) {
         u.firstbalance = 0;
         updateUser(u).then(function(res){
@@ -2103,8 +2106,7 @@ app.post('/pay_offer', function (req, res) {
   payOffer(js);
 });
 
-function payOffer(js) {
-  var db = create_db('user');
+function payOffer(js) {  
   viewUser(js.client).then(function(res){  
     if(res.length){
       var u = res[0];
@@ -2118,6 +2120,9 @@ function payOffer(js) {
         diffbalance: u.offeredbonus,
         type: "topup offered bonus"
       };
+      if(u.offeredbonus<5000){
+        throw new Error('Value must be more than 5000');
+      }
       updateTopupBalance(js).then(function (body) {
         u.offeredbonus = 0;
         updateUser(u).then(function(res){
@@ -2700,9 +2705,9 @@ function processTopUp(js) {
         var mb = [];
         mb.push(res.rows[0].value);
         // need to turn js.client.data.topupbalance.diffbalance to be minus value, before this function
-        if (js.client.data.topupbalance.diffbalance >= 0) {
+        if (js.client.data.topupbalance.diffbalance >= 0&&js.client.data.topupbalance.diffbalance<=-5000) {
           var l={
-            log: 'value to top up must be lower than 0',
+            log: 'value to top up must be lower than 0 and less than -5000',
             logdate: convertTZ(new Date()),
             type:"error topup  "+ js.client.username,
             gui: uuidV4(),

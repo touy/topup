@@ -2892,7 +2892,13 @@ function processTopUp(js) {
   });
 }
 
-app.post('/show_operator_failure_by_user', function (req, res) { //js.client.data.user,js.client.data.page, js.client.data.maxpage
+// show operator failure by user
+app.post('/show_operator_failure_by_user', function (req, res) { 
+  //js.client.data.user,
+  //js.client.data.page, js.client.data.maxpage
+  // return client
+  // client.data.message='OK';
+  // client.data.topupfailure={arr:{},count=0}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -2900,11 +2906,77 @@ app.post('/show_operator_failure_by_user', function (req, res) { //js.client.dat
     js.client.data.topupfailure = body;
     js.resp.send(js.client);
   }).catch(function (err) {
+    var l={
+      log: err,
+      logdate: convertTZ(new Date()),
+      type:"error show topup failure "+ js.client.username,
+      gui: uuidV4(),
+    }
+    logging(l); 
     js.client.data.message = err;
     js.resp.send(js.client);;
-  }).done();
+  });
 });
-app.post('/show_operator_failure', function (req, res) { //js.client.data.page, js.client.data.maxpage
+
+function countTopupFailureByUsername(js) {
+  var deferred = Q.defer();
+  db = create_db('topupfailure');
+  db.view(__design_view, 'findCountByUsername', {
+      key: js.client.data.user.username,
+      decending: true
+    },
+    function (err, res) {
+      if (err) deferred.reject(err);
+      else {
+        var arr = [];
+        if (res.rows.lenth) {
+          for (var index = 0; index < res.rows.length; index++) {
+            arr.push(res.rows[index].value);
+          }
+        }
+        deferred.resolve(arr);
+      }
+    });
+  return deferred.promise;
+}
+function showTopUpFailureByUsername(js) {
+  var deferred = Q.defer();
+  db = create_db('topupfailure');
+  countTopupFailureByUsername(js).then(function (body) {
+    db.view(__design_view, 'findByUsername', {
+        key: js.client.data.user.username,
+        decending: true,
+        skip: js.client.data.page,
+        limit: js.client.data.pagemax
+      },
+      function (err, res) {
+        if (err) deferred.reject(err);
+        else {
+          var arr = [];
+          if (res.rows.lenth) {
+            for (var index = 0; index < res.rows.length; index++) {
+              arr.push(res.rows[index].value);
+            }
+          }
+          deferred.resolve({
+            arr: arr,
+            count: body
+          });
+        }
+      });
+  }).catch(function (err) {
+    deferred.reject(err);
+  });
+  return deferred.promise;
+}
+
+// Admin only
+// show all operator failure 
+app.post('/show_operator_failure', function (req, res) { 
+  //js.client.data.page, js.client.data.maxpage
+  // return client
+  // client.data.message='OK';
+  // client.data.topupfailure={arr:{},count=0}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -2913,17 +2985,173 @@ app.post('/show_operator_failure', function (req, res) { //js.client.data.page, 
     js.client.data.topupfailure = body;
     js.resp.send(js.client);
   }).catch(function (err) {
+    var l={
+      log: err,
+      logdate: convertTZ(new Date()),
+      type:"error show topup failure "+ js.client.username,
+      gui: uuidV4(),
+    }
+    logging(l);
     js.client.data.message = err;
     js.resp.send(js.client);;
-  }).done();
+  });
 });
-
-app.post('/transfer', function (req, res) { //js.client, js.client.data.balance , js.client.data.transferbalance
+function countTopupFailure() {
+  var deferred = Q.defer();
+  db = create_db('topupfailure');
+  db.view(__design_view, 'findCount', {
+      decending: true
+    },
+    function (err, res) {
+      if (err) deferred.reject(err);
+      else {
+        var arr = [];
+        if (res.rows.lenth) {
+          arr.push(res.rows[0].value);
+        }
+        deferred.resolve(arr);
+      }
+    });
+  return deferred.promise;
+}
+function showTopUpFailure(js) {
+  var deferred = Q.defer();
+  db = create_db('topupfailure');
+  countTopupFailure().then(function (body) {
+    db.view(__design_view, 'findAll', {
+        decending: true,
+        skip: js.client.data.page,
+        limit: js.client.data.pagemax
+      },
+      function (err, res) {
+        if (err) deferred.reject(err);
+        else {
+          var arr = [];
+          if (res.rows.lenth) {
+            for (var index = 0; index < res.rows.length; index++) {
+              arr.push(res.rows[index].value);
+            }
+          }
+          deferred.resolve({
+            arr: arr,
+            count: body
+          });
+        }
+      });
+  }).catch(function (err) {
+    deferred.reject(err);
+  });
+  return deferred.promise;
+}
+// Transfer balance
+app.post('/transfer', function (req, res) { 
+  //client, 
+  //client.data.user
+  //client.data.balance , 
+  //client.data.transferbalance=balance
+  //client.data.transferbalance.diffbalance=0
   var js = {};
   js.client = req.body;
   js.resp = res;
   transferBalance(js);
 });
+//
+function transferBalance(js) {
+  viewUser(js.client).then(function(res){
+    if (res.length) {
+      var u = res[0];
+      var d = js.client.data.user;
+      js.client.data.user = u;
+      //js.client.data.transferbalance  
+      js.client.data.transferbalance.type = 'transfer';
+      js.client.data.transferbalance.updated = convertTZ(new Date());
+      if (js.client.data.transferbalance.diffbalance < u.mainbalance) {
+        var l={
+          log: "not enough balance to transfer",
+          logdate: convertTZ(new Date()),
+          type:"error not enough balance to transfer "+ js.client.username,
+          gui: uuidV4(),
+        }
+        logging(l);
+        js.client.data.message = "not enough balance";
+        js.resp.send(js.client);
+        return;
+      }
+      if (js.client.data.transferbalance.username != u.username || js.client.data.transferbalance.diffbalance < 1) {
+        var l={
+          log: "wrong username or balance must be positive",
+          logdate: convertTZ(new Date()),
+          type:"error wrong username or balance must be positive "+ js.client.username,
+          gui: uuidV4(),
+        }
+        logging(l);
+        js.client.data.message = " wrong username or balance must be positive";
+        js.resp.send(js.client);
+        return;
+      }
+      js.client.data.balance = js.client.data.transferbalance;
+      updateTopupBalance(js).then(function (body) {
+        u.mainbalance -= js.client.data.balance.balance;
+        updateUser(u).then(function (body) {
+          viewUser(d).then(function(res){
+            if(res.length){
+              var d = body[0];
+              d.mainbalance += js.client.data.balance.balance;
+              js.client.data.user = d;
+              updateTopupBalance(js).then(function (body) {
+                updateUser(d).then(function (body) {
+                  var p = {
+                    usergui: d.gui,
+                    username: d.username,
+                    paymentdate: convertTZ(new Date()),
+                    paymentvalue: js.client.data.balance.balance,
+                    paymentby: u.username,
+                    paidbygui: u.gui,
+                    payreason: "transfer", 
+                    attache: "",
+                    bankinfo: '',
+                    targetuser: d.username,
+                    status: "approved",
+                    description: "",
+                    receiveddate: convertTZ(new Date()), //
+                    certifieddate: convertTZ(new Date()), //
+                    approveddate: convertTZ(new Date()), //
+                    gui: uuidV4()
+                  };              
+                  makePayment(p).then(function(res){                
+                    js.client.data.message = "OK transfer balance completely user:" + u.username + "-->" + d.username;
+                    js.resp.send(js.client);                  });
+                });
+              });
+            }
+          })
+        });
+      });
+    } else {
+      var l={
+        log: 'transfer balance user not found',
+        logdate: convertTZ(new Date()),
+        type:"error transfer balance username not found "+ js.client.username,
+        gui: uuidV4(),
+      }
+      logging(l);
+      js.client.data.message = 'username not found!';
+      js.resp.send(js.client);
+    }
+  }).catch(function(err){
+    var l={
+      log: err,
+      logdate: convertTZ(new Date()),
+      type:"error transfer balance "+ js.client.username,
+      gui: uuidV4(),
+    }
+    logging(l);
+    js.client.data.message = err;
+    js.resp.send(js.client);
+  });
+
+}
+
 
 app.post('/main_balance_list_by_user', function (req, res) { //js.client
   var js = {};
@@ -7072,107 +7300,11 @@ function operatorLogCenterBalance() { // record operator query details by 15 min
 }
 
 
-function countTopupFailureByUsername(js) {
-  var deferred = Q.defer();
-  db = create_db('topupfailure');
-  db.view(__design_view, 'findCountByUsername', {
-      key: js.client.data.user.username,
-      decending: true
-    },
-    function (err, res) {
-      if (err) deferred.reject(err);
-      else {
-        var arr = [];
-        if (res.rows.lenth) {
-          for (var index = 0; index < res.rows.length; index++) {
-            arr.push(res.rows[index].value);
-          }
-        }
-        deferred.resolve(arr);
-      }
-    });
-  return deferred.promise;
-}
 
-function countTopupFailure() {
-  var deferred = Q.defer();
-  db = create_db('topupfailure');
-  db.view(__design_view, 'findCount', {
-      decending: true
-    },
-    function (err, res) {
-      if (err) deferred.reject(err);
-      else {
-        var arr = [];
-        if (res.rows.lenth) {
-          arr.push(res.rows[0].value);
-        }
-        deferred.resolve(arr);
-      }
-    });
-  return deferred.promise;
-}
 
-function showTopUpFailure(js) {
-  var deferred = Q.defer();
-  db = create_db('topupfailure');
-  countTopupFailure().then(function (body) {
-    db.view(__design_view, 'findAll', {
-        decending: true,
-        skip: js.client.data.page,
-        limit: js.client.data.pagemax
-      },
-      function (err, res) {
-        if (err) deferred.reject(err);
-        else {
-          var arr = [];
-          if (res.rows.lenth) {
-            for (var index = 0; index < res.rows.length; index++) {
-              arr.push(res.rows[index].value);
-            }
-          }
-          deferred.resolve({
-            arr: arr,
-            count: body
-          });
-        }
-      });
-  }).catch(function (err) {
-    deferred.reject(err);
-  }).done();;
-  return deferred.promise;
-}
 
-function showTopUpFailureByUsername(js) {
-  var deferred = Q.defer();
-  db = create_db('topupfailure');
-  countTopupFailureByUsername(js).then(function (body) {
-    db.view(__design_view, 'findByUsername', {
-        key: js.client.data.user.username,
-        decending: true,
-        skip: js.client.data.page,
-        limit: js.client.data.pagemax
-      },
-      function (err, res) {
-        if (err) deferred.reject(err);
-        else {
-          var arr = [];
-          if (res.rows.lenth) {
-            for (var index = 0; index < res.rows.length; index++) {
-              arr.push(res.rows[index].value);
-            }
-          }
-          deferred.resolve({
-            arr: arr,
-            count: body
-          });
-        }
-      });
-  }).catch(function (err) {
-    deferred.reject(err);
-  }).done();
-  return deferred.promise;
-}
+
+
 
 
 function connectOperator(phone, value) {
@@ -7494,77 +7626,7 @@ function checkRegisterNeedBalancePerPackage(js) {
 
 }
 
-//
-function transferBalance(js) {
-  var db = create_db('user');
-  db.view(__design_view, 'findByUsername', {
-    key: js.client.username
-  }, function (err, res) {
-    if (err) {
-      js.client.data.message = err;
-      js.resp.send(js.client);;
-    } else {
-      if (res.rows.length) {
-        var u = res.rows[0].value;
-        var d = js.client.data.user;
-        js.client.data.user = u;
-        //js.client.data.transferbalance  
-        js.client.data.transferbalance.type = 'transfer';
-        js.client.data.transferbalance.updated = convertTZ(new Date());
-        if (js.client.data.transferbalance.diffbalance < u.mainbalance) {
-          js.client.data.message = "not enough balance";
-          js.resp.send(js.client);
-          return;
-        }
-        if (js.client.data.transferbalance.username != u.username || js.client.data.transferbalance.diffbalance < 1) {
-          js.client.data.message = " wrong username or balance must be positive";
-          js.resp.send(js.client);
-          return;
-        }
-        js.client.data.balance = js.client.data.transferbalance;
-        updateTopupBalance(js).then(function (body) {
-          u.mainbalance -= js.client.data.balance.balance;
-          updateUser(u).then(function (body) {
-            if (err) {
-              js.client.data.message = err;
-              js.resp.send(js.client);;
-            } else {
-              db.view(__design_view, 'findByUsername', {
-                key: d.username
-              }, function (err, res) {
-                var d = res.rows[0].value;
-                d.mainbalance += js.client.data.balance.balance;
-                js.client.data.user = d;
-                updateTopupBalance(js).then(function (body) {
-                  updateUser(d).then(function (body) {
-                    js.client.data.message = "transfer balance completely user:" + u.username + "-->" + d.username;
-                    js.resp.send(js.client);
-                  }).catch(function (err) {
-                    js.client.data.message = err;
-                    js.resp.send(js.client);;
-                  }).done();
-                }).catch(function (err) {
-                  js.client.data.message = err;
-                  js.resp.send(js.client);;
-                }).done();
-              });
-            }
-          }).catch(function (err) {
-            js.client.data.message = err;
-            js.resp.send(js.client);;
-          }).done();
-        }).catch(function (err) {
-          js.client.data.message = err;
-          js.resp.send(js.client);;
-        }).done();
-      } else {
-        js.client.data.message = 'username not found!';
-        js.resp.send(js.client);
-      }
-    }
-  });
 
-}
 
 function checkphone(phone) {
   if (phone == '205') {

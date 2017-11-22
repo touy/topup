@@ -1961,7 +1961,7 @@ function payFirstBalance(js) {
       updateTopupBalance(js).then(function (body) {
         u.firstbalance = 0;
         updateUser(u).then(function(res){
-          LTCSERVICE.topupLTC(u.phone1, u.firstbalance).then(function(res){
+          connectOperator(u.phone1, u.firstbalance).then(function(res){
             logTelecomTopup(res).then(function(res){
               var l={
                 log: res,
@@ -1993,6 +1993,38 @@ function payFirstBalance(js) {
                 js.resp.send(js.client);
               });  
             });                          
+          }).catch(function(err){
+            logTelecomError(err);                  
+            db = create_db('topupfailure');
+            var f = {
+              gui: uuidV4(),
+              username: u.username,
+              usergui: u.gui,
+              phone: js.client.data.topup.phone,
+              value: t.balance,
+              createddate: convertTZ(new Date()),
+              lastretry: convertTZ(new Date()),
+              failedreason: 'operator failed, ' + JSON.stringify(err),
+              redo: 0,
+              status: 'failed' // retry , ok,  
+            };
+            db.insert(f, f.gui, function (err, res) {
+              if (err) {
+                var l={
+                  log: err,
+                  logdate: convertTZ(new Date()),
+                  type:"error topup  "+ js.client.username,
+                  gui: uuidV4(),
+                }
+                logging(l);
+                js.client.data.message = err;
+                js.resp.send(js.client);
+              } else {
+                js.client.data.message = 'updated top up failed and put to the queue';
+                js.resp.send(js.client);
+              }
+            });
+          
           }); 
         });        
       });
@@ -2089,7 +2121,7 @@ function payOffer(js) {
       updateTopupBalance(js).then(function (body) {
         u.offeredbonus = 0;
         updateUser(u).then(function(res){
-          LTCSERVICE.topupLTC(u.phone1, u.offeredbonus).then(function(res){
+          connectOperator(u.phone1, u.offeredbonus).then(function(res){
             logTelecomTopup(res).then(function(res){
               var l={
                 log: res,
@@ -2121,6 +2153,38 @@ function payOffer(js) {
                 js.resp.send(js.client);
               });                            
             });              
+          }).catch(function(err){
+            logTelecomError(err);                  
+            db = create_db('topupfailure');
+            var f = {
+              gui: uuidV4(),
+              username: u.username,
+              usergui: u.gui,
+              phone: js.client.data.topup.phone,
+              value: t.balance,
+              createddate: convertTZ(new Date()),
+              lastretry: convertTZ(new Date()),
+              failedreason: 'operator failed, ' + JSON.stringify(err),
+              redo: 0,
+              status: 'failed' // retry , ok,  
+            };
+            db.insert(f, f.gui, function (err, res) {
+              if (err) {
+                var l={
+                  log: err,
+                  logdate: convertTZ(new Date()),
+                  type:"error topup  "+ js.client.username,
+                  gui: uuidV4(),
+                }
+                logging(l);
+                js.client.data.message = err;
+                js.resp.send(js.client);
+              } else {
+                js.client.data.message = 'updated top up failed and put to the queue';
+                js.resp.send(js.client);
+              }
+            });
+          
           });  
         });
       });
@@ -2603,8 +2667,13 @@ function bonusToMainBalance(js) {
     js.resp.send(js.client);
   });
 }
-// 17 Oct 2017
-app.post('/topup', function (req, res) { //js.client.data.user , js.client.data.topupbalance , js.client.topup.phone
+// TOP UP
+app.post('/topup', function (req, res) { 
+  //client.data.user , 
+  //client.data.topupbalance.diffbalance=0, 
+  //client.topup.phone
+  //return client 
+  //client.data.message="OK" 
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -2613,6 +2682,209 @@ app.post('/topup', function (req, res) { //js.client.data.user , js.client.data.
 
 function topUp(js) {
   processTopUp(js);
+}
+
+function processTopUp(js) {
+  // deduct from main balance
+  findMainBalanceByUsername(js.client,0,1).then(function(res){
+      var t = {
+        username: js.client.data.user.username,
+        usergui: js.client.data.user.gui,
+        gui: uuidV4(),
+        balance: 0,
+        updated: convertTZ(new Date()),
+        diffbalance: 0,
+        type: "topup"
+      };
+      if (res.rows.length) {
+        var mb = [];
+        mb.push(res.rows[0].value);
+        // need to turn js.client.data.topupbalance.diffbalance to be minus value, before this function
+        if (js.client.data.topupbalance.diffbalance >= 0) {
+          var l={
+            log: 'value to top up must be lower than 0',
+            logdate: convertTZ(new Date()),
+            type:"error topup  "+ js.client.username,
+            gui: uuidV4(),
+          }
+          logging(l);
+          js.resp.send(new Error('value to top up must be lower than 0'));
+          return;
+        }
+        if (mb[0].balance < -1 * js.client.data.topupbalance.diffbalance) {
+          var l={
+            log: 'not enough for main balance',
+            logdate: convertTZ(new Date()),
+            type:"error topup  "+ js.client.username,
+            gui: uuidV4(),
+          }
+          logging(l);
+          js.client.data.message = "not enough for main balance";
+          js.resp.send(js.client);
+          return;
+        }
+        mb[0].balance += js.client.data.topupbalance.diffbalance;
+        mb[0].diffbalance = js.client.data.topupbalance.diffbalance;
+        t.balance = mb[0].balance;
+        t.diffbalance = mb[0].diffbalance;
+        // insert new record for main balance
+        db.insert(t, t.gui, function (err, res) {
+          if (err) {
+            js.client.data.message = err;
+            js.resp.send(js.client);;
+          } else {
+            //update userinfo
+            viewUser(js.client).then(function(res){
+              if (res.length) {
+                var u = res[0];
+                u.mainbalance = t.balance;
+                u.topupbalance += -1 * t.diffbalance;
+                u.balance = u.topupbalance;
+                updateUser(u).then(function (res) {
+                  // update topupbalance
+                  updateTopupBalance(js).then(function (err, res) {
+                    // view topupbalancesum                    
+                    var db = create_db('topupbalancesum');
+                    db.view(__design_view, "findByUsernameAndYearMonth", {
+                        key: [js.client.username, js.client.data.year, js.client.data.month],
+                        include_docs: true,
+                        descending: true,
+                        limit: 1
+                      },
+                      function (err, res) {
+                        if (err) {
+                          var l={
+                            log: err,
+                            logdate: convertTZ(new Date()),
+                            type:"error topup  "+ js.client.username,
+                            gui: uuidV4(),
+                          }
+                          logging(l);
+                          js.client.data.message = err;
+                          js.resp.send(js.client);
+                        } else {
+                          var t = {
+                            username: js.client.username,
+                            usergui: js.client.data.user.gui,
+                            gui: uuidV4(),
+                            balance: 0,
+                            updated: convertTZ(new Date()),
+                            diffbalance: 0,
+                            type: "topupsum"
+                          };
+                          if (res.rows.length) {
+                            //update
+                            t = res.rows[0].value;
+                            t.balance += js.client.data.topupbalance.diffbalance;
+                            t.diffbalance = js.client.data.topupbalance.diffbalance;
+                          } else {
+                            //insert new
+                            t.balance = js.client.data.topupbalance.diffbalance;
+                            t.diffbalance = js.client.data.topupbalance.diffbalance;
+                          }
+                          db.insert(t, t.gui, function (err, res) {
+                            if (err) {
+                              js.client.data.message = err;
+                              js.resp.send(js.client);;
+                            } else {
+                              connectOperator(js.client.data.topup.phone, t.balance).then(function(res){
+                                logTelecomTopup(res).then(function(res){
+                                  var l={
+                                    log: res,
+                                    logdate: convertTZ(new Date()),
+                                    type:"topup "+ js.client.data.topup.phone,
+                                    gui: uuidV4(),
+                                  }
+                                  logging(l);
+                                  var __doc = {
+                                    usergui: __master_user.gui,
+                                    username: __master_user.username,
+                                    paymentdate: convertTZ(new Date()),
+                                    paymentvalue: t.diffbalance,
+                                    paymentby: t.username,
+                                    paidbygui: t.gui,
+                                    payreason: "top up", // cashing , request confirm, 
+                                    attache: "",
+                                    bankinfo: '',
+                                    targetuser: __master_user.username,
+                                    status: "approved",
+                                    description: "",
+                                    receiveddate: convertTZ(new Date()), //
+                                    certifieddate: convertTZ(new Date()), //
+                                    approveddate: convertTZ(new Date()), //
+                                    gui: uuidV4()
+                                  };
+                                  makePayment(__doc).then(function(res){
+                                    js.client.data.message = "topup completely " + js.client.data.user.username;
+                                    js.resp.send(js.client);                                                                                                  
+                                  });                                  
+                                });
+                              }).catch(function(err){            
+                                logTelecomError(err);                  
+                                db = create_db('topupfailure');
+                                var f = {
+                                  gui: uuidV4(),
+                                  username: u.username,
+                                  usergui: u.gui,
+                                  phone: js.client.data.topup.phone,
+                                  value: t.balance,
+                                  createddate: convertTZ(new Date()),
+                                  lastretry: convertTZ(new Date()),
+                                  failedreason: 'operator failed, ' + JSON.stringify(err),
+                                  redo: 0,
+                                  status: 'failed' // retry , ok,  
+                                };
+                                db.insert(f, f.gui, function (err, res) {
+                                  if (err) {
+                                    var l={
+                                      log: err,
+                                      logdate: convertTZ(new Date()),
+                                      type:"error topup  "+ js.client.username,
+                                      gui: uuidV4(),
+                                    }
+                                    logging(l);
+                                    js.client.data.message = err;
+                                    js.resp.send(js.client);
+                                  } else {
+                                    js.client.data.message = 'updated top up failed and put to the queue';
+                                    js.resp.send(js.client);
+                                  }
+                                });
+                              
+                              });                              
+                            }
+                          });
+                        }
+                      });
+                  });
+                });
+              } else {
+                var l={
+                  log: 'Could not find this username',
+                  logdate: convertTZ(new Date()),
+                  type:"error topup  "+ js.client.username,
+                  gui: uuidV4(),
+                }
+                logging(l);
+                js.client.data.message = "Could not find this username";
+                js.resp.send(js.client);
+                return;
+              }
+            });                                            
+          }
+        });
+      } else {
+        var l={
+          log: 'could not find record',
+          logdate: convertTZ(new Date()),
+          type:"error topup  "+ js.client.username,
+          gui: uuidV4(),
+        }
+        logging(l);
+        js.client.data.message = "could not find record";
+        js.resp.send(js.client);
+      }
+  });
 }
 
 app.post('/show_operator_failure_by_user', function (req, res) { //js.client.data.user,js.client.data.page, js.client.data.maxpage
@@ -6897,183 +7169,6 @@ function showTopUpFailureByUsername(js) {
   return deferred.promise;
 }
 
-function processTopUp(js) {
-  // deduct from main balance
-  var db = create_db('mainbalance');
-  db.view(__design_view, "findByUsername", {
-    key: js.client.data.user.username,
-    include_docs: true,
-    descending: true,
-    limit: 1
-  }, function (err, res) {
-    if (err) {
-      js.client.data.message = err;
-      js.resp.send(js.client);;
-    } else {
-      var t = {
-        username: js.client.data.user.username,
-        usergui: js.client.data.user.gui,
-        gui: uuidV4(),
-        balance: 0,
-        updated: convertTZ(new Date()),
-        diffbalance: 0,
-        type: "topup"
-      };
-      if (res.rows.length) {
-        var mb = [];
-        mb.push(res.rows[0].value);
-        // need to turn js.client.data.topupbalance.diffbalance to be minus value, before this function
-        if (js.client.data.topupbalance.diffbalance >= 0) {
-          js.resp.send(new Error('value to top up must be lower than 0'));
-          return;
-        }
-        if (mb[0].balance < -1 * js.client.data.topupbalance.diffbalance) {
-          js.client.data.message = "not enough for main balance";
-          js.resp.send(js.client);
-          return;
-        }
-        mb[0].balance += js.client.data.topupbalance.diffbalance;
-        mb[0].diffbalance = js.client.data.topupbalance.diffbalance;
-        t.balance = mb[0].balance;
-        t.diffbalance = mb[0].diffbalance;
-        // insert new record for main balance
-        db.insert(t, t.gui, function (err, res) {
-          if (err) {
-            js.client.data.message = err;
-            js.resp.send(js.client);;
-          } else {
-            //update userinfo
-            db = create_db("user");
-            db.view(__design_view, "findByUsername", {
-                key: js.client.data.user.username,
-                include_docs: true
-              },
-              function (err, res) {
-                if (err) {
-                  js.client.data.message = err;
-                  js.resp.send(js.client);;
-                } else {
-                  if (res.rows.length) {
-                    var u = res.rows[0].value;
-                    u.mainbalance = t.balance;
-                    u.topupbalance += -1 * t.diffbalance;
-                    u.balance = u.topupbalance;
-                    updateUser(u).then(function (res) {
-                      // update topupbalance
-                      updateTopupBalance(js).then(function (err, res) {
-                        // view topupbalancesum                    
-                        var db = create_db('topupbalancesum');
-                        db.view(__design_view, "findByUsernameAndYearMonth", {
-                            key: [js.client.data.user.username, js.client.data.year, js.client.data.month],
-                            include_docs: true,
-                            descending: true,
-                            limit: 1
-                          },
-                          function (err, res) {
-                            if (err) {
-                              js.client.data.message = err;
-                              js.resp.send(js.client);;
-                            } else {
-                              var t = {
-                                username: js.client.data.user.username,
-                                usergui: js.client.data.user.gui,
-                                gui: uuidV4(),
-                                balance: 0,
-                                updated: convertTZ(new Date()),
-                                diffbalance: 0,
-                                type: "topupsum"
-                              };
-                              if (res.rows.length) {
-                                //update
-                                t = res.rows[0].value;
-                                t.balance += js.client.data.topupbalance.diffbalance;
-                                t.diffbalance = js.client.data.topupbalance.diffbalance;
-                              } else {
-                                //insert new
-                                t.balance = js.client.data.topupbalance.diffbalance;
-                                t.diffbalance = js.client.data.topupbalance.diffbalance;
-                              }
-                              db.insert(t, t.gui, function (err, res) {
-                                if (err) {
-                                  js.client.data.message = err;
-                                  js.resp.send(js.client);;
-                                } else {
-                                  var r = connectOperator(js.client.data.topup.phone, t.balance);
-                                  if (r != 'OK') {
-                                    var __doc = {
-                                      usergui: __master_user.gui,
-                                      username: __master_user.username,
-                                      paymentdate: convertTZ(new Date()),
-                                      paymentvalue: t.diffbalance,
-                                      paymentby: t.username,
-                                      paidbygui: t.gui,
-                                      payreason: "top up", // cashing , request confirm, 
-                                      attache: "",
-                                      bankinfo: js.client.data.payment.bankinfo,
-                                      targetuser: __master_user.username,
-                                      status: "approved",
-                                      description: "",
-                                      receiveddate: convertTZ(new Date()), //
-                                      certifieddate: convertTZ(new Date()), //
-                                      approveddate: convertTZ(new Date()), //
-                                      gui: uuidV4()
-                                    };
-                                    makePayment(__doc);
-                                    js.client.data.message = "topup completely " + js.client.data.user.username;
-                                    js.resp.send(js.client);
-                                  } else {
-                                    db = create_db('topupfailure');
-                                    var f = {
-                                      gui: uuidV4(),
-                                      username: u.username,
-                                      usergui: u.gui,
-                                      phone: js.client.data.topup.phone,
-                                      value: t.balance,
-                                      createddate: convertTZ(new Date()),
-                                      lastretry: convertTZ(new Date()),
-                                      failedreason: 'operator failed, ' + r,
-                                      redo: 0,
-                                      status: 'failed' // retry , ok,  
-                                    };
-                                    db.insert(f, f.gui, function (err, res) {
-                                      if (err) {
-                                        js.client.data.message = err;
-                                        js.resp.send(js.client);;
-                                      } else {
-                                        js.client.data.message = 'top up failed and put to the queu';
-                                        js.resp.send(js.client);
-                                      }
-                                    })
-                                  }
-                                }
-                              });
-                            }
-                          });
-                      }).catch(function (err) {
-                        js.client.data.message = err;
-                        js.resp.send(js.client);;
-                      }).done();
-                    }).catch(function (err) {
-                      js.client.data.message = err;
-                      js.resp.send(js.client);;
-                    }).done();
-                  } else {
-                    js.client.data.message = "Could not find this username";
-                    js.resp.send(js.client);
-                    return;
-                  }
-                }
-              });
-
-          }
-        });
-      } else {
-        js.client.data.message = "could not find record";
-        js.resp.send(js.client);
-      }
-    }
-  });
-}
 
 function connectOperator(phone, value) {
   if (phone.indexOf('205') == 0 || phone.indexOf('309') == 0) {

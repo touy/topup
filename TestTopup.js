@@ -3050,6 +3050,8 @@ app.post('/transfer', function (req, res) {
   //client.data.balance , 
   //client.data.transferbalance=balance
   //client.data.transferbalance.diffbalance=0
+  // return client
+  // client.data.message
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -3152,13 +3154,56 @@ function transferBalance(js) {
 
 }
 
-
-app.post('/main_balance_list_by_user', function (req, res) { //js.client
+// show main balance list by user
+app.post('/main_balance_list_by_user', function (req, res) { 
+  // client.data.user
+  // client.data.maxpage 
+  //client.data.page
+  //return client
+  //client.data.mainbalance
+  //client.message='OK'
   var js = {};
   js.client = req.body;
   js.resp = res;
   showMainBalance(js)
 });
+function findCountMainBalanceByUser(user){
+  var deferred=Q.defer();
+  var db=create_db("mainbalance");
+  db.view(__design_view, "findCountByUsername", {
+    key: js.client.username
+  }, function (err, res) {
+    if (err) {
+      deferred.reject(err);
+    } else {
+      if (res.rows.length) {
+        var count = res.rows[0].value;
+      }
+      deferred.resolve(count);
+    }
+  });
+  return deferred.promise;
+}
+function showMainBalance(js) {
+  findCountMainBalanceByUser(js.client.user).then(function(res){
+    var count=res[0];
+    findMainBalanceByUsername(js.client.data.user,js.client.data.page,js.client.data.maxpage).then(function(res){
+      js.client.data.mainbalance={arr:res,count:count};
+      js.client.data.message="OK";
+      js.resp(js.client);
+    });
+  }).catch(function(err){
+    var l={
+      log: err,
+      logdate: convertTZ(new Date()),
+      type:"error show main balance by username "+ js.client.username,
+      gui: uuidV4(),
+    }
+    logging(l);
+  });
+  
+}
+
 app.post('/bonus_balance_list_by_user', function (req, res) { //js.client 
   var js = {};
   js.client = req.body;
@@ -6912,45 +6957,7 @@ function findQualifiedParents(js, pArr) {
 
 
 
-function showMainBalance(js) {
-  var db = create_db("mainbalance");
-  db.view(__design_view, "findCountByUsername", {
-    key: js.client.username
-  }, function (err, res) {
-    if (err) {
-      js.client.data.message = err;
-      js.resp.send(js.client);;
-    } else {
-      if (res.rows.length) {
-        var count = res.rows[0].value;
-        db.view(__design_view, "findByUsername", {
-          key: js.client.username,
-          descending: true,
-          limit: js.client.data.maxpage,
-          skip: js.client.data.page
-        }, function (err, res) {
-          if (err) {
-            js.client.data.message = err;
-            js.resp.send(js.client);;
-          } else {
-            var arr = [];
-            if (res.rows.length) {
-              for (i = 0; l = res.rows.length, i < l; i++) {
-                arr.push(res.rows[i].value);
-              }
-            }
-            js.client.data.balance = {
-              arr: arr,
-              count: count
-            };
-            js.client.data.message = "OK";
-            js.resp.send(js.client);
-          }
-        });
-      }
-    }
-  });
-}
+
 
 
 function get_member_count_by_year_month(js) {

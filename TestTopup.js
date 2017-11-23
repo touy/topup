@@ -3959,7 +3959,13 @@ function getPaymentRequestListByUsername(user, page, maxpage) {
   return deferred.promise;
 }
 
-app.post('/cashing_list_by_username', function (req, res) { //js.client.data.user 
+// cashing request list by username
+app.post('/cashing_list_by_username', function (req, res) { 
+  //client.data.user 
+  //client.data.maxpage , client.data.page
+  // return client
+  // client.data.message='OK'
+  // client.data.payment ={arr:{},count:0}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -3971,6 +3977,13 @@ function showCashingListByUsername(js) {
     js.client.data.payment = body;
     js.resp.send(js.client);
   }).catch(function (err) {
+    var l = {
+      log: err,
+      logdate: convertTZ(new Date()),
+      type: "error show cashing request list by user" + js.client.username,
+      gui: uuidV4(),
+    }
+    logging(l);
     js.client.data.message = err;
     js.resp.send(js.client);
   }).done();
@@ -4010,8 +4023,13 @@ function getCashingListByUsername(user, page, maxpage) {
 }
 
 
-
-app.post('/payment_request_list_admin', function (req, res) { //?
+// payment request list admin
+app.post('/payment_request_list_admin', function (req, res) { 
+  //client 
+  // client.data.page , client.data.maxpage 
+  //return client 
+  // client.data.message='OK'
+  // client.data.payment={arr:{},count:0}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -4023,6 +4041,13 @@ function showPaymentRequestList(js) {
     js.client.data.payment = body;
     js.resp.send(js.client);
   }).catch(function (err) {
+    var l = {
+      log: err,
+      logdate: convertTZ(new Date()),
+      type: "error show payment request list admin " + js.client.username,
+      gui: uuidV4(),
+    }
+    logging(l);
     js.client.data.message = err;
     js.resp.send(js.client);
   }).done();
@@ -4057,7 +4082,13 @@ function getPaymentRequestList(page, maxpage) {
   });
   return deferred.promise;
 }
-app.post('/cashing_request_list_admin', function (req, res) { //?
+// cashing request list by admin
+// admin 
+app.post('/cashing_request_list_admin', function (req, res) { 
+  //client
+  // client.data.page , client.data.maxpage 
+  // return client
+  //client.data.payment={arr:{},count:0}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -4069,6 +4100,13 @@ function showCashingList(js) {
     js.client.data.payment = body;
     js.resp.send(js.client);
   }).catch(function (err) {
+    var l = {
+      log: err,
+      logdate: convertTZ(new Date()),
+      type: "error show cashing request list admin" + js.client.username,
+      gui: uuidV4(),
+    }
+    logging(l);
     js.client.data.message = err;
     js.resp.send(js.client);
   }).done();
@@ -4103,7 +4141,9 @@ function getCashingList(user, page, maxpage) {
   });
   return deferred.promise;
 }
-app.post('/get_member_count_by_package', function (req, res) { //js.client.data.user,js.client.data.package , js.client.data.user.ismember
+
+app.post('/get_member_count_by_package', function (req, res) {
+   //js.client.data.user,js.client.data.package , js.client.data.user.ismember
   var js = {};
   js.client = req.body;
   js.resp = res;

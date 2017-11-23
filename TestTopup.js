@@ -3474,8 +3474,10 @@ function updatePaymentRequest(js) {
           b.usergui = js.client.data.payment.usergui;
           b.diffbalance *= -1;
           updateMainBalance(js.client.data.payment.targetuser, b).then(function (body) {
-            js.client.data.message = 'payment request has been updated ' + mark;
-            js.resp.send(js.client);
+            findUserByUserName({username:js.client.username}).then(function(res){
+              js.client.data.message = 'payment request has been updated ' + mark;
+              js.resp.send(js.client);
+            });
           });
         });
       } else if (mark == 'certified') {
@@ -3496,8 +3498,11 @@ function updatePaymentRequest(js) {
     });
 }
 
-
-app.post('/cashing_request', function (req, res) { //js.client.data.payment
+//submit cashing request
+app.post('/cashing_request', function (req, res) { 
+  //client.data.payment
+  //return client
+  //client.data.message='OK' 
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -3524,7 +3529,14 @@ function sendCashingRequest(js) {
     gui: uuidV4()
   };
   if (__doc.paymentvalue >= 0) {
-    js.client.data.message = new Error('Payment value must be positive integer');
+    var l = {
+      log: 'cashing value must be positive integer',
+      logdate: convertTZ(new Date()),
+      type: "error update cashing request " + js.client.username,
+      gui: uuidV4(),
+    }
+    logging(l);
+    js.client.data.message = new Error('cashing value must be positive integer');
     js.resp.send(js.client);
     return;
   }
@@ -3539,11 +3551,11 @@ function sendCashingRequest(js) {
   findUserByUserName(users.user).then(function (body) {
     if (body.length) {
       var u = body[0];
-      if (u.bankaccount != __doc.bankinfo) {
-        js.client.data.message = new Error('Bank info not the same');
-        js.resp.send(js.client);
-        return;
-      }
+      // if (u.bankaccount != __doc.bankinfo) {
+      //   js.client.data.message = new Error('Bank info not the same');
+      //   js.resp.send(js.client);
+      //   return;
+      // }
       var b = {
         username: js.client.data.payment.targetuser,
         usergui: js.client.data.payment.usergui,
@@ -3553,28 +3565,49 @@ function sendCashingRequest(js) {
         diffbalance: -js.client.data.payment.paymentvalue,
         type: "cashing request"
       };
-      updateMainBalance(js.client.data.payment, b).then(function (body) {
+      updateMainBalance({username:js.client.username}, b).then(function (body) {
         makePayment(__doc).then(function (body) {
-          js.client.data.message = 'OK send Cashing request completely';
-          js.resp.send(js.client);
-        }).catch(function (err) {
-          js.client.data.message = err;
-          js.resp.send(js.client);
-        }).done();
-      }).catch(function (err) {
-        js.client.data.message = err;
-        js.resp.send(js.client);
-      }).done();
+          u.mainbalance-=js.client.data.payment.paymentvalue;
+          updateUser(u).then(function(res){
+            js.client.data.message = 'OK send Cashing request completely';
+            js.resp.send(js.client);
+          });
+          
+        });
+      });
     } else {
+      var l = {
+        log: "user not found",
+        logdate: convertTZ(new Date()),
+        type: "error cashing request " + js.client.username,
+        gui: uuidV4(),
+      }
+      logging(l);
       js.client.data.message = "user not found"
       js.resp.send(js.client);
     }
   }).catch(function (err) {
+    var l = {
+      log: err,
+      logdate: convertTZ(new Date()),
+      type: "error cashing request " + js.client.username,
+      gui: uuidV4(),
+    }
+    logging(l);
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
-app.post('/update_cashing_request', function (req, res) { //js.client.data.payment
+//admin only
+// update cashing request
+app.post('/update_cashing_request', function (req, res) { 
+  //js.client.data.payment
+  //check
+  //certify
+  //approve and send new balance to mainbalance
+  // declined
+  // return client
+  // client.data.message='OK'
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -3585,7 +3618,7 @@ function updateCashingRequest(js) { // js.client.data.payment for admin only
   //check
   //certify
   //approve and send new balance to mainbalance
-  var deferred = Q.defer();
+  // declined
   var db = create_db('payment');
   var p = js.client.data.payment;
   var mark = '';
@@ -3605,24 +3638,146 @@ function updateCashingRequest(js) { // js.client.data.payment for admin only
     mark = 'nothing';
   } else {
     mark = 'wrong process, please try again ';
+    var l = {
+      log: mark,
+      logdate: convertTZ(new Date()),
+      type: "error update cashing request " + js.client.username,
+      gui: uuidV4(),
+    }
+    logging(l);
     js.client.data.message = mark;
     js.resp.send(js.client);
     return;
   }
-  if (js.client.data.payment._rev)
+  if (p._rev)
     makePayment(p).then(function (body) {
-      js.client.data.message = 'payment request has been updated ' + mark;
-      js.resp.send(js.client);
+        js.client.data.message = 'OK cashing request has been updated ' + mark;
+        js.resp.send(js.client);     
     }).catch(function (err) {
+      var l = {
+        log: err,
+        logdate: convertTZ(new Date()),
+        type: "error cashing request " + js.client.username,
+        gui: uuidV4(),
+      }
+      logging(l);
       js.client.message = err;
       js.resp.send(js.client);
-    }).done();
-
-  return deferred.promise;
+    });
 }
 
-
-app.post('/payment_list_by_username', function (req, res) { //js.client.data.user
+//admin only 
+// instantly cashing
+app.post('/instantly_cashing',function(req,res){
+  //js.client.data.payment
+  //check
+  //certify
+  //approve and send new balance to mainbalance
+  // declined
+  // return client
+  // client.data.message='OK'
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  instantlyCashing(js);
+});
+function instantlyCashing(js) {
+  var __doc = {
+    usergui: js.client.data.payment.usergui,
+    username: js.client.data.payment.username,
+    paymentdate: convertTZ(new Date()),
+    paymentvalue: -js.client.data.payment.paymentvalue,
+    paymentby: __master_user.username,
+    paidbygui: __master_user.usergui,
+    payreason: "cashing",
+    bankinfo: js.client.data.payment.bankinfo,
+    targetuser: js.client.data.payment.username,
+    status: "",
+    attache: js.client.data.payment.attache,
+    description: js.client.data.payment.description,
+    receiveddate: convertTZ(new Date()),
+    certifieddate: convertTZ(new Date()),
+    approveddate: convertTZ(new Date()),
+    gui: uuidV4()
+  };
+  if (__doc.paymentvalue >= 0) {
+    var l = {
+      log: 'cashing value must be positive integer',
+      logdate: convertTZ(new Date()),
+      type: "error update cashing request " + js.client.username,
+      gui: uuidV4(),
+    }
+    logging(l);
+    js.client.data.message = new Error('cashing value must be positive integer');
+    js.resp.send(js.client);
+    return;
+  }
+  if (js.client.data.payment.targetuser != js.client.data.payment.username || js.client.data.payment.targetuser != js.client.username || js.client.username != js.client.data.payment.username) {
+    js.client.data.message = new Error('you could not cash-out to other usernme');
+    js.resp.send(js.client);
+    return;
+  }
+  var users = {};
+  users.user = {};
+  users.user.username = js.client.data.payment.username;
+  findUserByUserName(users.user).then(function (body) {
+    if (body.length) {
+      var u = body[0];
+      // if (u.bankaccount != __doc.bankinfo) {
+      //   js.client.data.message = new Error('Bank info not the same');
+      //   js.resp.send(js.client);
+      //   return;
+      // }
+      if(u.mainbalance<js.client.data.payment.paymentvalue)
+        throw new Error('not enough mainbalance to cash out')
+      var b = {
+        username: js.client.data.payment.targetuser,
+        usergui: js.client.data.payment.usergui,
+        gui: uuidV4(),
+        balance: 0,
+        updated: convertTZ(new Date()),
+        diffbalance: -js.client.data.payment.paymentvalue,
+        type: "cashing request"
+      };
+      updateMainBalance({username:js.client.username}, b).then(function (body) {
+        makePayment(__doc).then(function (body) {
+          u.mainbalance+=b.diffbalance;
+          updateUser(u).then(function(res){
+            js.client.data.message = 'OK send Cashing request completely';
+            js.resp.send(js.client);
+          });
+        });
+      });
+    } else {
+      var l = {
+        log: "user not found",
+        logdate: convertTZ(new Date()),
+        type: "error cashing request " + js.client.username,
+        gui: uuidV4(),
+      }
+      logging(l);
+      js.client.data.message = "user not found"
+      js.resp.send(js.client);
+    }
+  }).catch(function (err) {
+    var l = {
+      log: err,
+      logdate: convertTZ(new Date()),
+      type: "error cashing request " + js.client.username,
+      gui: uuidV4(),
+    }
+    logging(l);
+    js.client.data.message = err;
+    js.resp.send(js.client);
+  });
+}
+// payment list by username
+app.post('/payment_list_by_username', function (req, res) { 
+  //client.data.user
+  //client.data.maxpage, client.data.page
+  //return client
+  // client.data.payment ={arr:{},count=0}
+  // client.data.message='OK'
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -3635,16 +3790,23 @@ function showPaymentListByUsername(js) {
     js.client.data.message = 'OK';
     js.resp.send(js.client);
   }).catch(function (err) {
+    var l = {
+      log: err,
+      logdate: convertTZ(new Date()),
+      type: "error show payment list by user" + js.client.username,
+      gui: uuidV4(),
+    }
+    logging(l);
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function getPaymentListByUsername(user, page, maxpage) {
   var deferred = Q.defer();
   var db = create_db('payment');
   db.view(__design_view, 'findCountByUsername', {
-    key: user.username
+    key: user.username,
   }, function (err, res) {
     if (err) deferred.reject(err);
     else {
@@ -3673,8 +3835,14 @@ function getPaymentListByUsername(user, page, maxpage) {
   });
   return deferred.promise;
 }
-
-app.post('/payment_list_admin', function (req, res) { //?
+// show payment list  
+// admin only
+app.post('/payment_list_admin', function (req, res) { 
+  //client
+  //client.data.maxpage , client.data.page 
+  // return client
+  // client.data.payment={arr:{},count=0}
+  // client.data.message='OK'
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -3686,6 +3854,13 @@ function showPaymentList(js) {
     js.client.data.payment = body;
     js.resp.send(js.client);
   }).catch(function (err) {
+    var l = {
+      log: err,
+      logdate: convertTZ(new Date()),
+      type: "error show payment list admin" + js.client.username,
+      gui: uuidV4(),
+    }
+    logging(l);
     js.client.data.message = err;
     js.resp.send(js.client);
   }).done();
@@ -3721,7 +3896,13 @@ function getPaymentList(page, maxpage) {
   return deferred.promise;
 }
 
-app.post('/payment_request_list_by_username', function (req, res) { //js.client.data.user 
+// payment request list by username
+app.post('/payment_request_list_by_username', function (req, res) { 
+  //client.data.user 
+  //client.data.page , client.data.maxpage
+  //return client
+  // client.data.payment ={arr:{},count=0}
+  // client.data.message 
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -3733,6 +3914,13 @@ function showPaymentRequestListByUsername(js) {
     js.client.data.payment = body;
     js.resp.send(js.client);
   }).catch(function (err) {
+    var l = {
+      log: err,
+      logdate: convertTZ(new Date()),
+      type: "error show payment request list by user" + js.client.username,
+      gui: uuidV4(),
+    }
+    logging(l);
     js.client.data.message = err;
     js.resp.send(js.client);
   }).done();

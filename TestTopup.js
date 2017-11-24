@@ -914,7 +914,7 @@ function login(js) {
       var l = {
         log: "login failed",
         logdate: convertTZ(new Date()),
-        type: "login failed " + js.client.user.username + " password:" + js.client.data.user.password,
+        type: "login failed " + js.client.username ,
         gui: uuidV4(),
       }
       logging(l);
@@ -925,7 +925,7 @@ function login(js) {
     var l = {
       log: err,
       logdate: convertTZ(new Date()),
-      type: "error log in  " + js.client.user.username + " password:" + js.client.data.user.password,
+      type: "error log in  " + js.client.username ,
       gui: uuidV4(),
     }
     logging(l);

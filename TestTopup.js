@@ -856,13 +856,14 @@ function set_client(js) {
     js.client.data = {};
     //js.client.clientuid=uuidV4();
     js.client.logintoken = uuidV4();
-    r_client.setAsync(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken, JSON.stringify(js.client), 'EX', 15 * 60).then(function (res) {
+    r_client.setAsync(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken, JSON.stringify(js.client), 'EX', 15 * 60).then(
+      function (res) {
       if (js.resp && res) {
         __cur_client = js.client;
         var l = {
           log: "login completed",
           logdate: convertTZ(new Date()),
-          type: "log in completed " + js.client.data.user.username + " password:" + js.client.data.user.password,
+          type: "log in completed " + js.client.username,
           gui: uuidV4(),
         }
         logging(l);
@@ -870,6 +871,16 @@ function set_client(js) {
         js.resp.send(js.client);
       }
     });
+  }).catch(function(err){
+    var l = {
+      log: err,
+      logdate: convertTZ(new Date()),
+      type: "error log in " + js.client.username,
+      gui: uuidV4(),
+    }
+    logging(l);
+    js.client.data.message = err;
+    js.resp.send(js.client);
   });
 
 }

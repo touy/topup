@@ -4917,7 +4917,7 @@ var __design_user = {
       "map": "function(doc) {\r\n    if(doc.phone1) {\r\n        emit(doc.phone1,doc);\r\n    }\r\n}"
     },
     "findUserByUsernameAndPhone1": {
-      "map": "function(doc) {\r\n    if(doc.phone1&&user.username) {\r\n        emit([doc.username,doc.phone1],doc);\r\n    }\r\n}"
+      "map": "function(doc) {\r\n    if(doc.phone1&&doc.username) {\r\n        emit([doc.username,doc.phone1],doc);\r\n    }\r\n}"
     },
     "findMembersByUsername": {
       "map": "function(doc) {\r\n    for(var word in doc.aboveparents) {\r\n      emit(doc.aboveparents[word],doc);\r\n    }\r\n}"

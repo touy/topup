@@ -8018,7 +8018,7 @@ function logging(log) {
   db.insert(log, log.gui, function (err, body) {
     if (err) console.log(err);
     else {
-      console.log("log oK" + body);
+      console.log("log oK "+JSON.stringify(body));
     }
   });
 }

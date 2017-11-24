@@ -1942,7 +1942,7 @@ function updatePackageDetails(user, package) {
 
 function upgradePackage(js) {
   viewUser(js.client.data.user).then(function (res) {
-    if (!res.length) throw Error('User not found');
+    if (!res.length) throw new Error('User not found');
     if (res.length) {
       res = res[0];
       updatePackageDetails(res, js.client.data.package).then(function (res) {
@@ -6332,9 +6332,9 @@ function register(register /*,needbalance*/ , resp) { //needbalance={main:0.5,bu
       // find if a new user is qualify for max phone number  ==>
       js.user.password = js.user.password.trim();
       if (body.length > 0)
-        throw Error('you could not use this username');
+        throw new Error('you could not use this username');
       if (!validatePassword(js.user.password))
-        throw Error('password must be length >=6');
+        throw new Error('password must be length >=6');
       // FIND max number can use to register a new account ==>
       findMaxPhoneNumber(js.user).then(function (body) {
 

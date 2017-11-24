@@ -932,7 +932,6 @@ function login(js) {
       js.client.username = "";
       js.client.logintime = "";
       js.client.logintoken = "";
-      js.client.data = {};
       js.client.lastaccess = convertTZ(new Date());
       //set_client(js);
       var l = {

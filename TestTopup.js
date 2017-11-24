@@ -862,7 +862,7 @@ function set_client(js) {
         var l = {
           log: "login completed",
           logdate: convertTZ(new Date()),
-          type: "log in completed " + js.client.user.username + " password:" + js.client.data.user.password,
+          type: "log in completed " + js.client.data.user.username + " password:" + js.client.data.user.password,
           gui: uuidV4(),
         }
         logging(l);
@@ -5628,13 +5628,14 @@ function init_default_master_user(js) {
           js.client.data.message = err;
           js.resp.send(js.client);
         } else {
-          r_client.setAsync("__Master", JSON.stringify(__master_user)).then(function (body) {}).catch(function (err) {
-            throw new Error("could not set master user for redis" + err);
+          r_client.setAsync("__Master", JSON.stringify(__master_user)).then(function (body) {
+            js.client.data.message = "OK master user has been set";
+            js.resp.send(js.client);
+          }).catch(function (err) {
+            //throw new Error("could not set master user for redis" + err);
             js.client.data.message = err;
-            js.resp.send(js.client);;
-          }).done();
-          console.log("top user created!");
-          js.resp.send("done!");
+            js.resp.send(js.client);
+          });
         }
       });
     } else {

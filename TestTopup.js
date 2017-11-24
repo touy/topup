@@ -351,8 +351,8 @@ app.post('/change_default_user_info', function (req, res) {
   //client.data.user
   //client.data.user.oldusername;  // old username
   //client.data.user.oldphone1; // old phone
-  //client.data.user.username;  // old username
-  //client.data.user.phone1; // old phone
+  //client.data.user.username;  // new username
+  //client.data.user.phone1; // new phone
   //return client
   // client.data.message='OK';
   var js = {};
@@ -362,7 +362,7 @@ app.post('/change_default_user_info', function (req, res) {
 });
 
 function changeUserNameAndPhoneNumber(js) {
-  if (js.client.data.user.oldusername && js.client.data.user.oldphone1 && js.client.data.user.username && js.client.data.user.phone1) {
+  if (js.client.data.user.oldusername && js.client.data.user.oldphone1 && js.client.data.user.username && js.client.data.user.phone1) { 
     changeDefaultInfo(js).then(function (body) {
       var l = {
         log: body,
@@ -374,7 +374,6 @@ function changeUserNameAndPhoneNumber(js) {
       js.client.data.message = body;
       js.resp.send(js.client);
     }).catch(function (err) {
-      if (err) {
         var l = {
           log: err,
           logdate: convertTZ(new Date()),
@@ -384,8 +383,7 @@ function changeUserNameAndPhoneNumber(js) {
         logging(l);
         js.client.data.message = err;
         js.resp.send(js.client);
-      }
-    })
+    });
   } else {
     var l = {
       log: "phone number or username not match",
@@ -405,33 +403,58 @@ function changeDefaultInfo(js) {
   var db = create_db('user');
   var username = js.client.data.user.oldusername;
   var phone1 = js.client.data.user.oldphone1;
+
   db.view(__design_view, 'findUserByUsernameAndPhone1', {
     key: [username, phone1],
     include_docs: true
   }, function (err, res) {
+    console.log('before change username and phone1');
     if (err) deferred.reject(err);
     else {
       if (res.rows.length) {
         u = res.rows[0].value;
         u.username = js.client.data.user.username;
+        u.usercode = u.username;
         u.phone1 = js.client.data.user.phone1;
-        findUserByUserName(u).then(function (res) {
-          if (res.length)
-            deferred.reject('User existed');
-          else if (!res.length)
             findMaxPhoneNumber(u).then(function (res) {
-              if (res.length > 3) deferred.reject(new Error('this phonenumber has more than 3 in the database'));
+              if (res.length > 3) {
+                var l = {
+                  log: "this phonenumber has more than 3 in the databaseh",
+                  logdate: convertTZ(new Date()),
+                  type: "error change username and phone number " + js.client.data.user.username,
+                  gui: uuidV4(),
+                }
+                logging(l);
+                deferred.reject(Error('this phonenumber has more than 3 in the database'));
+              }
               else
                 db.insert(u, u._id, function (err, res) {
-                  if (err) deferred.reject(err);
+                  if (err) {
+                    var l = {
+                      log: err,
+                      logdate: convertTZ(new Date()),
+                      type: "error change username and phone number " + js.client.data.user.username,
+                      gui: uuidV4(),
+                    }
+                    logging(l);
+                    deferred.reject(err);
+                  }
                   else {
+                    console.log('before change username and phone2');
                     deferred.resolve('OK');
                   }
                 });
             });
-        });
-      } else {
-        deferred.reject(new Error("User not found"));
+      }
+      else{
+        var l = {
+          log: "no matching this username and phone",
+          logdate: convertTZ(new Date()),
+          type: "error change username and phone number " + js.client.data.user.username,
+          gui: uuidV4(),
+        }
+        logging(l);
+        deferred.reject(Error('Error no matching this username and phone'));
       }
     }
   });
@@ -4657,6 +4680,7 @@ app.all('*', function (req, res, next) {
     r_client.getAsync(keyword + ' ' + client.clientuid + ' ' + __cur_client.logintoken).then(function (body) {
       if (body) { // NEED TO CHECK  USER OR ADMIN
         //next();
+        console.log(body);
         var c = JSON.parse(body);
         if (auth == 1) { //CHECK authorization ADMIN
           checkAdmin(c).then(function (body) {
@@ -4907,9 +4931,9 @@ var __design_bonustopupbalance = {
 var __design_user = {
   "_id": "_design/objectList",
   "views": {
-    "containText": {
-      "map": "function(doc) {\r\n    var i;\r\n    if (doc.username) {\r\n        for (i = 0; i < doc.username.length; i += 1) {\r\n            emit(doc.username.slice(i), doc);\r\n        }\r\n    }\r\n}"
-    },
+    // "containText": {
+    //   "map": "function(doc) {\r\n    var i;\r\n    if (doc.username) {\r\n        for (i = 0; i < doc.username.length; i += 1) {\r\n            emit(doc.username.slice(i), doc);\r\n        }\r\n    }\r\n}"
+    // },
     "countMembers": {
       "map": "function(doc) {\r\n    for(var word in doc.aboveparents) {\r\n        emit(doc.aboveparents[word],1);\r\n    }\r\n}",
       "reduce": "_count"
@@ -5719,6 +5743,7 @@ function init_master_user() {
 
       });
     } else {
+      console.log(body);
       __master_user = JSON.parse(body);
     }
   });
@@ -6860,12 +6885,13 @@ function validatePassword(p) {
 
 function findMaxPhoneNumber(user) {
   var deferred = Q.defer();
-  js.db.view(__design_view, "findByPhone", {
+  var db=create_db('user');
+  db.view(__design_view, "findByPhone", {
     key: user.phone1,
     include_docs: true
   }, function (err, res) {
     if (err) {
-      deferred.reject(new Error(err));
+      deferred.reject(err);
     } else {
       var arr = [];
       if (res.rows.length) {
@@ -8015,10 +8041,11 @@ function logging(log) {
     gui: uuidV4()
   };
   var db = create_db("logs");
+  console.log(log);
   db.insert(log, log.gui, function (err, body) {
     if (err) console.log(err);
     else {
-      console.log("log oK "+JSON.stringify(body));
+      console.log("log oK ");
     }
   });
 }

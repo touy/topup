@@ -306,7 +306,7 @@ function change_password(js) {
     var l = {
       log: "confirm password not match",
       logdate: convertTZ(new Date()),
-      type: "error confirm password not match " + js.client.user.username,
+      type: "error confirm password not match " + js.client.data.user.username,
       gui: uuidV4(),
     }
     logging(l);
@@ -860,6 +860,7 @@ function set_client(js) {
     };
     client.data.message:"ERROR, OK, GOOD, SUCCESS";
   */
+  var username=js.client.data.user.username;
   var keyword = __login_kw;
   console.log("client.clientuid" + js.client.clientuid)
 
@@ -886,10 +887,10 @@ function set_client(js) {
         var l = {
           log: "login completed",
           logdate: convertTZ(new Date()),
-          type: "log in completed " + js.client.username,
+          username: username ,
           gui: uuidV4(),
         }
-        logging(l);
+        loggingLogin(l);
         js.client.data.message = 'OK';
         js.resp.send(js.client);
       }
@@ -898,10 +899,10 @@ function set_client(js) {
     var l = {
       log: err,
       logdate: convertTZ(new Date()),
-      type: "error log in " + js.client.username,
+      username: username ,
       gui: uuidV4(),
     }
-    logging(l);
+    loggingLogin(l);
     js.client.data.message = err;
     js.resp.send(js.client);
   });
@@ -937,21 +938,21 @@ function login(js) {
       var l = {
         log: "login failed",
         logdate: convertTZ(new Date()),
-        type: "login failed " + js.client.username ,
+        username: js.client.data.user.username ,
         gui: uuidV4(),
       }
-      logging(l);
+      loggingLogin(l);
       js.client.data.message = "NO this Username and password";
       js.resp.send(js.client);
     }
   }).catch(function (err) {
     var l = {
-      log: err,
+      log: "login failed",
       logdate: convertTZ(new Date()),
-      type: "error log in  " + js.client.username ,
+      username: js.client.data.user.username ,
       gui: uuidV4(),
     }
-    logging(l);
+    loggingLogin(l);
     js.client.data.message = err;
     js.resp.send(js.client);
   });
@@ -981,7 +982,7 @@ function logout(js) {
         var l = {
           log: "log out completed",
           logdate: convertTZ(new Date()),
-          type: "log out " + js.client.user.username + " password:" + js.client.data.user.password,
+          type: "log out " + js.client.data.user.username + " password:" + js.client.data.user.password,
           gui: uuidV4(),
         }
         logging(l);
@@ -992,7 +993,7 @@ function logout(js) {
     var l = {
       log: err,
       logdate: convertTZ(new Date()),
-      type: "error log out " + js.client.user.username + " password:" + js.client.data.user.password,
+      type: "error log out " + js.client.data.user.username + " password:" + js.client.data.user.password,
       gui: uuidV4(),
     }
     logging(l);
@@ -1035,7 +1036,7 @@ function heartbeat(js) {
       var l = {
         log: err,
         logdate: convertTZ(new Date()),
-        type: "error heart beat " + js.client.user.username + " password:" + js.client.data.user.password,
+        type: "error heart beat " + js.client.data.user.username + " password:" + js.client.data.user.password,
         gui: uuidV4(),
       }
       logging(l);
@@ -1162,14 +1163,17 @@ function editUser(js) {
     u.email = ju.email;
     u.phone2 = ju.phone2;
     u.photo = ju.photo;
+
     updateUser(u).then(function (res) {
+      console.log('updated')
       var l = {
         log: "update user data",
         logdate: convertTZ(new Date()),
-        type: "update user data " + js.client.user.username,
+        type: "update user data " + js.client.data.user.username,
         gui: uuidV4(),
       }
       logging(l);
+      console.log('logged');
       js.client.data.message = 'OK';
       js.resp.send(js.client);
     });
@@ -1177,7 +1181,7 @@ function editUser(js) {
     var l = {
       log: err,
       logdate: convertTZ(new Date()),
-      type: "error update user data" + js.client.user.username,
+      type: "error update user data" + js.client.data.user.username,
       gui: uuidV4(),
     }
     logging(l);
@@ -1189,6 +1193,7 @@ function editUser(js) {
 function updateUser(user) {
   var deferred = Q.defer();
   db = create_db("user");
+  if(user._rev&&user._rev!=undefined)
   db.insert(user, user.gui, function (err, res) {
     if (err) {
       deferred.reject(err);
@@ -1196,6 +1201,8 @@ function updateUser(user) {
       deferred.resolve('OK');
     }
   });
+  else
+  deferred.reject(Error('_rev is not define'));
   return deferred.promise;
 }
 // GET CURRENT USER INFO TO CHECK IF IT'S HAS BEEN LOGGING IN 
@@ -1227,7 +1234,7 @@ function checkRegisterMaxphone(js) {
     var l = {
       log: err,
       logdate: convertTZ(new Date()),
-      type: "error check max phone " + js.client.user.phone1,
+      type: "error check max phone " + js.client.data.user.phone1,
       gui: uuidV4(),
     }
     logging(l);
@@ -1254,7 +1261,7 @@ function checkRegisterAvailableUser(js) { // client.data.user.username
       var l = {
         log: "user name is existed",
         logdate: convertTZ(new Date()),
-        type: "user name is existed " + js.client.user.username,
+        type: "user name is existed " + js.client.data.user.username,
         gui: uuidV4(),
       }
       logging(l);
@@ -1269,7 +1276,7 @@ function checkRegisterAvailableUser(js) { // client.data.user.username
     var l = {
       log: err,
       logdate: convertTZ(new Date()),
-      type: "error check available user for register " + js.client.user.username,
+      type: "error check available user for register " + js.client.data.user.username,
       gui: uuidV4(),
     }
     logging(l);
@@ -1353,7 +1360,7 @@ function showPackageDetailsByUser(js) {
     var l = {
       log: err,
       logdate: convertTZ(new Date()),
-      type: "error show package details" + js.client.user.username,
+      type: "error show package details" + js.client.data.user.username,
       gui: uuidV4(),
     }
     logging(l);
@@ -1418,13 +1425,13 @@ function showMemberListByParent(js) {
     var l = {
       log: err,
       logdate: convertTZ(new Date()),
-      type: "error show member list by parent" + js.client.user.username,
+      type: "error show member list by parent" + js.client.data.user.username,
       gui: uuidV4(),
     }
     logging(l);
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function getMemberListByParent(username, page, maxpage) {
@@ -1935,7 +1942,7 @@ function updatePackageDetails(user, package) {
 
 function upgradePackage(js) {
   viewUser(js.client.data.user).then(function (res) {
-    if (!res.length) throw new Error('User not found');
+    if (!res.length) throw Error('User not found');
     if (res.length) {
       res = res[0];
       updatePackageDetails(res, js.client.data.package).then(function (res) {
@@ -5348,6 +5355,36 @@ var __design_introductions = {
   },
   "language": "javascript"
 };
+var __design_login={
+  "_id": "_design/objectList",
+  "views": {
+    "findByTime": {
+      "map": "function (doc) {\n  emit(doc.logdate,doc);\n}"
+    },
+    "countByUsername": {
+      "reduce": "_count",
+      "map": "function (doc) {\n  emit(doc.username,doc);\n}"
+    },
+    "findByUsername": {
+      "map": "function (doc) {\n  emit(doc.username,doc);\n}"
+    }
+  }
+}
+var __design_log={
+  "_id": "_design/objectList",
+  "views": {
+    "findByTime": {
+      "map": "function (doc) {\n  emit(doc.logdate,doc);\n}"
+    },
+    "countByType": {
+      "reduce": "_count",
+      "map": "function (doc) {\n  emit(doc.type,doc);\n}"
+    },
+    "findByType": {
+      "map": "function (doc) {\n  emit(doc.type,doc);\n}"
+    }
+  }
+}
 var __design_useracceslog = {
   "_id": "_design/objectList",
   "views": {
@@ -5642,7 +5679,8 @@ init_db('payment', __design_payment);
 init_db('user', __design_user);
 init_db('userbinary', __design_binary);
 init_db('package', __design_package);
-
+init_db('logs',__design_log);
+init_db('loginlog',__design_login);
 init_master_user();
 init_default_package();
 
@@ -8032,6 +8070,22 @@ function topupbalance(phone, value) {
 
 
 
+function loggingLogin(log) {
+  var l = {
+    log: "",
+    logdate: "",
+    username: "",
+    gui: uuidV4()
+  };
+  var db = create_db("loginlog");
+  console.log(log);
+  db.insert(log, log.gui, function (err, body) {
+    if (err) console.log(err);
+    else {
+      console.log("log oK ");
+    }
+  });
+}
 
 function logging(log) {
   var l = {

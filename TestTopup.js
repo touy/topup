@@ -919,7 +919,7 @@ function login(js) {
     // console.log(body);
     // encrypt password and compare here 
     if (body.username == js.client.data.user.username && body.password == js.client.data.user.password) {
-      js.client.data = {};
+      console.log('here');
       js.client.username = body.username;
       js.client.logintime = convertTZ(new Date());
       js.client.logintoken = uuidV4();

@@ -17,6 +17,24 @@ r_client = redis.createClient();
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
 var moment = require('moment-timezone');
+var passwordValidator = require('password-validator');
+var passValidator = new passwordValidator();
+passValidator
+.is().min(6)                                    // Minimum length 8 
+.is().max(100)                                  // Maximum length 100 
+.has().uppercase()                              // Must have uppercase letters 
+.has().lowercase()                              // Must have lowercase letters 
+.has().digits()                                 // Must have digits 
+.has().not().spaces()                           // Should not have spaces 
+.is().not().oneOf(['Passw0rd', 'Password123']); // Blacklist these values 
+ 
+
+
+
+
+
+
+
 //const Promise=require ('promise');
 // var Promise = require('nano-promise');
 const Q = require('q');
@@ -332,6 +350,10 @@ function changePassword(js) {
       if (res.rows.length) {
         u = res.rows[0].value;
         u.password = js.client.data.user.password1;
+        var passwordOK=passValidator.validate(u.password, { list: true });
+        if(passwordOK.length)
+          deferred.reject(passwordOK);
+        else
         db.insert(u, u._id, function (err, res) {
           if (err) deferred.reject(err);
           else {

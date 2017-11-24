@@ -1053,6 +1053,7 @@ function showUserInfo(js, isedit) {
     if (!body.length) throw new Error('User not found');
     if (body.length) {
       body = body[0];
+      js.client.data={};
       js.client.data.message = 'OK';
       js.client.data.user = body;
       js.client.data.user.password = "";
@@ -1062,7 +1063,7 @@ function showUserInfo(js, isedit) {
         var l = {
           log: "get user data " + isedit,
           logdate: convertTZ(new Date()),
-          type: "get user data " + js.client.user.username,
+          type: "get user data " + js.client.username,
           gui: uuidV4(),
         }
         logging(l);
@@ -1073,7 +1074,7 @@ function showUserInfo(js, isedit) {
     var l = {
       log: err,
       logdate: convertTZ(new Date()),
-      type: "error get user data  " + js.client.user.username,
+      type: "error get user data  " + js.client.username,
       gui: uuidV4(),
     }
     logging(l);

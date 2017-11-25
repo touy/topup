@@ -19,6 +19,26 @@ bluebird.promisifyAll(redis.Multi.prototype);
 var moment = require('moment-timezone');
 var passwordValidator = require('password-validator');
 var passValidator = new passwordValidator();
+var userValidator = new passwordValidator();
+var phoneValidator = new passwordValidator();
+phoneValidator
+.is().min(11)                                    // Minimum length 8 
+.is().max(11)                                  // Maximum length 100 
+.has().not().letter()                              // Must not have lowercase letters 
+.has().digits()                                 // Must have digits 
+.has().not().symbols()
+.has().not().spaces()                           // Should not have spaces 
+
+userValidator
+.is().min(6)                                    // Minimum length 8 
+.is().max(100)                                  // Maximum length 100 
+//.has().uppercase()                              // Must have uppercase letters 
+.has().lowercase()                              // Must have lowercase letters 
+//.has().digits()                                 // Must have digits 
+.has().not().symbols()
+.has().not().spaces()                           // Should not have spaces 
+//.is().not().oneOf(['Passw0rd', 'Password123']); // Blacklist these values 
+
 passValidator
 .is().min(6)                                    // Minimum length 8 
 .is().max(100)                                  // Maximum length 100 
@@ -350,7 +370,7 @@ function changePassword(js) {
       if (res.rows.length) {
         u = res.rows[0].value;
         u.password = js.client.data.user.password1;
-        var passwordOK=passValidator.validate(u.password, { list: true });
+        var passwordOK=validatePassword(u.password);
         if(passwordOK.length)
           deferred.reject(passwordOK);
         else
@@ -438,35 +458,41 @@ function changeDefaultInfo(js) {
         u.username = js.client.data.user.username;
         u.usercode = u.username;
         u.phone1 = js.client.data.user.phone1;
-            findMaxPhoneNumber(u).then(function (res) {
-              if (res.length > 3) {
+        var vuser=usernameValidate(u.username);
+        var vphone=phonenumberValidate(u.phone1);
+        if(vuser.length||vphone.length){
+          deferred.reject(new Error("invalid username: "+vuser+" invalide phonenumber: "+vphone));
+        }
+        else
+          findMaxPhoneNumber(u).then(function (res) {
+          if (res.length > 3) {
+            var l = {
+              log: "this phonenumber has more than 3 in the databaseh",
+              logdate: convertTZ(new Date()),
+              type: "error change username and phone number " + js.client.data.user.username,
+              gui: uuidV4(),
+            }
+            logging(l);
+            deferred.reject(new Error('this phonenumber has more than 3 in the database'));
+          }
+          else
+            db.insert(u, u._id, function (err, res) {
+              if (err) {
                 var l = {
-                  log: "this phonenumber has more than 3 in the databaseh",
+                  log: err,
                   logdate: convertTZ(new Date()),
                   type: "error change username and phone number " + js.client.data.user.username,
                   gui: uuidV4(),
                 }
                 logging(l);
-                deferred.reject(Error('this phonenumber has more than 3 in the database'));
+                deferred.reject(err);
               }
-              else
-                db.insert(u, u._id, function (err, res) {
-                  if (err) {
-                    var l = {
-                      log: err,
-                      logdate: convertTZ(new Date()),
-                      type: "error change username and phone number " + js.client.data.user.username,
-                      gui: uuidV4(),
-                    }
-                    logging(l);
-                    deferred.reject(err);
-                  }
-                  else {
-                    console.log('before change username and phone2');
-                    deferred.resolve('OK');
-                  }
-                });
+              else {
+                //console.log('before change username and phone2');
+                deferred.resolve('OK');
+              }
             });
+        });
       }
       else{
         var l = {
@@ -6354,8 +6380,9 @@ function register(register /*,needbalance*/ , resp) { //needbalance={main:0.5,bu
       js.user.password = js.user.password.trim();
       if (body.length > 0)
         throw new Error('you could not use this username');
-      if (!validatePassword(js.user.password))
-        throw new Error('password must be length >=6');
+      var v=validatePassword(js.user.password);
+      if (v.length)
+        throw new Error('password is invalid form '+v);
       // FIND max number can use to register a new account ==>
       findMaxPhoneNumber(js.user).then(function (body) {
 
@@ -6936,10 +6963,30 @@ function findUserByUserName(user) {
   });
   return deferred.promise;
 }
-
+function usernameValidate(p){
+  return userValidator.validate(p,{list:true});
+}
+function phonenumberValidate(p){
+  var vp=phoneValidator.validate(p,{list:true});
+  if(!p.indexOf("0205")){
+    return vp;
+  }
+  if(!p.indexOf("0202")){
+    return vp;
+  }
+  if(!p.indexOf("0207")){
+    return vp;
+  }
+  if(!p.indexOf("0209")){
+    return vp;
+  }
+  else{
+    return [];
+  }
+}
 function validatePassword(p) {
-  if (p.length > 5) return true;
-  return false;
+  p=passValidator.validate(p, { list: true });
+  return p;
 }
 
 function findMaxPhoneNumber(user) {
@@ -8006,8 +8053,9 @@ function showBonusTopupBalanceByYear(js) {
 
 
 function checkRegisterPassword(js) {
-  if (!validatePassword(js.client.data.user.password)) {
-    js.client.data.message = "password must be more than 5";
+  var v=validatePassword(js.client.data.user.password);
+  if (v.length) {
+    js.client.data.message = "password is invalid form "+v;
   } else
     js.client.data.message = "OK";
   js.resp.send(js.client);

@@ -24,7 +24,7 @@ var phoneValidator = new passwordValidator();
 phoneValidator
 .is().min(11)                                    // Minimum length 8 
 .is().max(11)                                  // Maximum length 100 
-.has().not().letter()                              // Must not have lowercase letters 
+.has().not().letters()                              // Must not have lowercase letters 
 .has().digits()                                 // Must have digits 
 .has().not().symbols()
 .has().not().spaces()                           // Should not have spaces 

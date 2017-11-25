@@ -290,16 +290,15 @@ app.use('/public', express.static('public'));
 app.get('/', function (req, res) {
   res.send("hello");
 });
+
 var upload = multer({
   storage: multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, _current_picture_path);
-    },
-    filename: function (req, file, cb) {
+    },filename: function (req, file, cb) {
       cb(null, file.originalname +'-'+makeid(6)+ '-' + Date.now() + path.extname(file.originalname));
     }
-  }),
-  fileFilter: function(req, file, cb) {
+  }),fileFilter: function(req, file, cb) {
     var ext = path.extname(file.originalname);
     if (ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg') {
       return cb(res.end('Only images are allowed'), null);
@@ -307,6 +306,7 @@ var upload = multer({
     cb(null, true);
   }
 }).single('userFile');
+
 // UPLOAD image file
 app.post('/upload_img',upload, function(req, res) {
   // client
@@ -320,6 +320,7 @@ app.post('/upload_img',upload, function(req, res) {
   js.client.data.file=_current_picture_path+req.file.filename;
   js.resp.send(js.client);
 });
+
 // GET sample data 
 app.get('/get_sample', function (req, res) {
   html = displayJson(__obj_json);

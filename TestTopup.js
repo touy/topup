@@ -22,11 +22,11 @@ var passValidator = new passwordValidator();
 passValidator
 .is().min(6)                                    // Minimum length 8 
 .is().max(100)                                  // Maximum length 100 
-.has().uppercase()                              // Must have uppercase letters 
-.has().lowercase()                              // Must have lowercase letters 
-.has().digits()                                 // Must have digits 
+//.has().uppercase()                              // Must have uppercase letters 
+//.has().lowercase()                              // Must have lowercase letters 
+//.has().digits()                                 // Must have digits 
 .has().not().spaces()                           // Should not have spaces 
-.is().not().oneOf(['Passw0rd', 'Password123']); // Blacklist these values 
+//.is().not().oneOf(['Passw0rd', 'Password123']); // Blacklist these values 
  
 
 

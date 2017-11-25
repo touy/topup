@@ -28,7 +28,7 @@ phoneValidator
 .has().digits()                                 // Must have digits 
 .has().not().symbols()
 .has().not().spaces()                           // Should not have spaces 
-
+// start with 0205 , 0207, 0209 ,0202
 userValidator
 .is().min(6)                                    // Minimum length 8 
 .is().max(100)                                  // Maximum length 100 
@@ -38,7 +38,6 @@ userValidator
 .has().not().symbols()
 .has().not().spaces()                           // Should not have spaces 
 //.is().not().oneOf(['Passw0rd', 'Password123']); // Blacklist these values 
-
 passValidator
 .is().min(6)                                    // Minimum length 8 
 .is().max(100)                                  // Maximum length 100 
@@ -1157,6 +1156,7 @@ function showUserInfo(js, isedit) {
 function viewUser(user) {
   var deferred = Q.defer();
   db = create_db("user");
+  if(user.username&&user.username!=undefined)
   db.view(__design_view, "findByUserName", {
       key: user.username
     },
@@ -1171,12 +1171,16 @@ function viewUser(user) {
         deferred.resolve(arr);
       }
     });
+  else 
+    deferred.reject('Error username is empty');
   return deferred.promise;
 }
 // UPDATE CURRENT USER INFO
 app.post('/update_userdata', function (req, res) {
-  //client
-  // client.data.user // client.data.user._rev
+  // client
+  // client.data.user 
+  // client.data.user._rev
+  // "username":""
   // "ID": "",
   // "fullname": "",
   // "birthdate": "",
@@ -1200,6 +1204,7 @@ function editUser(js) {
     if (!res.length) throw new Error('User not found');
     var u = res[0];
     var ju = js.client.data.user;
+    //u._rev=ju._rev;
     u.ID = ju.ID;
     u.fullname = ju.fullname;
     u.birthdate = ju.birthdate;
@@ -1210,7 +1215,6 @@ function editUser(js) {
     u.email = ju.email;
     u.phone2 = ju.phone2;
     u.photo = ju.photo;
-
     updateUser(u).then(function (res) {
       console.log('updated')
       var l = {

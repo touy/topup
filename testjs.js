@@ -14,13 +14,57 @@ var moment = require('moment-timezone');
 // var Promise = require('nano-promise');
 const Q=require('q');
 var Promise = require('bluebird');
+const _current_picture_path = './_doc_item_/';
 //Promise.promisifyAll(nano);
 //app.use(express.json());       // to support JSON-encoded bodies
 //app.use(express.urlencoded()); // to support URL-encoded bodies
 const bodyParser = require('body-parser');
 app.use(bodyParser());
 app.use(cors());
-
+var multer  = require('multer');
+var path = require('path');
+var upload = multer({
+    storage: multer.diskStorage({
+      destination: function (req, file, cb) {
+          cb(null, _current_picture_path);
+      },
+      filename: function (req, file, cb) {
+        cb(null, file.originalname +'-'+ Date.now() + path.extname(file.originalname));
+      }
+    }),
+    fileFilter: function(req, file, callback) {
+      var ext = path.extname(file.originalname);
+      if (ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg') {
+        return callback(res.end('Only images are allowed'), null);
+      }
+      callback(null, true);
+    }
+  }).single('userFile');
+  app.get('/',function(req,res){
+    var html="<html><head></head><body>"
+    html='<form id="uploadForm" enctype="multipart/form-data" method="post" action="/upload_img">'
+    html+='<input type="file" name="userFile" />'
+    html+='<input type="submit" value="Upload File" name="submit">'
+    html+='</form>'
+    html+='</body></html>'
+    res.send(html);
+  });
+  // UPLOAD image file
+  app.post('/upload_img',upload, function(req, res) {
+    // client
+    // <form id="uploadForm" enctype="multipart/form-data" method="post">
+    // <input type="file" name="userFile" />   
+    // </form>
+    // return client 
+    // client.data.file
+    var js = {};
+    js.client = req.body;
+    js.resp = res;    	
+    js.client.data={};
+    js.client.data.message="OK file uploaded";
+    js.client.data.file=_current_picture_path+req.file.filename;
+    js.resp.send(js.client);
+  });
 
 
 
@@ -126,54 +170,57 @@ function calculateRange(level){
     }
     return r;
 }
-// var maxlevel = 5; // 4 levels
-// var range = calculateRange(maxlevel);
+// // var maxlevel = 5; // 4 levels
+// // var range = calculateRange(maxlevel);
 
-// var level=1;
-// for (var index = 1; index < range; index++) {
-//     if (calculateRange(level) <= index) {
-//         level++;
-//     }
-//     console.log('level '+level+'index '+(index));
+// // var level=1;
+// // for (var index = 1; index < range; index++) {
+// //     if (calculateRange(level) <= index) {
+// //         level++;
+// //     }
+// //     console.log('level '+level+'index '+(index));
     
-// }
+// // }
 
-// app.listen(88, function listening() {
-//     console.log('Listening on ');
-//   });
-var dbu=[];
-var client=[];
-client.data={};
-client.data.user={};
-client.data.userbinary={};
+// // app.listen(88, function listening() {
+// //     console.log('Listening on ');
+// //   });
+// var dbu=[];
+// var client=[];
+// client.data={};
+// client.data.user={};
+// client.data.userbinary={};
 
-function getBinaryDataByUser(lusername,rusername,level=0,i=0){
-    client.data.user.username=lusername;
-    //if(lusername)    
-    $.jpost("http://localhost:3000/get_default_binary_tree",client,function(res){
-        console.log("LEFT"+res+"\n");
-        client.data.user.username=rusername;    
-        if(res){              
-            arr[i++]=res.data.userbinary;        
-            arr[i--].index=i;                
-            //if(rusername)    
-            if(rusername)         
-            $.jpost("http://localhost:3000/get_default_binary_tree",client,function(res){                
-                console.log("right"+res+"\n");
-                if(res){                    
-                    arr[i]=res.data.userbinary;       
-                    arr[i].index=i;                                              
-                }
-                getBinaryDataByUser(arr[i-1].luser,arr[i-1].ruser,++level,((i-1)*2)+1);
-                getBinaryDataByUser(arr[i].luser,arr[i].ruser,level,((i-1)*2)+2);
-            });
-            else{
-                getBinaryDataByUser(arr[i-1].luser,arr[i-1].ruser,++level,((i-1)*2)+1);
-            }
-        }
-    });
-};
+// function getBinaryDataByUser(lusername,rusername,level=0,i=0){
+//     client.data.user.username=lusername;
+//     //if(lusername)    
+//     $.jpost("http://localhost:3000/get_default_binary_tree",client,function(res){
+//         console.log("LEFT"+res+"\n");
+//         client.data.user.username=rusername;    
+//         if(res){              
+//             arr[i++]=res.data.userbinary;        
+//             arr[i--].index=i;                
+//             //if(rusername)    
+//             if(rusername)         
+//             $.jpost("http://localhost:3000/get_default_binary_tree",client,function(res){                
+//                 console.log("right"+res+"\n");
+//                 if(res){                    
+//                     arr[i]=res.data.userbinary;       
+//                     arr[i].index=i;                                              
+//                 }
+//                 getBinaryDataByUser(arr[i-1].luser,arr[i-1].ruser,++level,((i-1)*2)+1);
+//                 getBinaryDataByUser(arr[i].luser,arr[i].ruser,level,((i-1)*2)+2);
+//             });
+//             else{
+//                 getBinaryDataByUser(arr[i-1].luser,arr[i-1].ruser,++level,((i-1)*2)+1);
+//             }
+//         }
+//     });
+// };
 
-getBinaryDataByUser("souk@TheFriendd",'',0,0);
+// getBinaryDataByUser("souk@TheFriendd",'',0,0);
 
 
+app.listen(5000, "0.0.0.0", function () {
+    console.log('Example app listening on port 5000!')
+  });

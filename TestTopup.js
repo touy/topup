@@ -18,15 +18,9 @@ bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
 var moment = require('moment-timezone');
 var multer  = require('multer');
-var storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-      cb(null, _current_picture_path)
-  },
-  filename: function (req, file, cb) {
-      cb(null, file.originalname+ '-'+makeid(6,1)+'-' + Date.now()+'.jpg')
-  }
-});
-var upload = multer({ storage: storage });
+var path = require('path');
+
+
 
 var passwordValidator = require('password-validator');
 var passValidator = new passwordValidator();
@@ -73,9 +67,22 @@ const Q = require('q');
 //app.use(express.json());       // to support JSON-encoded bodies
 //app.use(express.urlencoded()); // to support URL-encoded bodies
 const bodyParser = require('body-parser');
+var methodOverride = require('method-override');
 //app.use(bodyParser());
 app.use(bodyParser.json());
+app.use(methodOverride());
 app.use(cors());
+// app.use(logErrors)
+// app.use(clientErrorHandler)
+app.use(errorHandler)
+
+function errorHandler (err, req, res, next) {
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(500);
+  res.render('error', { error: err });
+}
 
 var _pp = '/pp';
 var _prp = '/prp';
@@ -283,7 +290,36 @@ app.use('/public', express.static('public'));
 app.get('/', function (req, res) {
   res.send("hello");
 });
-app.post('/upload', upload.single('file'));
+var upload = multer({
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, _current_picture_path);
+    },
+    filename: function (req, file, cb) {
+      cb(null, file.originalname +'-'+makeid(6)+ '-' + Date.now() + path.extname(file.originalname));
+    }
+  }),
+  fileFilter: function(req, file, cb) {
+    var ext = path.extname(file.originalname);
+    if (ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg') {
+      return cb(res.end('Only images are allowed'), null);
+    }
+    cb(null, true);
+  }
+}).single('userFile');
+// UPLOAD image file
+app.post('/upload_img',upload, function(req, res) {
+  // client
+  // return client 
+  // client.data.file
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  js.client.data={};    	
+  js.client.data.message="OK file uploaded";
+  js.client.data.file=_current_picture_path+req.file.filename;
+  js.resp.send(js.client);
+});
 // GET sample data 
 app.get('/get_sample', function (req, res) {
   html = displayJson(__obj_json);
@@ -1039,7 +1075,7 @@ function logout(js) {
         var l = {
           log: "log out completed",
           logdate: convertTZ(new Date()),
-          type: "log out " + js.client.data.user.username + " password:" + js.client.data.user.password,
+          type: "log out " + js.client.username ,
           gui: uuidV4(),
         }
         logging(l);
@@ -1050,7 +1086,7 @@ function logout(js) {
     var l = {
       log: err,
       logdate: convertTZ(new Date()),
-      type: "error log out " + js.client.data.user.username + " password:" + js.client.data.user.password,
+      type: "error log out " + js.client.username ,
       gui: uuidV4(),
     }
     logging(l);

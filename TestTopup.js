@@ -17,6 +17,17 @@ r_client = redis.createClient();
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
 var moment = require('moment-timezone');
+var multer  = require('multer');
+var storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+      cb(null, _current_picture_path)
+  },
+  filename: function (req, file, cb) {
+      cb(null, file.originalname+ '-'+makeid(6,1)+'-' + Date.now()+'.jpg')
+  }
+});
+var upload = multer({ storage: storage });
+
 var passwordValidator = require('password-validator');
 var passValidator = new passwordValidator();
 var userValidator = new passwordValidator();
@@ -272,7 +283,7 @@ app.use('/public', express.static('public'));
 app.get('/', function (req, res) {
   res.send("hello");
 });
-
+app.post('/upload', upload.single('file'));
 // GET sample data 
 app.get('/get_sample', function (req, res) {
   html = displayJson(__obj_json);
@@ -8220,6 +8231,7 @@ function makePhotoFromBase64(content, itemgui, name) {
   });
   return deferred.promise;
 }
+
 
 function makeBase64FromFile(itemgui, name) { // IF use only base64 string we can give short link which need request base64 string only
   var deferred = Q.defer();

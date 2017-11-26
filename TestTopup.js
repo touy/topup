@@ -306,6 +306,7 @@ var upload = multer({
     cb(null, true);
   }
 }).single('userFile');
+
 // UPLOAD image file
 app.post('/upload_img',upload, function(req, res) {
   // client

@@ -45,6 +45,7 @@ var upload = multer({
     html='<form id="uploadForm" enctype="multipart/form-data" method="post" action="/upload_img">'
     html+='<input type="file" name="userFile" />'
     html+='<input type="submit" value="Upload File" name="submit">'
+    html+='<input type="hidden" value="{client}" name="client">'
     html+='</form>'
     html+='</body></html>'
     res.send(html);

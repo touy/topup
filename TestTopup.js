@@ -313,7 +313,7 @@ app.post('/upload_img',upload, function(req, res) {
   // return client 
   // client.data.file
   var js = {};
-  js.client = req.body;
+  js.client = req.body.client;//It is special
   js.resp = res;
   js.client.data={};    	
   js.client.data.message="OK file uploaded";

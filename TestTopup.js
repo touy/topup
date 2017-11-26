@@ -299,9 +299,9 @@ var upload = multer({
       cb(null, file.originalname +'-'+makeid(6)+ '-' + Date.now() + path.extname(file.originalname));
     }
   }),fileFilter: function(req, file, cb) {
-    var ext = path.extname(file.originalname);
+    var ext = path.extname(file.originalname).toLowerCase();
     if (ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg') {
-      return cb(res.end('Only images are allowed'), null);
+      return cb(new Error('Only images are allowed'), null);
     }
     cb(null, true);
   }
@@ -315,10 +315,23 @@ app.post('/upload_img',upload, function(req, res) {
   var js = {};
   js.client = req.body.client;//It is special
   js.resp = res;
-  js.client.data={};    	
-  js.client.data.message="OK file uploaded";
-  js.client.data.file=_current_picture_path+req.file.filename;
-  js.resp.send(js.client);
+  viewUser(js.client).then(function(res){
+    if(res.photo)
+    fs.exists(res.photo, function(exists) {
+      if(exists) {
+        fs.unlink(res.photo);
+      } else {
+        throw new Error('File not found, so not deleting.');
+      }
+    });
+    js.client.data={};    	
+    js.client.data.message="OK file uploaded";
+    js.client.data.file=_current_picture_path+req.file.filename;
+    js.resp.send(js.client);
+  }).catch(function(err){
+    js.client.data.message=err;
+    js.resp.send(js.client);
+  });
 });
 
 // GET sample data 
@@ -4283,32 +4296,276 @@ function getCashingList(user, page, maxpage) {
   return deferred.promise;
 }
 
+// get member count by package 
 app.post('/get_member_count_by_package', function (req, res) {
-   //js.client.data.user,js.client.data.package , js.client.data.user.ismember
+   //client.data.user,
+   //client.data.package , 
+   // return client
+   // client.message='OK'
+   // client.data.user.count=0
+   js.client.data.user.ismember
   var js = {};
   js.client = req.body;
   js.resp = res;
   showTotalMemberByUsername(js);
 });
-app.post('/get_member_count_by_username', function (req, res) { //js.client.data.user , js.client.data.user.ismember
+function showTotalMemberByUsername(js) {
+  getMemberCountByPackage(js.client.data.user, js.client.data.package).then(function (body) {
+    if (body) {
+      js.client.data.user.count = body;
+      js.resp.send(js.client);
+    }
+  }).catch(function (err) {
+    js.client.data.message = err;
+    js.resp.send(js.client);
+  }).done();
+}
+
+function getMemberCountByPackage(user, package) {
+  var deferred = Q.defer();
+  var db = create_db("user");
+  viewUser(user).then(function(res){
+    if (res.length) {
+      db.view(__design_view, "countMembersByPackageValue", {
+        key: [user.username, package.packagevalue]
+      }, function (err, res) {
+        if (err)
+          deferred.reject(err);
+        else {
+          // if (res.rows[0].value.packagevalue == package.packagevalue && user.ismember)
+          //   deferred.resolve(res.rows[0].value + 1);
+          // else
+          deferred.resolve(res.rows[0].value);
+        }
+      });
+    } else {
+      deferred.reject(new Error('User not found'));
+    }
+  }).catch(function(err){
+    deferred.reject(err);
+  });
+    
+  return deferred.promise;
+}
+
+// get member count by username
+app.post('/get_member_count_by_username', function (req, res) { 
+  //client.data.user 
+  //return client
+  // client.message
+  // client.data.user.count=0
   var js = {};
   js.client = req.body;
   js.resp = res;
   showMemberCountByUsername(js);
 });
-app.post('/show_coupling_list_by_user', function (req, res) { //js.client.data.user,js.client.data.package , js.client.data.user.ismember, js.client.data.user.month ,js.client.data.user.year
+function showMemberCountByUsername(js) {
+  var db = create_db('user')
+  getMemberCount(js.client.data.user).then(function (body) {
+    if (body) {
+      js.client.data.user.count = body;
+      js.resp.send(js.client);
+    }
+  }).catch(function (err) {
+    js.client.data.message = err;
+    js.resp.send(js.client);
+  }).done();
+}
+
+function getMemberCount(user) {
+  var deferred = Q.defer();
+  var db = create_db("user");
+  viewUser(user).then(function(res){
+    if (res.length) {
+      
+            db.view(__design_view, "countMembers", {
+              key: user.username
+            }, function (err, res) {
+              if (err)
+                deferred.reject(err);
+              else {
+                // if (user.ismember)
+                //   deferred.resolve(res.rows[0].value + 1);
+                // else
+                deferred.resolve(res.rows[0].value);
+              }
+            });
+          } else {
+            deferred.reject("User not found");
+          }
+  }).catch(function(err){
+    deferred.reject(err);
+  });
+
+
+  return deferred.promise;
+}
+
+// show coupling score list by user
+app.post('/show_coupling_list_by_user', function (req, res) { 
+  //client.data.user
+  // return client 
+  // client.data.couplingscore={arr:{},count:0}
   var js = {};
   js.client = req.body;
   js.resp = res;
   showCouplingScoreByUser(js); // show who has the most introduction codes by month
 });
-app.post('/show_the_best_friend_by_month_year', function (req, res) { //js.client.data.user,js.client.data.package , js.client.data.user.ismember, js.client.data.user.month ,js.client.data.user.year
+
+
+function showCouplingScoreByUser(js) {
+  getCouplingScoreByUser(js).then(function (body) {
+    js.client.data.couplingscore = body;
+    js.resp.send(js.client);
+  }).catch(function (err) {
+    js.client.data.message = err;
+    js.resp.send(js.client);;
+  });
+}
+
+function getCountCouplingScoreByUser(user) {
+  var deferred = Q.defer();
+  var db = create_db('couplingscore');
+  db.view(__design_view, "findCountByUsername", {
+    key: user.username,
+    include_docs: true,
+    descending: true,
+  }, function (err, res) {
+    if (err)
+      deferred.reject(err);
+    else {
+      var arr = [];
+      if (res.rows.length) {
+        for (var index = 0; index < res.rows.length; index++) {
+          res.rows.push(res.rows[index].value);
+        }
+      }
+      deferred.resolve(arr);
+    }
+  });
+  return deferred.promise;
+}
+function getCouplingScoreByUser(js) {
+  var deferred = Q.defer();
+  var db = create_db('couplingscore');
+  getCountCouplingScoreByUser(js.client.data.user, js.client.data.page, js.client.data.maxpage).then(function (body) {
+    if (body) {
+      var count = body[0];
+      // var __doc={
+      //   usergui:"",
+      //   username:"",
+      //   Lscore:0,
+      //   Rscore:0,
+      //   balance:0,
+      //   createddate:convertTZ(new Date()),
+      //   gui:uuidV4()
+      //   };
+      js.db.view(__design_view, "findByUsername", {
+        key: js.client.data.user.username,
+        include_docs: true,
+        descending: true,
+        limit: maxpage,
+        skip: page
+      }, function (err, res) {
+        if (err)
+          deferred.reject(err);
+        else {
+          var arr = [];
+          if (res.rows.length) {
+            for (var index = 0; index < res.rows.length; index++) {
+              arr.push(res.rows[index].value);
+            }
+          }
+          deferred.resolve({
+            arr: arr,
+            count: count
+          });
+        }
+      });
+    }
+  }).catch(function (err) {
+    deferred.reject(err);
+  });
+  return deferred.promise;
+}
+
+// show who has most introduction by month year
+app.post('/show_the_best_friend_by_month_year', function (req, res) {
+   //client.data.user,
+  //client.data.user.month ,
+  //client.data.user.year
+  // client.data.page 
+  // client.data.maxpage
+  // return client
+  // client.data.message='OK'
+  // client.data.thebestfriend={arr:{},count=0}
   var js = {};
   js.client = req.body;
   js.resp = res;
   showTheBestFriendByMonthYear(js); // show who has the most introduction codes by month
 });
-
+function findCountTheBestFriendByMonthYear(month, year) {
+  var deferred = Q.defer();
+  var db = create_db('introductions');
+  db.view(__design_view, 'findCountByMonthYear', {
+      key: [month, year]
+    },
+    function (err, res) {
+      if (err) deferred.reject(err);
+      else {
+        var arr = [];
+        if (res.rows.length)
+          for (var index = 0; index < res.rows.length; index++) {
+            arr.push(res.rows[index].value);
+          }
+        deferred.resolve(arr[0]);
+      }
+    });
+  return deferred.promise;
+}
+function showTheBestFriendByMonthYear(js) { // get from the most introduction by month  from introductions
+  var introd = {
+    gui: uuidV4(),
+    username: '',
+    month: 0,
+    year: 0,
+    count: 0
+  };
+  var db = create_db('introductions');
+  //TODO
+  findCountTheBestFriendByMonthYear(js.client.data.month, js.client.data.year).then(
+    function (body) {
+      var count = body[0];
+      db.view(__design_view, 'findByMonthYear', {
+        startkey: [js.client.data.month, js.client.data.year, ""],
+        endkey: [js.client.data.month, js.client.data.year, "\u9999"],
+        decending: true,
+        skip: js.client.data.page,
+        limit: js.client.data.maxpage
+      }, function (err, res) {
+        if (err) {
+          js.client.data.message = err;
+          js.resp.send(js.client);;
+        } else {
+          var arr = [];
+          if (res.rows.length) {
+            for (var index = 0; index < array.length; index++) {
+              arr.push(array[index].value);
+            }
+          }
+          js.client.data.thebestfriend = {
+            arr: arr,
+            count: count
+          };
+          js.client.data.message = 'OK';
+          js.resp.send(js.client);
+        }
+      });
+    }).catch(function (err) {
+    js.client.data.message = err;
+    js.resp.send(js.client);
+  });
+}
 function findTheBestFriendByMonthYear(user, month, year) {
   var deferred = Q.defer();
   var db = create_db('introductions');
@@ -4380,74 +4637,10 @@ function addTheBestFriendLog(user, introd, month, year) {
 
 }
 
-function findCountTheBestFriendByMonthYear(month, year) {
-  var deferred = Q.defer();
-  var db = create_db('introductions');
-  db.view(__design_view, 'findCountByMonthYear', {
-      key: [month, year]
-    },
-    function (err, res) {
-      if (err) deferred.reject(err);
-      else {
-        var arr = [];
-        if (res.rows.length)
-          for (var index = 0; index < res.rows.length; index++) {
-            arr.push(res.rows[index].value);
-          }
-        deferred.resolve(arr[0].value);
-      }
-    });
-  return deferred.promise;
-}
-
-function showTheBestFriendByMonthYear(js) { // get from the most introduction by month  from introductions
-  var introd = {
-    gui: uuidV4(),
-    username: '',
-    month: 0,
-    year: 0,
-    count: 0
-  };
-  var db = create_db('introductions');
-  //TODO
-  findCountTheBestFriendByMonthYear(js.client.data.month, js.client.data.year).then(
-    function (body) {
-      var count = body[0];
-      db.view(__design_view, 'findByMonthYear', {
-        startkey: [js.client.data.month, js.client.data.year, ""],
-        endkey: [js.client.data.month, js.client.data.year, "\u9999"],
-        decending: true,
-        skip: js.client.data.page,
-        limit: js.client.data.maxpage
-      }, function (err, res) {
-        if (err) {
-          js.client.data.message = err;
-          js.resp.send(js.client);;
-        } else {
-          var arr = [];
-          if (res.rows.length) {
-            for (var index = 0; index < array.length; index++) {
-              arr.push(array[index].value);
-            }
-          }
-          js.client.data.thebestfriend = {
-            arr: arr,
-            count: count
-          };
-          js.client.data.message = 'OK';
-          js.resp.send(js.client);
-        }
-      });
-    }).catch(function (err) {
-    js.client.data.message = err;
-    js.resp.send(js.client);
-  }).done();
-}
-//
-
 
 //for a certain user
-app.post('/show_latest_members', function (req, res) { //js.client.data.user , js.client.data.package
+app.post('/show_latest_members', function (req, res) { 
+  //js.client.data.user 
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -7205,83 +7398,7 @@ function findByUserGui(js) {
 
 
 
-function showCouplingScoreByUser(js) {
-  js.db = create_db('couplingscore');
-  getCouplingScoreByUser(js).then(function (body) {
-    js.client.data.couplingscore = body;
-    js.resp.send(js.client);
-  }).catch(function (err) {
-    js.client.data.message = err;
-    js.resp.send(js.client);;
-  });
-}
 
-function getCountCouplingScoreByUser(user) {
-  var deferred = Q.defer();
-  var db = create_db('couplingscore');
-  db.view(__design_view, "findCountByUsername", {
-    key: user.username,
-    include_docs: true,
-    descending: true,
-  }, function (err, res) {
-    if (err)
-      deferred.reject(err);
-    else {
-      var arr = [];
-      if (res.rows.length) {
-        for (var index = 0; index < res.rows.length; index++) {
-          res.rows.push(res.rows[index].value);
-        }
-      }
-      deferred.resolve(arr);
-    }
-  });
-  return deferred.promise;
-}
-
-function getCouplingScoreByUser(js) {
-  var deferred = Q.defer();
-  var db = create_db('couplingscore');
-  getCountCouplingScoreByUser(js.client.data.user, js.client.data.page, js.client.data.maxpage).then(function (body) {
-    if (body) {
-      var count = body[0];
-      // var __doc={
-      //   usergui:"",
-      //   username:"",
-      //   Lscore:0,
-      //   Rscore:0,
-      //   balance:0,
-      //   createddate:convertTZ(new Date()),
-      //   gui:uuidV4()
-      //   };
-      js.db.view(__design_view, "findByUsername", {
-        key: js.client.data.user.username,
-        include_docs: true,
-        descending: true,
-        limit: maxpage,
-        skip: page
-      }, function (err, res) {
-        if (err)
-          deferred.reject(err);
-        else {
-          var arr = [];
-          if (res.rows.length) {
-            for (var index = 0; index < res.rows.length; index++) {
-              arr.push(res.rows[index].value);
-            }
-          }
-          deferred.resolve({
-            arr: arr,
-            count: count
-          });
-        }
-      });
-    }
-  }).catch(function (err) {
-    deferred.reject(err);
-  }).done();
-  return deferred.promise;
-}
 
 function addCouplingScore(js, parent) { //add for above parent only, which search from first parent 
   //find exsit coupling score
@@ -7498,12 +7615,8 @@ function get_member_count_by_year_month(js) {
 function getMemberCountByPackageYearMonth(user, package, year, month) {
   var deferred = Q.defer();
   var db = create_db("user");
-  db.view(__design_view, "findByUsername", {
-    key: user.username,
-    limit: 1
-  }, function (err, res) {
-    if (err) deferred.reject(err);
-    else if (res.rows.length) {
+  viewUser(user).then(function(res){
+    if (res.length) {
       db.view(__design_view, "countMembersByPackageValueMonthYear", {
         key: [user.username, package.packagevalue, [year, month]]
       }, function (err, res) {
@@ -7517,92 +7630,17 @@ function getMemberCountByPackageYearMonth(user, package, year, month) {
         }
       });
     } else {
-      deferred.resolve(0);
+      deferred.reject(new Error('User not found'));
     }
+  }).catch(function(err){
+    deferred.reject(err);
   });
   return deferred.promise;
 }
 
-function showTotalMemberByUsername(js) {
-  getMemberCountByPackage(js.client.data.user, js.client.data.package).then(function (body) {
-    if (body) {
-      js.client.data.user.count = body;
-      js.resp.send(js.client);
-    }
-  }).catch(function (err) {
-    js.client.data.message = err;
-    js.resp.send(js.client);
-  }).done();
-}
 
-function getMemberCountByPackage(user, package) {
-  var deferred = Q.defer();
-  var db = create_db("user");
-  db.view(__design_view, "findByUsername", {
-    key: user.username,
-    limit: 1
-  }, function (err, res) {
-    if (err) deferred.reject(err);
-    else if (res.rows.length) {
-      db.view(__design_view, "countMembersByPackageValue", {
-        key: [user.username, package.packagevalue]
-      }, function (err, res) {
-        if (err)
-          deferred.reject(err);
-        else {
-          // if (res.rows[0].value.packagevalue == package.packagevalue && user.ismember)
-          //   deferred.resolve(res.rows[0].value + 1);
-          // else
-          deferred.resolve(res.rows[0].value);
-        }
-      });
-    } else {
-      deferred.resolve(0);
-    }
-  });
-  return deferred.promise;
-}
 
-function showMemberCountByUsername(js) {
-  var db = create_db('user')
-  getMemberCount(js.client.data.user).then(function (body) {
-    if (body) {
-      js.client.data.user.count = body;
-      js.resp.send(js.client);
-    }
-  }).catch(function (err) {
-    js.client.data.message = err;
-    js.resp.send(js.client);
-  }).done();
-}
 
-function getMemberCount(user) {
-  var deferred = Q.defer();
-  var db = create_db("user");
-  db.view(__design_view, "findByUsername", {
-    key: user.username,
-    limit: 1
-  }, function (err, res) {
-    if (err) deferred.reject(err);
-    else if (res.rows.length) {
-      db.view(__design_view, "countMembers", {
-        key: user.username
-      }, function (err, res) {
-        if (err)
-          deferred.reject(err);
-        else {
-          // if (user.ismember)
-          //   deferred.resolve(res.rows[0].value + 1);
-          // else
-          deferred.resolve(res.rows[0].value);
-        }
-      });
-    } else {
-      deferred.resolve(0);
-    }
-  });
-  return deferred.promise;
-}
 
 
 

@@ -33,9 +33,9 @@ var upload = multer({
       }
     }),
     fileFilter: function(req, file, callback) {
-      var ext = path.extname(file.originalname);
+      var ext = path.extname(file.originalname).toLowerCase();
       if (ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg') {
-        return callback(res.end('Only images are allowed'), null);
+        return callback(new Error('Only images are allowed'), null);
       }
       callback(null, true);
     }

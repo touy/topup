@@ -286,6 +286,7 @@ __master_user.parentname = __master_user.username;
 //     console.log("create master completedly");
 // });
 app.use('/public', express.static('public'));
+app.use('/images',express.static('_doc_item_'));
 
 app.get('/', function (req, res) {
   res.send("hello");
@@ -326,7 +327,7 @@ app.post('/upload_img',upload, function(req, res) {
     });
     js.client.data={};    	
     js.client.data.message="OK file uploaded";
-    js.client.data.file=_current_picture_path+req.file.filename;
+    js.client.data.file='/images/'+req.file.filename;
     js.resp.send(js.client);
   }).catch(function(err){
     js.client.data.message=err;
@@ -4639,8 +4640,16 @@ function addTheBestFriendLog(user, introd, month, year) {
 
 
 //for a certain user
+// show latest member by user
 app.post('/show_latest_members', function (req, res) { 
-  //js.client.data.user 
+  //client.data.user
+  //client.data.page
+  //client.data.maxpage
+  //client.data.month
+  //client.data.year
+  //return client
+  // client.message='OK'
+  //client.data.latestmember={arr:{},count:0}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -4709,8 +4718,17 @@ function showLatestMembers(js) {
   return deferred.promise;
 
 }
+
 // for admin
-app.post('/show_latest_members_list', function (req, res) { //js.client.data.user , js.client.data.package
+// show latest member list 
+app.post('/show_latest_members_list', function (req, res) { 
+  //client.data.page
+  //client.data.maxpage
+  //client.data.month
+  //client.data.year
+  //return client
+  // client.message='OK'
+  //client.data.latestmember={arr:{},count:0}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -4722,7 +4740,7 @@ app.post('/show_latest_members_list', function (req, res) { //js.client.data.use
     function (err) {
       js.client.data.message = err;
       js.resp.send(client);
-    }).done(); //{month:0,year:0,package1:0,package2:0,package3:0}
+    }); //{month:0,year:0,package1:0,package2:0,package3:0}
 });
 
 function countLatestMemberList(month, year) {
@@ -4774,14 +4792,10 @@ function showLatestMembersList(js) {
       });
   }).catch(function (err) {
     deferred.reject(err);
-  }).done();
-
+  });
   return deferred.promise;
 
 }
-
-
-
 
 
 app.get('/default_master', function (req, res) {
@@ -4791,7 +4805,13 @@ app.get('/default_master', function (req, res) {
   init_default_master_user(js);
 });
 ///*********************** */
+
+// check if this username is user's members
 app.post('/check_your_member', function (req, res) {
+  //client
+  //client.data.user.username
+  //return client
+  //client.message='ok'
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -4807,34 +4827,166 @@ app.post('/check_your_member', function (req, res) {
 function checkYourMember(username) {
   var deferred = Q.defer();
   var db = create_db('user');
-  var cu = __cur_client.username;
-  //.... need to FIND here
-  deferred.resolve(username);
+  viewUser({username:username}).then(function(res){
+    if(res.aboveparents.indexOf(__cur_client.username)>-1)
+      deferred.resolve(username);
+  }).catch(function(err){
+    deferred.reject(err);
+  });
+  //.... need to FIND here , 
+  //deferred.resolve(username);
 
   return deferred.promise;
 }
 
-
-
-app.post('/check_register_password', function (req, res) { //js.client.data.user,js.client.data.package , js.client.data.user.ismember, js.client.data.user.month ,js.client.data.user.year
+// check if password is OK
+app.post('/check_register_password', function (req, res) { 
+  //client.data.user,
+  //return client
+  // client.message='OK'
   var js = {};
   js.client = req.body;
   js.resp = res;
   checkRegisterPassword(js);
 });
-app.post('/check_register_sponsor_code', function (req, res) { //js.client.data.user,js.client.data.package , js.client.data.user.ismember, js.client.data.user.month ,js.client.data.user.year
+
+function checkRegisterPassword(js) {
+  var v=validatePassword(js.client.data.user.password);
+  if (v.length) {
+    js.client.data.message = "password is invalid form "+v;
+  } else
+    js.client.data.message = "OK";
+  js.resp.send(js.client);
+}
+
+
+// register sponser code
+app.post('/check_register_sponsor_code', function (req, res) { 
+  //client
+  //client.data.user
+  //return client
+  // client.data.message="OK"
   var js = {};
   js.client = req.body;
   js.resp = res;
   checkRegisterSponserCode(js);
 });
-app.post('/check_register_need_balance_per_package', function (req, res) { //js.client.data.user,js.client.data.package , js.client.data.user.ismember, js.client.data.user.month ,js.client.data.user.year
+function findUserByIntroductionCode(js) {
+  var deferred = Q.defer();
+  var db = create_db('user');
+  db.view(__design_view, "findByIntroductorcode", {
+    key: js.user.introductorcode,
+    include_docs: true
+  }, function (err, res) {
+    if (err) {
+      deferred.reject(new Error(err));
+    } else {
+      var arr = [];
+      if (res.rows.length) {
+        arr.push(res.rows[0].value);
+      }
+      deferred.resolve(arr);
+    }
+  });
+  return deferred.promise;
+}
+function checkRegisterSponserCode(js) {
+  var obj = js.client.data;
+  findUserByIntroductionCode(obj).then(function (body) {
+    if (body) {
+      js.client.data.message = "OK";
+      js.resp.send(js.client);
+    } else {
+      js.client.data.message = "could not find sponsor code";
+      js.resp.send(js.client);
+    }
+  });
+}
+
+// check balnce for resiter
+app.post('/check_register_need_balance_per_package', function (req, res) { 
+  //client.data.user,
+  //client.data.user.username
+  //client.data.package
+  // return client
+  // client.data.message='OK'
+  // client.data.balance={maine:0,bonus:0}
   var js = {};
   js.client = req.body;
   js.resp = res;
   checkRegisterNeedBalancePerPackage(js);
 });
+function findNeedBalanceByUserGui(js, registra) {
+  //var userCurrentBalance=0;
+  //js.needbalance={main:0.5,bonus:0.5}
+  var deferred = Q.defer();
+  js.db = create_db("mainBalance");
+  js.db.view(__design_view, "findByGui", {
+    key: registra.gui,
+    include_docs: true,
+    descending: true,
+    limit: 1
+  }, function (err, body) {
+    if (err) {
+      deferred.reject(err);
+    } else {
+      if (!body.rows.length) {
+        deferred.reject(new Error("no record"));
+      } else {
+        mainBalance = body.rows[0].value;
+        js.db = create_db("bonusbalance");
+        js.db.view(__design_view, "findByGui", {
+          key: registra.gui,
+          include_docs: true,
+          descending: true,
+          limit: 1
+        }, function (err, body) {
+          if (err) deferred.reject(err);
+          else {
+            bonusBalance = body.rows[0].value;
+            deferred.resolve({
+              main: mainBalance,
+              bonus: bonusBalance
+            });
+          }
+        });
 
+      }
+    }
+  });
+  return deferred.promise;
+}
+function checkRegisterNeedBalancePerPackage(js) {
+  var db = create_db('user');
+  db.view(__design_view, "findByUsername", {
+    key: js.client.username
+  }, function (err, res) {
+    if (err) {
+      js.client.data.message = err;
+      js.resp.send(js.client);;
+    } else if (res.rows.length) {
+      var registra = res.rows[0].value;
+      findNeedBalanceByUserGui(js, registra).then(function (body) {
+        var registrabalance = body;
+        js.client.data.balance=body;
+        if ( /*registrabalance.bonus.balance!=registra.balancevalue||*/ registrabalance.main.balance != registra.mainbalance) {
+          js.client.data.message = "Error: balance is abnormal";
+          js.resp.send(js.client);
+        }
+        if (registrabalance.main.balance <= js.client.data.package.packagevalue) {
+          js.client.data.message = "Error: you don't have enough fund";
+          js.resp.send(js.client);
+        }
+        js.client.data.message = ("OK:main:%s / package: %s", registrabalance.main.balance, js.client.data.package.packagevalue);
+        js.resp.send(js.client);
+      });
+    } else {
+      js.client.data.message = "could not find current user";
+      js.resp.send(js.client);
+    }
+  });
+
+}
 // USER, js.client.data.user 
 app.post('/show_user_accessed_log', function (req, res) { //js.client.data.user,js.client.data.package , js.client.data.user.ismember, js.client.data.user.month ,js.client.data.user.year
   var js = {};
@@ -7257,25 +7409,7 @@ function findMaxPhoneNumber(user) {
 }
 
 
-function findUserByIntroductionCode(js) {
-  var deferred = Q.defer();
-  var db = create_db('user');
-  db.view(__design_view, "findByIntroductorcode", {
-    key: js.user.introductorcode,
-    include_docs: true
-  }, function (err, res) {
-    if (err) {
-      deferred.reject(new Error(err));
-    } else {
-      var arr = [];
-      if (res.rows.length) {
-        arr.push(res.rows[0].value);
-      }
-      deferred.resolve(arr);
-    }
-  });
-  return deferred.promise;
-}
+
 
 function findClientExist(js) {
   var deferred = Q.defer();
@@ -7296,46 +7430,7 @@ function findClientExist(js) {
   return deferred.promise;
 }
 
-function findNeedBalanceByUserGui(js, registra) {
-  //var userCurrentBalance=0;
-  //js.needbalance={main:0.5,bonus:0.5}
-  var deferred = Q.defer();
-  js.db = create_db("mainBalance");
-  js.db.view(__design_view, "findByGui", {
-    key: registra.gui,
-    include_docs: true,
-    descending: true,
-    limit: 1
-  }, function (err, body) {
-    if (err) {
-      deferred.reject(err);
-    } else {
-      if (!body.rows.length) {
-        deferred.reject(new Error("no record"));
-      } else {
-        mainBalance = body.rows[0].value;
-        js.db = create_db("bonusbalance");
-        js.db.view(__design_view, "findByGui", {
-          key: registra.gui,
-          include_docs: true,
-          descending: true,
-          limit: 1
-        }, function (err, body) {
-          if (err) deferred.reject(err);
-          else {
-            bonusBalance = body.rows[0].value;
-            deferred.resolve({
-              main: mainBalance,
-              bonus: bonusBalance
-            });
-          }
-        });
 
-      }
-    }
-  });
-  return deferred.promise;
-}
 
 function findRegisterPackageByUser(js) {
   var deferred = Q.defer();
@@ -8142,58 +8237,8 @@ function showBonusTopupBalanceByYear(js) {
 
 
 
-function checkRegisterPassword(js) {
-  var v=validatePassword(js.client.data.user.password);
-  if (v.length) {
-    js.client.data.message = "password is invalid form "+v;
-  } else
-    js.client.data.message = "OK";
-  js.resp.send(js.client);
-}
 
-function checkRegisterSponserCode(js) {
-  var obj = js.client.data;
-  findUserByIntroductionCode(obj).then(function (body) {
-    if (body) {
-      js.client.data.message = "OK";
-      js.resp.send(js.client);
-    } else {
-      js.client.data.message = "could not find sponsor code";
-      js.resp.send(js.client);
-    }
-  });
-}
 
-function checkRegisterNeedBalancePerPackage(js) {
-  var db = create_db('user');
-  db.view(__design_view, "findByUsername", {
-    key: js.client.username
-  }, function (err, res) {
-    if (err) {
-      js.client.data.message = err;
-      js.resp.send(js.client);;
-    } else if (res.rows.length) {
-      var registra = res.rows[0].value;
-      findNeedBalanceByUserGui(js, registra).then(function (body) {
-        var registrabalance = body;
-        if ( /*registrabalance.bonus.balance!=registra.balancevalue||*/ registrabalance.main.balance != registra.mainbalance) {
-          js.client.data.message = "Error: balance is abnormal";
-          js.resp.send(js.client);
-        }
-        if (registrabalance.main.balance <= js.client.data.package.packagevalue) {
-          js.client.data.message = "Error: you don't have enough fund";
-          js.resp.send(js.client);
-        }
-        js.client.data.message = ("OK:main:%s / package: %s", registrabalance.main.balance, js.client.data.package.packagevalue);
-        js.resp.send(js.client);
-      });
-    } else {
-      js.client.data.message = "could not find current user";
-      js.resp.send(js.client);
-    }
-  });
-
-}
 
 
 

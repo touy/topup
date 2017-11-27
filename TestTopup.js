@@ -300,6 +300,7 @@ app.get('/', function (req, res) {
   res.send("hello");
 });
 
+
 var upload = multer({
   storage: multer.diskStorage({
     destination: function (req, file, cb) {
@@ -316,17 +317,16 @@ var upload = multer({
   }
 }).single('userFile');
 
-
 // UPLOAD image file
 app.post('/upload_img',upload, function(req, res) {
   // client
   // return client 
   // client.data.file
   var js = {};
-  js.client = req.body.client;//It is special
+  js.client =JSON.parse(req.body.client);//It is special
   console.log(js.client);
   js.resp = res;
-  viewUser(js.client).then(function(res){
+  viewUser(js.client.data.user).then(function(res){
     if(res.photo)
     fs.exists(res.photo, function(exists) {
       if(exists) {
@@ -345,6 +345,21 @@ app.post('/upload_img',upload, function(req, res) {
   });
 });
 
+
+app.get('/images',function(req,res){
+  var client={};
+  client.data={};
+  client.data.user={};
+  client.data.user.username="fd0007";
+  var html="<html><head></head><body>"
+  html="<form id='uploadForm' enctype='multipart/form-data' method='post' action='/upload_img'>"
+  html+="<input type='file' name='userFile' />"
+  html+="<input type='submit' value='Upload File' name='submit' />"
+  html+="<input type='hidden' value='"+JSON.stringify(client)+"' name='client'>"
+  html+="</form>"
+  html+="</body></html>"
+  res.send(html);
+});
 
 //logs
 app.post('/get_logs',function(req,res){

@@ -77,12 +77,20 @@ app.use(cors());
 app.use(errorHandler)
 
 function errorHandler (err, req, res, next) {
+  var l = {
+    log: err,
+    logdate: convertTZ(new Date()),
+    type: "error",
+    gui: uuidV4()
+  };
+  errorLogging(l);
   if (res.headersSent) {
     return next(err);
   }
   res.status(500);
   res.render('error', { error: err });
 }
+
 
 var _pp = '/pp';
 var _prp = '/prp';
@@ -308,6 +316,7 @@ var upload = multer({
   }
 }).single('userFile');
 
+
 // UPLOAD image file
 app.post('/upload_img',upload, function(req, res) {
   // client
@@ -335,6 +344,214 @@ app.post('/upload_img',upload, function(req, res) {
   });
 });
 
+
+//logs
+app.post('/get_logs',function(req,res){
+  // client
+  //client.data.starttime
+  //client.data.endtime
+  //client.data.page 
+  //client.data.maxpage
+  // return client 
+  // client.data.message='OK'
+  // client.data.errorlog={arr:{},count:0}
+  var js = {};
+  js.client = req.body.client;//It is special
+  js.resp = res;
+
+});
+function getLLog(js){
+  viewLog(js.client.data.starttime,js.client.data.endtime,js.client.data.page,js.client.data.maxpage).then(function(res){
+    js.client.data.message='OK';
+    js.client.data.errlog=res;
+    js.resp.send(js.client);
+  }).catch(function(err){
+    js.client.data.message=err;
+    js.resp.send(js.client);
+  });
+}
+function countLog(starttime,endtime){
+  var deferred=Q.defer();  
+  var db=create_db('logs');
+  db.view(__design_view,'countByTime',{startkey:starttime,endkey:endtime},function(err,res){
+    if(err)deferred.reject(err);
+    else{
+      var arr=[];
+      if(res.rows.length){
+        arr.push(res.rows[0].value);
+      }
+      deferred.resolve(arr);
+    }
+  });
+  return deferred.promise;
+}
+function viewLog(starttime,endtime,page,maxpage){
+  var deferred=Q.defer();
+  var db=create_db('logs');
+  countLog(starttime,endtime).then(function(res){
+    var count=res;
+    db.view(__design_view,'findByTime',{
+      startkey:starttime,
+      endkey:endtime,
+      decending:true,
+      limit:maxpage,
+      skip:page},function(err,res){
+      if(err) defer.reject(err);
+      else{
+        var arr=[];
+        if(res.rows.length){
+          for (let index = 0; index < array.length; index++) {
+            const element = array[index].value;
+            arr.push(element);
+          }          
+        }
+        deferred.resolve({arr:arr,count:count});
+      }
+    });
+  }).catch(function(err){
+    deferred.reject(err);
+  });  
+  return deferred.promise;
+}
+
+//login log
+app.post('/get_login_log',function(req,res){
+  // client
+  //client.data.starttime
+  //client.data.endtime
+  //client.data.page 
+  //client.data.maxpage
+  // return client 
+  // client.data.message='OK'
+  // client.data.errorlog={arr:{},count:0}
+  var js = {};
+  js.client = req.body.client;//It is special
+  js.resp = res;
+
+});
+function getLoginLog(js){
+  viewLoginLog(js.client.data.starttime,js.client.data.endtime,js.client.data.page,js.client.data.maxpage).then(function(res){
+    js.client.data.message='OK';
+    js.client.data.errlog=res;
+    js.resp.send(js.client);
+  }).catch(function(err){
+    js.client.data.message=err;
+    js.resp.send(js.client);
+  });
+}
+function countLoginLog(starttime,endtime){
+  var deferred=Q.defer();  
+  var db=create_db('loginlog');
+  db.view(__design_view,'countByTime',{startkey:starttime,endkey:endtime},function(err,res){
+    if(err)deferred.reject(err);
+    else{
+      var arr=[];
+      if(res.rows.length){
+        arr.push(res.rows[0].value);
+      }
+      deferred.resolve(arr);
+    }
+  });
+  return deferred.promise;
+}
+function viewLoginLog(starttime,endtime,page,maxpage){
+  var deferred=Q.defer();
+  var db=create_db('loginlog');
+  countLoginLog(starttime,endtime).then(function(res){
+    var count=res;
+    db.view(__design_view,'findByTime',{
+      startkey:starttime,
+      endkey:endtime,
+      decending:true,
+      limit:maxpage,
+      skip:page},function(err,res){
+      if(err) defer.reject(err);
+      else{
+        var arr=[];
+        if(res.rows.length){
+          for (let index = 0; index < array.length; index++) {
+            const element = array[index].value;
+            arr.push(element);
+          }          
+        }
+        deferred.resolve({arr:arr,count:count});
+      }
+    });
+  }).catch(function(err){
+    deferred.reject(err);
+  });  
+  return deferred.promise;
+}
+
+
+//Error log
+app.post('/get_error_log',function(req,res){
+  // client
+  //client.data.starttime
+  //client.data.endtime
+  //client.data.page 
+  //client.data.maxpage
+  // return client 
+  // client.data.message='OK'
+  // client.data.errorlog={arr:{},count:0}
+  var js = {};
+  js.client = req.body.client;//It is special
+  js.resp = res;
+
+});
+function getErrorLog(js){
+  viewErrorLog(js.client.data.starttime,js.client.data.endtime,js.client.data.page,js.client.data.maxpage).then(function(res){
+    js.client.data.message='OK';
+    js.client.data.errlog=res;
+    js.resp.send(js.client);
+  }).catch(function(err){
+    js.client.data.message=err;
+    js.resp.send(js.client);
+  });
+}
+function countErrorLog(starttime,endtime){
+  var deferred=Q.defer();  
+  var db=create_db('errorLogging');
+  db.view(__design_view,'countByTime',{startkey:starttime,endkey:endtime},function(err,res){
+    if(err)deferred.reject(err);
+    else{
+      var arr=[];
+      if(res.rows.length){
+        arr.push(res.rows[0].value);
+      }
+      deferred.resolve(arr);
+    }
+  });
+  return deferred.promise;
+}
+function viewErrorLog(starttime,endtime,page,maxpage){
+  var deferred=Q.defer();
+  var db=create_db('errorLogging');
+  countErrorLog(starttime,endtime).then(function(res){
+    var count=res;
+    db.view(__design_view,'findByTime',{
+      startkey:starttime,
+      endkey:endtime,
+      decending:true,
+      limit:maxpage,
+      skip:page},function(err,res){
+      if(err) defer.reject(err);
+      else{
+        var arr=[];
+        if(res.rows.length){
+          for (let index = 0; index < array.length; index++) {
+            const element = array[index].value;
+            arr.push(element);
+          }          
+        }
+        deferred.resolve({arr:arr,count:count});
+      }
+    });
+  }).catch(function(err){
+    deferred.reject(err);
+  });  
+  return deferred.promise;
+}
 // GET sample data 
 app.get('/get_sample', function (req, res) {
   html = displayJson(__obj_json);
@@ -5805,6 +6022,10 @@ var __design_login={
     "findByTime": {
       "map": "function (doc) {\n  emit(doc.logdate,doc);\n}"
     },
+    "countByTime": {
+      "reduce": "_count",
+      "map": "function (doc) {\n  emit(doc.logdate,doc);\n}"
+    },
     "countByUsername": {
       "reduce": "_count",
       "map": "function (doc) {\n  emit(doc.username,doc);\n}"
@@ -6103,9 +6324,10 @@ app.post('/register', function (req, res) { //client.data.user
 init_redis();
 init_db('adminaccesslog', __design_useracceslog);
 init_db('useraccesslog', __design_useracceslog);
+init_db('introductionslog', __design_introductionslog);
+
 init_db('authorize', __design_authorize);
 init_db('introductions', __design_introductions);
-init_db('introductionslog', __design_introductionslog);
 init_db('bonusbalance', __design_balance);
 init_db('couplingscore', __design_coupling_score);
 init_db('topupfailure', __design_topupfailure);
@@ -6123,8 +6345,10 @@ init_db('payment', __design_payment);
 init_db('user', __design_user);
 init_db('userbinary', __design_binary);
 init_db('package', __design_package);
+
 init_db('logs',__design_log);
 init_db('loginlog',__design_login);
+init_db('errlogging',__design_log);
 init_master_user();
 init_default_package();
 
@@ -8307,7 +8531,16 @@ function logging(log) {
     }
   });
 }
-
+function errorLogging(log) {
+  var db = create_db("errorlogs");
+  console.log(log);
+  db.insert(log, log.gui, function (err, body) {
+    if (err) console.log(err);
+    else {
+      console.log("log oK ");
+    }
+  });
+}
 
 
 function displayJson(arr) {

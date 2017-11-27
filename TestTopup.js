@@ -324,6 +324,7 @@ app.post('/upload_img',upload, function(req, res) {
   // client.data.file
   var js = {};
   js.client = req.body.client;//It is special
+  console.log(js.client);
   js.resp = res;
   viewUser(js.client).then(function(res){
     if(res.photo)

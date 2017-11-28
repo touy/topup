@@ -1,59 +1,76 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Image Upload Form</title>
- <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
-    <script type="text/javascript">
-        function submitForm() {
-            console.log("submit event");
-			var Objects ={
+<html ng-app="myApp">
+    <div ng-controller = "myCtrl">
+       <input type = "file" file-model = "userFile"/>
+       <button ng-click = "uploadFile()">Upload File</button>
+    </div>
+    </html>
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.6/angular.min.js"></script>
+      <script>
+         var myApp = angular.module('myApp', []);
+         myApp.directive('fileModel', ['$parse', function ($parse) {
+            return {
+               restrict: 'A',
+               link: function(scope, element, attrs) {
+                  var model = $parse(attrs.fileModel);
+                  var modelSetter = model.assign;
+                  element.bind('change', function(){
+                     scope.$apply(function(){
+                        modelSetter(scope, element[0].files[0]);
+                     });
+                  });
+               }
+            };
+         }]);
+         myApp.service('fileUpload', ['$http', function ($http) {
+            this.uploadFileToUrl = function(file, uploadUrl){
+               var fd = new FormData();
+               var client ={
 							"username": "nou002",
-							"logintoken": "9d72a96e-cc1d-4090-ad1c-3dd97262bc94",
-							"logintime": "2017-11-27T21:39:31+07:00",
+							"logintoken": "c6567914-9ec1-48aa-8eaf-9e5fd523d285",
+							"logintime": "2017-11-28T18:24:32+07:00",
 							"logintimeout": null,
-							"clientuid": "a17cff16-d4cb-486f-9937-9d68875e9782",
-							"registeruid": "b8e8302a-d7c1-4579-879e-f3f27a1f1b7a",
-							"confirmregisteruid": "722d9c7e-090a-4d4e-95df-627f31f616f3",
+							"clientuid": "60f8df41-79a0-4933-970e-fb65be618eb6",
+							"registeruid": "a87d0632-8911-4fcf-aa3f-2f13099a2250",
+							"confirmregisteruid": "33e47828-39ac-4387-9ddb-b35b678550c6",
 							"browserinfo": {
 								"name": "node",
 								"version": "7.10.1"
 							},
-							"ip": "115.84.94.22",
+							"ip": "115.84.94.26",
 							"other": "",
-							"lastaccess": "2017-11-27T21:39:31+07:00",
+							"lastaccess": "2017-11-28T18:24:32+07:00",
 							"isexist": true,
 							"clientjs": "",
 							"fingerprint": "",
-							"data": {
-									"username": "nou002"
+							"data": {user:{
+                                        "username": "nou002"
+                                    }									
 								}
-							}
-            var fd = new FormData();
-            
-            fd.append("userFile",$("#fileinfo").val());
-            fd.append("client", Objects);
-			 //fd.append("label", "WEBUPLOAD");
-            $.ajax({
-              url: "/upload_img",
-              type: "POST",
-              data: fd,
-              processData: false,  // tell jQuery not to process the data
-              contentType: false   // tell jQuery not to set contentType
-            }).done(function( data ) {
-                console.log("PHP Output:");
-                console.log( data );
-            });
-            return false;
-        }
-    </script>
-</head>
-
-<body>
-    <form method="post" id="fileinfo" name="fileinfo" onsubmit="return submitForm();">
-        <label>Select a file:</label><br>
-        <input type="file" name="userFile" required />
-        <input type="submit" value="Upload" />
-    </form>
-    <div id="output"></div>
-</body>
-</html>
+							};
+               fd.append('userFile', file);
+               fd.append('client',JSON.stringify(client));
+               $http.post(uploadUrl, fd, {
+                  transformRequest: angular.identity,
+                  headers: {'Content-Type': undefined}
+               })
+               .then(function(res){
+                   // success 
+                   console.log('success')
+                   console.log(res)
+               })
+               .catch(function(err){
+                   //error
+                   console.log('error')
+                   console.log(err)
+               });
+            }
+         }]);
+         myApp.controller('myCtrl', ['$scope', 'fileUpload', function($scope, fileUpload){
+            $scope.uploadFile = function(){
+               var file = $scope.userFile;
+               var uploadUrl = "/upload_img";
+               fileUpload.uploadFileToUrl(file, uploadUrl);
+            };
+         }]);
+      </script>

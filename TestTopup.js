@@ -306,7 +306,7 @@ var upload = multer({
     destination: function (req, file, cb) {
         cb(null, _current_picture_path);
     },filename: function (req, file, cb) {
-      cb(null, file.originalname +'-'+makeid(6)+ '-' + Date.now() + path.extname(file.originalname));
+      cb(null, file.originalname.replace(path.extname(file.originalname), "") +'-'+makeid(6)+ '-' + Date.now() + path.extname(file.originalname));
     }
   }),fileFilter: function(req, file, cb) {
     var ext = path.extname(file.originalname).toLowerCase();
@@ -323,9 +323,10 @@ app.post('/upload_img',upload, function(req, res) {
   // return client 
   // client.data.file
   var js = {};
-//  js.client =JSON.parse(req.body.client);//It is special
-  console.log(req.body);
-  js.client =req.body.client;//It is special
+  //  js.client =JSON.parse(req.body.client);//It is special  
+  js.client=JSON.parse(req.body.client)//It is special
+console.log('Uploade Successful ', req.file, js.client);
+  
   //console.log(js.client);
   js.resp = res;
   viewUser(js.client.data.user).then(function(res){
@@ -349,18 +350,19 @@ app.post('/upload_img',upload, function(req, res) {
 
 
 app.get('/images',function(req,res){
-  var client={};
-  client.data={};
-  client.data.user={};
-  client.data.user.username="fd0007";
-  var html="<html><head></head><body>"
-  html="<form id='uploadForm' enctype='multipart/form-data' method='post' action='/upload_img'>"
-  html+="<input type='file' name='userFile' />"
-  html+="<input type='submit' value='Upload File' name='submit' />"
-  html+="<input type='hidden' value='"+JSON.stringify(client)+"' name='client'>"
-  html+="</form>"
-  html+="</body></html>"
-  res.send(html);
+  res.sendfile('test.html');
+//   var client={};
+//   client.data={};
+//   client.data.user={};
+//   client.data.user.username="fd0007";
+//   var html="<html><head><  /head><body>"
+//   html="<form id='uploadForm' enctype='multipart/form-data' method='post' action='/upload_img'>"
+//   html+="<input type='file' name='userFile' />"
+//   html+="<input type='submit' value='Upload File' name='submit' />"
+//   html+="<input type='hidden' value='"+JSON.stringify(client)+"' name='client'>"
+//   html+="</form>"
+//   html+="</body></html>"
+//   res.send(html);
 });
 
 //logs

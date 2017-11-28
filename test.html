@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Image Upload Form</title>
+ <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.2/jquery.min.js"></script>
+    <script type="text/javascript">
+        function submitForm() {
+            console.log("submit event");
+			var Objects ={
+							"username": "nou002",
+							"logintoken": "9d72a96e-cc1d-4090-ad1c-3dd97262bc94",
+							"logintime": "2017-11-27T21:39:31+07:00",
+							"logintimeout": null,
+							"clientuid": "a17cff16-d4cb-486f-9937-9d68875e9782",
+							"registeruid": "b8e8302a-d7c1-4579-879e-f3f27a1f1b7a",
+							"confirmregisteruid": "722d9c7e-090a-4d4e-95df-627f31f616f3",
+							"browserinfo": {
+								"name": "node",
+								"version": "7.10.1"
+							},
+							"ip": "115.84.94.22",
+							"other": "",
+							"lastaccess": "2017-11-27T21:39:31+07:00",
+							"isexist": true,
+							"clientjs": "",
+							"fingerprint": "",
+							"data": {
+									"username": "nou002"
+								}
+							}
+            var fd = new FormData();
+            
+            fd.append("userFile",$("#fileinfo").val());
+            fd.append("client", Objects);
+			 //fd.append("label", "WEBUPLOAD");
+            $.ajax({
+              url: "/upload_img",
+              type: "POST",
+              data: fd,
+              processData: false,  // tell jQuery not to process the data
+              contentType: false   // tell jQuery not to set contentType
+            }).done(function( data ) {
+                console.log("PHP Output:");
+                console.log( data );
+            });
+            return false;
+        }
+    </script>
+</head>
+
+<body>
+    <form method="post" id="fileinfo" name="fileinfo" onsubmit="return submitForm();">
+        <label>Select a file:</label><br>
+        <input type="file" name="userFile" required />
+        <input type="submit" value="Upload" />
+    </form>
+    <div id="output"></div>
+</body>
+</html>

@@ -17,7 +17,7 @@ r_client = redis.createClient();
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
 var moment = require('moment-timezone');
-var multer  = require('multer');
+var multer = require('multer');
 var path = require('path');
 
 
@@ -27,31 +27,31 @@ var passValidator = new passwordValidator();
 var userValidator = new passwordValidator();
 var phoneValidator = new passwordValidator();
 phoneValidator
-.is().min(11)                                    // Minimum length 8 
-.is().max(11)                                  // Maximum length 100 
-.has().not().letters()                              // Must not have lowercase letters 
-.has().digits()                                 // Must have digits 
-.has().not().symbols()
-.has().not().spaces()                           // Should not have spaces 
+  .is().min(11) // Minimum length 8 
+  .is().max(11) // Maximum length 100 
+  .has().not().letters() // Must not have lowercase letters 
+  .has().digits() // Must have digits 
+  .has().not().symbols()
+  .has().not().spaces() // Should not have spaces 
 // start with 0205 , 0207, 0209 ,0202
 userValidator
-.is().min(6)                                    // Minimum length 8 
-.is().max(100)                                  // Maximum length 100 
-//.has().uppercase()                              // Must have uppercase letters 
-.has().lowercase()                              // Must have lowercase letters 
-//.has().digits()                                 // Must have digits 
-.has().not().symbols()
-.has().not().spaces()                           // Should not have spaces 
+  .is().min(6) // Minimum length 8 
+  .is().max(100) // Maximum length 100 
+  //.has().uppercase()                              // Must have uppercase letters 
+  .has().lowercase() // Must have lowercase letters 
+  //.has().digits()                                 // Must have digits 
+  .has().not().symbols()
+  .has().not().spaces() // Should not have spaces 
 //.is().not().oneOf(['Passw0rd', 'Password123']); // Blacklist these values 
 passValidator
-.is().min(6)                                    // Minimum length 8 
-.is().max(100)                                  // Maximum length 100 
-//.has().uppercase()                              // Must have uppercase letters 
-//.has().lowercase()                              // Must have lowercase letters 
-//.has().digits()                                 // Must have digits 
-.has().not().spaces()                           // Should not have spaces 
+  .is().min(6) // Minimum length 8 
+  .is().max(100) // Maximum length 100 
+  //.has().uppercase()                              // Must have uppercase letters 
+  //.has().lowercase()                              // Must have lowercase letters 
+  //.has().digits()                                 // Must have digits 
+  .has().not().spaces() // Should not have spaces 
 //.is().not().oneOf(['Passw0rd', 'Password123']); // Blacklist these values 
- 
+
 
 
 
@@ -76,7 +76,7 @@ app.use(cors());
 // app.use(clientErrorHandler)
 app.use(errorHandler)
 
-function errorHandler (err, req, res, next) {
+function errorHandler(err, req, res, next) {
   var l = {
     log: err,
     logdate: convertTZ(new Date()),
@@ -88,7 +88,9 @@ function errorHandler (err, req, res, next) {
     return next(err);
   }
   res.status(500);
-  res.render('error', { error: err });
+  res.render('error', {
+    error: err
+  });
 }
 
 
@@ -294,7 +296,7 @@ __master_user.parentname = __master_user.username;
 //     console.log("create master completedly");
 // });
 app.use('/public', express.static('public'));
-app.use('/images',express.static('_doc_item_'));
+app.use('/images', express.static('_doc_item_'));
 
 app.get('/', function (req, res) {
   res.send("hello");
@@ -304,11 +306,13 @@ app.get('/', function (req, res) {
 var upload = multer({
   storage: multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, _current_picture_path);
-    },filename: function (req, file, cb) {
-      cb(null, file.originalname.replace(path.extname(file.originalname), "") +'-'+makeid(6)+ '-' + Date.now() + path.extname(file.originalname));
+      cb(null, _current_picture_path);
+    },
+    filename: function (req, file, cb) {
+      cb(null, file.originalname.replace(path.extname(file.originalname), "") + '-' + makeid(6) + '-' + Date.now() + path.extname(file.originalname));
     }
-  }),fileFilter: function(req, file, cb) {
+  }),
+  fileFilter: function (req, file, cb) {
     var ext = path.extname(file.originalname).toLowerCase();
     if (ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg') {
       return cb(new Error('Only images are allowed'), null);
@@ -318,55 +322,55 @@ var upload = multer({
 }).single('userFile');
 
 // UPLOAD image file
-app.post('/upload_img',upload, function(req, res) {
+app.post('/upload_img', upload, function (req, res) {
   // client
   // return client 
   // client.data.file
   var js = {};
   //  js.client =JSON.parse(req.body.client);//It is special  
-  js.client=JSON.parse(req.body.client)//It is special
-console.log('Uploade Successful ', req.file, js.client);
-  
+  js.client = JSON.parse(req.body.client) //It is special
+  console.log('Uploade Successful ', req.file, js.client);
+
   //console.log(js.client);
   js.resp = res;
-  viewUser(js.client.data.user).then(function(res){
-    if(res.photo)
-    fs.exists(res.photo, function(exists) {
-      if(exists) {
-        fs.unlink(res.photo);
-      } else {
-        throw new Error('File not found, so not deleting.');
-      }
-    });
-    js.client.data={};    	
-    js.client.data.message="OK file uploaded";
-    js.client.data.file='/images/'+req.file.filename;
+  viewUser(js.client.data.user).then(function (res) {
+    if (res.photo)
+      fs.exists(res.photo, function (exists) {
+        if (exists) {
+          fs.unlink(res.photo);
+        } else {
+          throw new Error('File not found, so not deleting.');
+        }
+      });
+    js.client.data = {};
+    js.client.data.message = "OK file uploaded";
+    js.client.data.file = '/images/' + req.file.filename;
     js.resp.send(js.client);
-  }).catch(function(err){
-    js.client.data.message=err;
+  }).catch(function (err) {
+    js.client.data.message = err;
     js.resp.send(js.client);
   });
 });
 
 
-app.get('/images',function(req,res){
+app.get('/images', function (req, res) {
   res.sendfile('test.html');
-//   var client={};
-//   client.data={};
-//   client.data.user={};
-//   client.data.user.username="fd0007";
-//   var html="<html><head><  /head><body>"
-//   html="<form id='uploadForm' enctype='multipart/form-data' method='post' action='/upload_img'>"
-//   html+="<input type='file' name='userFile' />"
-//   html+="<input type='submit' value='Upload File' name='submit' />"
-//   html+="<input type='hidden' value='"+JSON.stringify(client)+"' name='client'>"
-//   html+="</form>"
-//   html+="</body></html>"
-//   res.send(html);
+  //   var client={};
+  //   client.data={};
+  //   client.data.user={};
+  //   client.data.user.username="fd0007";
+  //   var html="<html><head><  /head><body>"
+  //   html="<form id='uploadForm' enctype='multipart/form-data' method='post' action='/upload_img'>"
+  //   html+="<input type='file' name='userFile' />"
+  //   html+="<input type='submit' value='Upload File' name='submit' />"
+  //   html+="<input type='hidden' value='"+JSON.stringify(client)+"' name='client'>"
+  //   html+="</form>"
+  //   html+="</body></html>"
+  //   res.send(html);
 });
 
 //logs
-app.post('/get_logs',function(req,res){
+app.post('/get_logs', function (req, res) {
   // client
   //client.data.starttime
   //client.data.endtime
@@ -376,28 +380,33 @@ app.post('/get_logs',function(req,res){
   // client.data.message='OK'
   // client.data.errorlog={arr:{},count:0}
   var js = {};
-  js.client = req.body.client;//It is special
+  js.client = req.body.client; //It is special
   js.resp = res;
 
 });
-function getLLog(js){
-  viewLog(js.client.data.starttime,js.client.data.endtime,js.client.data.page,js.client.data.maxpage).then(function(res){
-    js.client.data.message='OK';
-    js.client.data.errlog=res;
+
+function getLLog(js) {
+  viewLog(js.client.data.starttime, js.client.data.endtime, js.client.data.page, js.client.data.maxpage).then(function (res) {
+    js.client.data.message = 'OK';
+    js.client.data.errlog = res;
     js.resp.send(js.client);
-  }).catch(function(err){
-    js.client.data.message=err;
+  }).catch(function (err) {
+    js.client.data.message = err;
     js.resp.send(js.client);
   });
 }
-function countLog(starttime,endtime){
-  var deferred=Q.defer();  
-  var db=create_db('logs');
-  db.view(__design_view,'countByTime',{startkey:starttime,endkey:endtime},function(err,res){
-    if(err)deferred.reject(err);
-    else{
-      var arr=[];
-      if(res.rows.length){
+
+function countLog(starttime, endtime) {
+  var deferred = Q.defer();
+  var db = create_db('logs');
+  db.view(__design_view, 'countByTime', {
+    startkey: starttime,
+    endkey: endtime
+  }, function (err, res) {
+    if (err) deferred.reject(err);
+    else {
+      var arr = [];
+      if (res.rows.length) {
         arr.push(res.rows[0].value);
       }
       deferred.resolve(arr);
@@ -405,37 +414,42 @@ function countLog(starttime,endtime){
   });
   return deferred.promise;
 }
-function viewLog(starttime,endtime,page,maxpage){
-  var deferred=Q.defer();
-  var db=create_db('logs');
-  countLog(starttime,endtime).then(function(res){
-    var count=res;
-    db.view(__design_view,'findByTime',{
-      startkey:starttime,
-      endkey:endtime,
-      decending:true,
-      limit:maxpage,
-      skip:page},function(err,res){
-      if(err) defer.reject(err);
-      else{
-        var arr=[];
-        if(res.rows.length){
+
+function viewLog(starttime, endtime, page, maxpage) {
+  var deferred = Q.defer();
+  var db = create_db('logs');
+  countLog(starttime, endtime).then(function (res) {
+    var count = res;
+    db.view(__design_view, 'findByTime', {
+      startkey: starttime,
+      endkey: endtime,
+      decending: true,
+      limit: maxpage,
+      skip: page
+    }, function (err, res) {
+      if (err) defer.reject(err);
+      else {
+        var arr = [];
+        if (res.rows.length) {
           for (let index = 0; index < array.length; index++) {
             const element = array[index].value;
             arr.push(element);
-          }          
+          }
         }
-        deferred.resolve({arr:arr,count:count});
+        deferred.resolve({
+          arr: arr,
+          count: count
+        });
       }
     });
-  }).catch(function(err){
+  }).catch(function (err) {
     deferred.reject(err);
-  });  
+  });
   return deferred.promise;
 }
 
 //login log
-app.post('/get_login_log',function(req,res){
+app.post('/get_login_log', function (req, res) {
   // client
   //client.data.starttime
   //client.data.endtime
@@ -445,28 +459,33 @@ app.post('/get_login_log',function(req,res){
   // client.data.message='OK'
   // client.data.errorlog={arr:{},count:0}
   var js = {};
-  js.client = req.body.client;//It is special
+  js.client = req.body.client; //It is special
   js.resp = res;
 
 });
-function getLoginLog(js){
-  viewLoginLog(js.client.data.starttime,js.client.data.endtime,js.client.data.page,js.client.data.maxpage).then(function(res){
-    js.client.data.message='OK';
-    js.client.data.errlog=res;
+
+function getLoginLog(js) {
+  viewLoginLog(js.client.data.starttime, js.client.data.endtime, js.client.data.page, js.client.data.maxpage).then(function (res) {
+    js.client.data.message = 'OK';
+    js.client.data.errlog = res;
     js.resp.send(js.client);
-  }).catch(function(err){
-    js.client.data.message=err;
+  }).catch(function (err) {
+    js.client.data.message = err;
     js.resp.send(js.client);
   });
 }
-function countLoginLog(starttime,endtime){
-  var deferred=Q.defer();  
-  var db=create_db('loginlog');
-  db.view(__design_view,'countByTime',{startkey:starttime,endkey:endtime},function(err,res){
-    if(err)deferred.reject(err);
-    else{
-      var arr=[];
-      if(res.rows.length){
+
+function countLoginLog(starttime, endtime) {
+  var deferred = Q.defer();
+  var db = create_db('loginlog');
+  db.view(__design_view, 'countByTime', {
+    startkey: starttime,
+    endkey: endtime
+  }, function (err, res) {
+    if (err) deferred.reject(err);
+    else {
+      var arr = [];
+      if (res.rows.length) {
         arr.push(res.rows[0].value);
       }
       deferred.resolve(arr);
@@ -474,38 +493,43 @@ function countLoginLog(starttime,endtime){
   });
   return deferred.promise;
 }
-function viewLoginLog(starttime,endtime,page,maxpage){
-  var deferred=Q.defer();
-  var db=create_db('loginlog');
-  countLoginLog(starttime,endtime).then(function(res){
-    var count=res;
-    db.view(__design_view,'findByTime',{
-      startkey:starttime,
-      endkey:endtime,
-      decending:true,
-      limit:maxpage,
-      skip:page},function(err,res){
-      if(err) defer.reject(err);
-      else{
-        var arr=[];
-        if(res.rows.length){
+
+function viewLoginLog(starttime, endtime, page, maxpage) {
+  var deferred = Q.defer();
+  var db = create_db('loginlog');
+  countLoginLog(starttime, endtime).then(function (res) {
+    var count = res;
+    db.view(__design_view, 'findByTime', {
+      startkey: starttime,
+      endkey: endtime,
+      decending: true,
+      limit: maxpage,
+      skip: page
+    }, function (err, res) {
+      if (err) defer.reject(err);
+      else {
+        var arr = [];
+        if (res.rows.length) {
           for (let index = 0; index < array.length; index++) {
             const element = array[index].value;
             arr.push(element);
-          }          
+          }
         }
-        deferred.resolve({arr:arr,count:count});
+        deferred.resolve({
+          arr: arr,
+          count: count
+        });
       }
     });
-  }).catch(function(err){
+  }).catch(function (err) {
     deferred.reject(err);
-  });  
+  });
   return deferred.promise;
 }
 
 
 //Error log
-app.post('/get_error_log',function(req,res){
+app.post('/get_error_log', function (req, res) {
   // client
   //client.data.starttime
   //client.data.endtime
@@ -515,28 +539,33 @@ app.post('/get_error_log',function(req,res){
   // client.data.message='OK'
   // client.data.errorlog={arr:{},count:0}
   var js = {};
-  js.client = req.body.client;//It is special
+  js.client = req.body.client; //It is special
   js.resp = res;
 
 });
-function getErrorLog(js){
-  viewErrorLog(js.client.data.starttime,js.client.data.endtime,js.client.data.page,js.client.data.maxpage).then(function(res){
-    js.client.data.message='OK';
-    js.client.data.errlog=res;
+
+function getErrorLog(js) {
+  viewErrorLog(js.client.data.starttime, js.client.data.endtime, js.client.data.page, js.client.data.maxpage).then(function (res) {
+    js.client.data.message = 'OK';
+    js.client.data.errlog = res;
     js.resp.send(js.client);
-  }).catch(function(err){
-    js.client.data.message=err;
+  }).catch(function (err) {
+    js.client.data.message = err;
     js.resp.send(js.client);
   });
 }
-function countErrorLog(starttime,endtime){
-  var deferred=Q.defer();  
-  var db=create_db('errorLogging');
-  db.view(__design_view,'countByTime',{startkey:starttime,endkey:endtime},function(err,res){
-    if(err)deferred.reject(err);
-    else{
-      var arr=[];
-      if(res.rows.length){
+
+function countErrorLog(starttime, endtime) {
+  var deferred = Q.defer();
+  var db = create_db('errorLogging');
+  db.view(__design_view, 'countByTime', {
+    startkey: starttime,
+    endkey: endtime
+  }, function (err, res) {
+    if (err) deferred.reject(err);
+    else {
+      var arr = [];
+      if (res.rows.length) {
         arr.push(res.rows[0].value);
       }
       deferred.resolve(arr);
@@ -544,32 +573,37 @@ function countErrorLog(starttime,endtime){
   });
   return deferred.promise;
 }
-function viewErrorLog(starttime,endtime,page,maxpage){
-  var deferred=Q.defer();
-  var db=create_db('errorLogging');
-  countErrorLog(starttime,endtime).then(function(res){
-    var count=res;
-    db.view(__design_view,'findByTime',{
-      startkey:starttime,
-      endkey:endtime,
-      decending:true,
-      limit:maxpage,
-      skip:page},function(err,res){
-      if(err) defer.reject(err);
-      else{
-        var arr=[];
-        if(res.rows.length){
+
+function viewErrorLog(starttime, endtime, page, maxpage) {
+  var deferred = Q.defer();
+  var db = create_db('errorLogging');
+  countErrorLog(starttime, endtime).then(function (res) {
+    var count = res;
+    db.view(__design_view, 'findByTime', {
+      startkey: starttime,
+      endkey: endtime,
+      decending: true,
+      limit: maxpage,
+      skip: page
+    }, function (err, res) {
+      if (err) defer.reject(err);
+      else {
+        var arr = [];
+        if (res.rows.length) {
           for (let index = 0; index < array.length; index++) {
             const element = array[index].value;
             arr.push(element);
-          }          
+          }
         }
-        deferred.resolve({arr:arr,count:count});
+        deferred.resolve({
+          arr: arr,
+          count: count
+        });
       }
     });
-  }).catch(function(err){
+  }).catch(function (err) {
     deferred.reject(err);
-  });  
+  });
   return deferred.promise;
 }
 // GET sample data 
@@ -668,16 +702,16 @@ function changePassword(js) {
       if (res.rows.length) {
         u = res.rows[0].value;
         u.password = js.client.data.user.password1;
-        var passwordOK=validatePassword(u.password);
-        if(passwordOK.length)
+        var passwordOK = validatePassword(u.password);
+        if (passwordOK.length)
           deferred.reject(passwordOK);
         else
-        db.insert(u, u._id, function (err, res) {
-          if (err) deferred.reject(err);
-          else {
-            deferred.resolve('OK');
-          }
-        });
+          db.insert(u, u._id, function (err, res) {
+            if (err) deferred.reject(err);
+            else {
+              deferred.resolve('OK');
+            }
+          });
       } else {
         deferred.reject(new Error("User not found"));
       }
@@ -702,7 +736,7 @@ app.post('/change_default_user_info', function (req, res) {
 });
 
 function changeUserNameAndPhoneNumber(js) {
-  if (js.client.data.user.oldusername && js.client.data.user.oldphone1 && js.client.data.user.username && js.client.data.user.phone1) { 
+  if (js.client.data.user.oldusername && js.client.data.user.oldphone1 && js.client.data.user.username && js.client.data.user.phone1) {
     changeDefaultInfo(js).then(function (body) {
       var l = {
         log: body,
@@ -714,15 +748,15 @@ function changeUserNameAndPhoneNumber(js) {
       js.client.data.message = body;
       js.resp.send(js.client);
     }).catch(function (err) {
-        var l = {
-          log: err,
-          logdate: convertTZ(new Date()),
-          type: "error change username and phone number " + js.client.data.user.username,
-          gui: uuidV4(),
-        }
-        logging(l);
-        js.client.data.message = err;
-        js.resp.send(js.client);
+      var l = {
+        log: err,
+        logdate: convertTZ(new Date()),
+        type: "error change username and phone number " + js.client.data.user.username,
+        gui: uuidV4(),
+      }
+      logging(l);
+      js.client.data.message = err;
+      js.resp.send(js.client);
     });
   } else {
     var l = {
@@ -756,43 +790,39 @@ function changeDefaultInfo(js) {
         u.username = js.client.data.user.username;
         u.usercode = u.username;
         u.phone1 = js.client.data.user.phone1;
-        var vuser=usernameValidate(u.username);
-        var vphone=phonenumberValidate(u.phone1);
-        if(vuser.length||vphone.length){
-          deferred.reject(new Error("invalid username: "+vuser+" invalide phonenumber: "+vphone));
-        }
-        else
+        var vuser = usernameValidate(u.username);
+        var vphone = phonenumberValidate(u.phone1);
+        if (vuser.length || vphone.length) {
+          deferred.reject(new Error("invalid username: " + vuser + " invalide phonenumber: " + vphone));
+        } else
           findMaxPhoneNumber(u).then(function (res) {
-          if (res.length > 3) {
-            var l = {
-              log: "this phonenumber has more than 3 in the databaseh",
-              logdate: convertTZ(new Date()),
-              type: "error change username and phone number " + js.client.data.user.username,
-              gui: uuidV4(),
-            }
-            logging(l);
-            deferred.reject(new Error('this phonenumber has more than 3 in the database'));
-          }
-          else
-            db.insert(u, u._id, function (err, res) {
-              if (err) {
-                var l = {
-                  log: err,
-                  logdate: convertTZ(new Date()),
-                  type: "error change username and phone number " + js.client.data.user.username,
-                  gui: uuidV4(),
+            if (res.length > 3) {
+              var l = {
+                log: "this phonenumber has more than 3 in the databaseh",
+                logdate: convertTZ(new Date()),
+                type: "error change username and phone number " + js.client.data.user.username,
+                gui: uuidV4(),
+              }
+              logging(l);
+              deferred.reject(new Error('this phonenumber has more than 3 in the database'));
+            } else
+              db.insert(u, u._id, function (err, res) {
+                if (err) {
+                  var l = {
+                    log: err,
+                    logdate: convertTZ(new Date()),
+                    type: "error change username and phone number " + js.client.data.user.username,
+                    gui: uuidV4(),
+                  }
+                  logging(l);
+                  deferred.reject(err);
+                } else {
+                  //console.log('before change username and phone2');
+                  deferred.resolve('OK');
                 }
-                logging(l);
-                deferred.reject(err);
-              }
-              else {
-                //console.log('before change username and phone2');
-                deferred.resolve('OK');
-              }
-            });
-        });
-      }
-      else{
+              });
+          });
+      } else {
         var l = {
           log: "no matching this username and phone",
           logdate: convertTZ(new Date()),
@@ -1206,7 +1236,7 @@ function set_client(js) {
     };
     client.data.message:"ERROR, OK, GOOD, SUCCESS";
   */
-  var username=js.client.data.user.username;
+  var username = js.client.data.user.username;
   var keyword = __login_kw;
   console.log("client.clientuid" + js.client.clientuid)
 
@@ -1228,24 +1258,24 @@ function set_client(js) {
     js.client.logintoken = uuidV4();
     r_client.setAsync(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken, JSON.stringify(js.client), 'EX', 15 * 60).then(
       function (res) {
-      if (js.resp && res) {
-        __cur_client = js.client;
-        var l = {
-          log: "login completed",
-          logdate: convertTZ(new Date()),
-          username: username ,
-          gui: uuidV4(),
+        if (js.resp && res) {
+          __cur_client = js.client;
+          var l = {
+            log: "login completed",
+            logdate: convertTZ(new Date()),
+            username: username,
+            gui: uuidV4(),
+          }
+          loggingLogin(l);
+          js.client.data.message = 'OK';
+          js.resp.send(js.client);
         }
-        loggingLogin(l);
-        js.client.data.message = 'OK';
-        js.resp.send(js.client);
-      }
-    });
-  }).catch(function(err){
+      });
+  }).catch(function (err) {
     var l = {
       log: err,
       logdate: convertTZ(new Date()),
-      username: username ,
+      username: username,
       gui: uuidV4(),
     }
     loggingLogin(l);
@@ -1283,7 +1313,7 @@ function login(js) {
       var l = {
         log: "login failed",
         logdate: convertTZ(new Date()),
-        username: js.client.data.user.username ,
+        username: js.client.data.user.username,
         gui: uuidV4(),
       }
       loggingLogin(l);
@@ -1294,7 +1324,7 @@ function login(js) {
     var l = {
       log: "login failed",
       logdate: convertTZ(new Date()),
-      username: js.client.data.user.username ,
+      username: js.client.data.user.username,
       gui: uuidV4(),
     }
     loggingLogin(l);
@@ -1327,7 +1357,7 @@ function logout(js) {
         var l = {
           log: "log out completed",
           logdate: convertTZ(new Date()),
-          type: "log out " + js.client.username ,
+          type: "log out " + js.client.username,
           gui: uuidV4(),
         }
         logging(l);
@@ -1338,7 +1368,7 @@ function logout(js) {
     var l = {
       log: err,
       logdate: convertTZ(new Date()),
-      type: "error log out " + js.client.username ,
+      type: "error log out " + js.client.username,
       gui: uuidV4(),
     }
     logging(l);
@@ -1422,7 +1452,7 @@ function showUserInfo(js, isedit) {
     if (!body.length) throw new Error('User not found');
     if (body.length) {
       body = body[0];
-      js.client.data={};
+      js.client.data = {};
       js.client.data.message = 'OK';
       js.client.data.user = body;
       js.client.data.user.password = "";
@@ -1455,22 +1485,22 @@ function showUserInfo(js, isedit) {
 function viewUser(user) {
   var deferred = Q.defer();
   db = create_db("user");
-  if(user.username&&user.username!=undefined)
-  db.view(__design_view, "findByUserName", {
-      key: user.username
-    },
-    function (err, res) {
-      if (err) {
-        deferred.reject(err);
-      } else {
-        var arr = [];
-        if (res.rows.length) {
-          arr.push(res.rows[0].value);
+  if (user.username && user.username != undefined)
+    db.view(__design_view, "findByUserName", {
+        key: user.username
+      },
+      function (err, res) {
+        if (err) {
+          deferred.reject(err);
+        } else {
+          var arr = [];
+          if (res.rows.length) {
+            arr.push(res.rows[0].value);
+          }
+          deferred.resolve(arr);
         }
-        deferred.resolve(arr);
-      }
-    });
-  else 
+      });
+  else
     deferred.reject('Error username is empty');
   return deferred.promise;
 }
@@ -1543,16 +1573,16 @@ function editUser(js) {
 function updateUser(user) {
   var deferred = Q.defer();
   db = create_db("user");
-  if(user._rev&&user._rev!=undefined)
-  db.insert(user, user.gui, function (err, res) {
-    if (err) {
-      deferred.reject(err);
-    } else {
-      deferred.resolve('OK');
-    }
-  });
+  if (user._rev && user._rev != undefined)
+    db.insert(user, user.gui, function (err, res) {
+      if (err) {
+        deferred.reject(err);
+      } else {
+        deferred.resolve('OK');
+      }
+    });
   else
-  deferred.reject(Error('_rev is not define'));
+    deferred.reject(Error('_rev is not define'));
   return deferred.promise;
 }
 // GET CURRENT USER INFO TO CHECK IF IT'S HAS BEEN LOGGING IN 
@@ -3616,7 +3646,7 @@ function showMainBalance(js) {
       gui: uuidV4(),
     }
     logging(l);
-    js.client.data.message =err;
+    js.client.data.message = err;
     js.resp(js.client);
   });
 
@@ -3633,6 +3663,7 @@ app.post('/bonus_balance_list_by_user', function (req, res) {
   js.resp = res;
   showBonusBalance(js);
 });
+
 function countBonusBalanceByUsername(user) {
   var deferred = Q.defer();
   var db = create_db('bonusbalance');
@@ -3650,6 +3681,7 @@ function countBonusBalanceByUsername(user) {
   });
   return deferred.promise;
 }
+
 function findBonusBalanceByUsername(user, page, maxpage) {
   var deferred = Q.defer();
   var db = create_db('bonusbalance');
@@ -3673,6 +3705,7 @@ function findBonusBalanceByUsername(user, page, maxpage) {
   });
   return deferred.promise;
 };
+
 function showBonusBalance(js) {
   countBonusBalanceByUsername(js.client).then(function (res) {
     var count = res;
@@ -3681,7 +3714,7 @@ function showBonusBalance(js) {
         arr: arr,
         count: count
       };
-      js.client.data.message='OK';
+      js.client.data.message = 'OK';
       js.resp.send(js.client);
     });
   }).catch(function (err) {
@@ -3692,13 +3725,13 @@ function showBonusBalance(js) {
       gui: uuidV4(),
     }
     logging(l);
-    js.client.data.message =err;
+    js.client.data.message = err;
     js.resp(js.client);
   })
 }
 
 // submit payment request form
-app.post('/payment_request', function (req, res) { 
+app.post('/payment_request', function (req, res) {
   //js.client.data.payment
   // return client 
   // client.data.message="OK";
@@ -3786,7 +3819,7 @@ function sendPaymentRequest(js) {
 
 //ADMIN
 // update payment request 
-app.post('/update_payment_request', function (req, res) { 
+app.post('/update_payment_request', function (req, res) {
   //js.client.data.payment
   //check , receiveddate !='' ,status ='check'
   //certify , certified !='' , status ='certified'
@@ -3801,7 +3834,7 @@ app.post('/update_payment_request', function (req, res) {
   updatePaymentRequest(js);
 });
 
-function updatePaymentRequest(js) { 
+function updatePaymentRequest(js) {
   // js.client.data.payment for admin only
   //check
   //certify
@@ -3866,7 +3899,9 @@ function updatePaymentRequest(js) {
           b.usergui = js.client.data.payment.usergui;
           b.diffbalance *= -1;
           updateMainBalance(js.client.data.payment.targetuser, b).then(function (body) {
-            findUserByUserName({username:js.client.username}).then(function(res){
+            findUserByUserName({
+              username: js.client.username
+            }).then(function (res) {
               js.client.data.message = 'payment request has been updated ' + mark;
               js.resp.send(js.client);
             });
@@ -3885,13 +3920,13 @@ function updatePaymentRequest(js) {
         gui: uuidV4(),
       }
       logging(l);
-      js.client.data.message=err;
+      js.client.data.message = err;
       js.resp.send(js.client);
     });
 }
 
 //submit cashing request
-app.post('/cashing_request', function (req, res) { 
+app.post('/cashing_request', function (req, res) {
   //client.data.payment
   //return client
   //client.data.message='OK' 
@@ -3957,14 +3992,16 @@ function sendCashingRequest(js) {
         diffbalance: -js.client.data.payment.paymentvalue,
         type: "cashing request"
       };
-      updateMainBalance({username:js.client.username}, b).then(function (body) {
+      updateMainBalance({
+        username: js.client.username
+      }, b).then(function (body) {
         makePayment(__doc).then(function (body) {
-          u.mainbalance-=js.client.data.payment.paymentvalue;
-          updateUser(u).then(function(res){
+          u.mainbalance -= js.client.data.payment.paymentvalue;
+          updateUser(u).then(function (res) {
             js.client.data.message = 'OK send Cashing request completely';
             js.resp.send(js.client);
           });
-          
+
         });
       });
     } else {
@@ -3992,7 +4029,7 @@ function sendCashingRequest(js) {
 }
 //admin only
 // update cashing request
-app.post('/update_cashing_request', function (req, res) { 
+app.post('/update_cashing_request', function (req, res) {
   //js.client.data.payment
   //check
   //certify
@@ -4043,8 +4080,8 @@ function updateCashingRequest(js) { // js.client.data.payment for admin only
   }
   if (p._rev)
     makePayment(p).then(function (body) {
-        js.client.data.message = 'OK cashing request has been updated ' + mark;
-        js.resp.send(js.client);     
+      js.client.data.message = 'OK cashing request has been updated ' + mark;
+      js.resp.send(js.client);
     }).catch(function (err) {
       var l = {
         log: err,
@@ -4060,7 +4097,7 @@ function updateCashingRequest(js) { // js.client.data.payment for admin only
 
 //admin only 
 // instantly cashing
-app.post('/instantly_cashing',function(req,res){
+app.post('/instantly_cashing', function (req, res) {
   //js.client.data.payment
   //check
   //certify
@@ -4073,6 +4110,7 @@ app.post('/instantly_cashing',function(req,res){
   js.resp = res;
   instantlyCashing(js);
 });
+
 function instantlyCashing(js) {
   var __doc = {
     usergui: js.client.data.payment.usergui,
@@ -4120,7 +4158,7 @@ function instantlyCashing(js) {
       //   js.resp.send(js.client);
       //   return;
       // }
-      if(u.mainbalance<js.client.data.payment.paymentvalue)
+      if (u.mainbalance < js.client.data.payment.paymentvalue)
         throw new Error('not enough mainbalance to cash out')
       var b = {
         username: js.client.data.payment.targetuser,
@@ -4131,10 +4169,12 @@ function instantlyCashing(js) {
         diffbalance: -js.client.data.payment.paymentvalue,
         type: "cashing request"
       };
-      updateMainBalance({username:js.client.username}, b).then(function (body) {
+      updateMainBalance({
+        username: js.client.username
+      }, b).then(function (body) {
         makePayment(__doc).then(function (body) {
-          u.mainbalance+=b.diffbalance;
-          updateUser(u).then(function(res){
+          u.mainbalance += b.diffbalance;
+          updateUser(u).then(function (res) {
             js.client.data.message = 'OK send Cashing request completely';
             js.resp.send(js.client);
           });
@@ -4164,7 +4204,7 @@ function instantlyCashing(js) {
   });
 }
 // payment list by username
-app.post('/payment_list_by_username', function (req, res) { 
+app.post('/payment_list_by_username', function (req, res) {
   //client.data.user
   //client.data.maxpage, client.data.page
   //return client
@@ -4229,7 +4269,7 @@ function getPaymentListByUsername(user, page, maxpage) {
 }
 // show payment list  
 // admin only
-app.post('/payment_list_admin', function (req, res) { 
+app.post('/payment_list_admin', function (req, res) {
   //client
   //client.data.maxpage , client.data.page 
   // return client
@@ -4289,7 +4329,7 @@ function getPaymentList(page, maxpage) {
 }
 
 // payment request list by username
-app.post('/payment_request_list_by_username', function (req, res) { 
+app.post('/payment_request_list_by_username', function (req, res) {
   //client.data.user 
   //client.data.page , client.data.maxpage
   //return client
@@ -4352,7 +4392,7 @@ function getPaymentRequestListByUsername(user, page, maxpage) {
 }
 
 // cashing request list by username
-app.post('/cashing_list_by_username', function (req, res) { 
+app.post('/cashing_list_by_username', function (req, res) {
   //client.data.user 
   //client.data.maxpage , client.data.page
   // return client
@@ -4416,7 +4456,7 @@ function getCashingListByUsername(user, page, maxpage) {
 
 
 // payment request list admin
-app.post('/payment_request_list_admin', function (req, res) { 
+app.post('/payment_request_list_admin', function (req, res) {
   //client 
   // client.data.page , client.data.maxpage 
   //return client 
@@ -4476,7 +4516,7 @@ function getPaymentRequestList(page, maxpage) {
 }
 // cashing request list by admin
 // admin 
-app.post('/cashing_request_list_admin', function (req, res) { 
+app.post('/cashing_request_list_admin', function (req, res) {
   //client
   // client.data.page , client.data.maxpage 
   // return client
@@ -4536,17 +4576,18 @@ function getCashingList(user, page, maxpage) {
 
 // get member count by package 
 app.post('/get_member_count_by_package', function (req, res) {
-   //client.data.user,
-   //client.data.package , 
-   // return client
-   // client.message='OK'
-   // client.data.user.count=0
-   js.client.data.user.ismember
+  //client.data.user,
+  //client.data.package , 
+  // return client
+  // client.message='OK'
+  // client.data.user.count=0
+  js.client.data.user.ismember
   var js = {};
   js.client = req.body;
   js.resp = res;
   showTotalMemberByUsername(js);
 });
+
 function showTotalMemberByUsername(js) {
   getMemberCountByPackage(js.client.data.user, js.client.data.package).then(function (body) {
     if (body) {
@@ -4562,7 +4603,7 @@ function showTotalMemberByUsername(js) {
 function getMemberCountByPackage(user, package) {
   var deferred = Q.defer();
   var db = create_db("user");
-  viewUser(user).then(function(res){
+  viewUser(user).then(function (res) {
     if (res.length) {
       db.view(__design_view, "countMembersByPackageValue", {
         key: [user.username, package.packagevalue]
@@ -4579,15 +4620,15 @@ function getMemberCountByPackage(user, package) {
     } else {
       deferred.reject(new Error('User not found'));
     }
-  }).catch(function(err){
+  }).catch(function (err) {
     deferred.reject(err);
   });
-    
+
   return deferred.promise;
 }
 
 // get member count by username
-app.post('/get_member_count_by_username', function (req, res) { 
+app.post('/get_member_count_by_username', function (req, res) {
   //client.data.user 
   //return client
   // client.message
@@ -4597,6 +4638,7 @@ app.post('/get_member_count_by_username', function (req, res) {
   js.resp = res;
   showMemberCountByUsername(js);
 });
+
 function showMemberCountByUsername(js) {
   var db = create_db('user')
   getMemberCount(js.client.data.user).then(function (body) {
@@ -4613,25 +4655,25 @@ function showMemberCountByUsername(js) {
 function getMemberCount(user) {
   var deferred = Q.defer();
   var db = create_db("user");
-  viewUser(user).then(function(res){
+  viewUser(user).then(function (res) {
     if (res.length) {
-      
-            db.view(__design_view, "countMembers", {
-              key: user.username
-            }, function (err, res) {
-              if (err)
-                deferred.reject(err);
-              else {
-                // if (user.ismember)
-                //   deferred.resolve(res.rows[0].value + 1);
-                // else
-                deferred.resolve(res.rows[0].value);
-              }
-            });
-          } else {
-            deferred.reject("User not found");
-          }
-  }).catch(function(err){
+
+      db.view(__design_view, "countMembers", {
+        key: user.username
+      }, function (err, res) {
+        if (err)
+          deferred.reject(err);
+        else {
+          // if (user.ismember)
+          //   deferred.resolve(res.rows[0].value + 1);
+          // else
+          deferred.resolve(res.rows[0].value);
+        }
+      });
+    } else {
+      deferred.reject("User not found");
+    }
+  }).catch(function (err) {
     deferred.reject(err);
   });
 
@@ -4640,7 +4682,7 @@ function getMemberCount(user) {
 }
 
 // show coupling score list by user
-app.post('/show_coupling_list_by_user', function (req, res) { 
+app.post('/show_coupling_list_by_user', function (req, res) {
   //client.data.user
   // return client 
   // client.data.couplingscore={arr:{},count:0}
@@ -4683,6 +4725,7 @@ function getCountCouplingScoreByUser(user) {
   });
   return deferred.promise;
 }
+
 function getCouplingScoreByUser(js) {
   var deferred = Q.defer();
   var db = create_db('couplingscore');
@@ -4729,7 +4772,7 @@ function getCouplingScoreByUser(js) {
 
 // show who has most introduction by month year
 app.post('/show_the_best_friend_by_month_year', function (req, res) {
-   //client.data.user,
+  //client.data.user,
   //client.data.user.month ,
   //client.data.user.year
   // client.data.page 
@@ -4742,6 +4785,7 @@ app.post('/show_the_best_friend_by_month_year', function (req, res) {
   js.resp = res;
   showTheBestFriendByMonthYear(js); // show who has the most introduction codes by month
 });
+
 function findCountTheBestFriendByMonthYear(month, year) {
   var deferred = Q.defer();
   var db = create_db('introductions');
@@ -4761,6 +4805,7 @@ function findCountTheBestFriendByMonthYear(month, year) {
     });
   return deferred.promise;
 }
+
 function showTheBestFriendByMonthYear(js) { // get from the most introduction by month  from introductions
   var introd = {
     gui: uuidV4(),
@@ -4804,6 +4849,7 @@ function showTheBestFriendByMonthYear(js) { // get from the most introduction by
     js.resp.send(js.client);
   });
 }
+
 function findTheBestFriendByMonthYear(user, month, year) {
   var deferred = Q.defer();
   var db = create_db('introductions');
@@ -4878,7 +4924,7 @@ function addTheBestFriendLog(user, introd, month, year) {
 
 //for a certain user
 // show latest member by user
-app.post('/show_latest_members', function (req, res) { 
+app.post('/show_latest_members', function (req, res) {
   //client.data.user
   //client.data.page
   //client.data.maxpage
@@ -4958,7 +5004,7 @@ function showLatestMembers(js) {
 
 // for admin
 // show latest member list 
-app.post('/show_latest_members_list', function (req, res) { 
+app.post('/show_latest_members_list', function (req, res) {
   //client.data.page
   //client.data.maxpage
   //client.data.month
@@ -5064,10 +5110,12 @@ app.post('/check_your_member', function (req, res) {
 function checkYourMember(username) {
   var deferred = Q.defer();
   var db = create_db('user');
-  viewUser({username:username}).then(function(res){
-    if(res.aboveparents.indexOf(__cur_client.username)>-1)
+  viewUser({
+    username: username
+  }).then(function (res) {
+    if (res.aboveparents.indexOf(__cur_client.username) > -1)
       deferred.resolve(username);
-  }).catch(function(err){
+  }).catch(function (err) {
     deferred.reject(err);
   });
   //.... need to FIND here , 
@@ -5077,7 +5125,7 @@ function checkYourMember(username) {
 }
 
 // check if password is OK
-app.post('/check_register_password', function (req, res) { 
+app.post('/check_register_password', function (req, res) {
   //client.data.user,
   //return client
   // client.message='OK'
@@ -5088,9 +5136,9 @@ app.post('/check_register_password', function (req, res) {
 });
 
 function checkRegisterPassword(js) {
-  var v=validatePassword(js.client.data.user.password);
+  var v = validatePassword(js.client.data.user.password);
   if (v.length) {
-    js.client.data.message = "password is invalid form "+v;
+    js.client.data.message = "password is invalid form " + v;
   } else
     js.client.data.message = "OK";
   js.resp.send(js.client);
@@ -5098,7 +5146,7 @@ function checkRegisterPassword(js) {
 
 
 // register sponser code
-app.post('/check_register_sponsor_code', function (req, res) { 
+app.post('/check_register_sponsor_code', function (req, res) {
   //client
   //client.data.user
   //return client
@@ -5108,6 +5156,7 @@ app.post('/check_register_sponsor_code', function (req, res) {
   js.resp = res;
   checkRegisterSponserCode(js);
 });
+
 function findUserByIntroductionCode(js) {
   var deferred = Q.defer();
   var db = create_db('user');
@@ -5127,6 +5176,7 @@ function findUserByIntroductionCode(js) {
   });
   return deferred.promise;
 }
+
 function checkRegisterSponserCode(js) {
   var obj = js.client.data;
   findUserByIntroductionCode(obj).then(function (body) {
@@ -5141,7 +5191,7 @@ function checkRegisterSponserCode(js) {
 }
 
 // check balnce for resiter
-app.post('/check_register_need_balance_per_package', function (req, res) { 
+app.post('/check_register_need_balance_per_package', function (req, res) {
   //client.data.user,
   //client.data.user.username
   //client.data.package
@@ -5153,6 +5203,7 @@ app.post('/check_register_need_balance_per_package', function (req, res) {
   js.resp = res;
   checkRegisterNeedBalancePerPackage(js);
 });
+
 function findNeedBalanceByUserGui(js, registra) {
   //var userCurrentBalance=0;
   //js.needbalance={main:0.5,bonus:0.5}
@@ -5193,6 +5244,7 @@ function findNeedBalanceByUserGui(js, registra) {
   });
   return deferred.promise;
 }
+
 function checkRegisterNeedBalancePerPackage(js) {
   var db = create_db('user');
   db.view(__design_view, "findByUsername", {
@@ -5205,7 +5257,7 @@ function checkRegisterNeedBalancePerPackage(js) {
       var registra = res.rows[0].value;
       findNeedBalanceByUserGui(js, registra).then(function (body) {
         var registrabalance = body;
-        js.client.data.balance=body;
+        js.client.data.balance = body;
         if ( /*registrabalance.bonus.balance!=registra.balancevalue||*/ registrabalance.main.balance != registra.mainbalance) {
           js.client.data.message = "Error: balance is abnormal";
           js.resp.send(js.client);
@@ -5224,8 +5276,14 @@ function checkRegisterNeedBalancePerPackage(js) {
   });
 
 }
-// USER, js.client.data.user 
-app.post('/show_user_accessed_log', function (req, res) { //js.client.data.user,js.client.data.package , js.client.data.user.ismember, js.client.data.user.month ,js.client.data.user.year
+// USER, user accessed log
+app.post('/show_user_accessed_log', function (req, res) {
+  //client.data.user,
+  //client.data.page
+  //client.data.maxpage
+  //return client
+  //client.data.message='OK'
+  //client.data.useraccessedlog
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -5233,7 +5291,8 @@ app.post('/show_user_accessed_log', function (req, res) { //js.client.data.user,
 });
 
 function showUserAccessLog(js) {
-  displayUserAccessLog(js.client.username).then(function (body) {
+  displayUserAccessLog(js.client.data.user.username).then(function (body) {
+    js.client.data.message = 'OK'
     js.client.data.accesslog = body;
     js.resp.send(js.client);
   }).catch(function (err) {
@@ -5247,7 +5306,8 @@ function findCountUserAccessLogUserNameAccessDate(username) {
   var db = create_db('useraccesslog');
   db.view(__design_view, 'findCountByUserNameAccessedDate', {
       startkey: [username, ""],
-      endkey: [username, "\u9999"]
+      endkey: [username, "\u9999"],
+      decending: true,
     },
     function (err, res) {
       if (err) deferred.reject(err);
@@ -5289,8 +5349,14 @@ function displayUserAccessLog(u, page, maxpage) {
   return deferred.promise;
 }
 
-// ADMIN, js.client.data.user 
-app.post('/show_admin_accessed_log', function (req, res) { //js.client.data.user,js.client.data.package , js.client.data.user.ismember, js.client.data.user.month ,js.client.data.user.year
+// ADMIN, show admin accessed log
+app.post('/show_admin_accessed_log', function (req, res) {
+  //client.data.user
+  //client.data.page
+  //client.data.maxpage
+  //return client
+  //client.data.message='OK'
+  //client.data.adminaccessedlog
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -5299,6 +5365,7 @@ app.post('/show_admin_accessed_log', function (req, res) { //js.client.data.user
 
 function showAdminAccessLog(js) {
   displayAdminAccessLog(js.client.username).then(function (body) {
+    js.client.data.message = 'OK'
     js.client.data.accesslog = body;
     js.resp.send(js.client);
   }).catch(function (err) {
@@ -6036,7 +6103,7 @@ var __design_introductions = {
   },
   "language": "javascript"
 };
-var __design_login={
+var __design_login = {
   "_id": "_design/objectList",
   "views": {
     "findByTime": {
@@ -6055,7 +6122,7 @@ var __design_login={
     }
   }
 }
-var __design_log={
+var __design_log = {
   "_id": "_design/objectList",
   "views": {
     "findByTime": {
@@ -6366,9 +6433,9 @@ init_db('user', __design_user);
 init_db('userbinary', __design_binary);
 init_db('package', __design_package);
 
-init_db('logs',__design_log);
-init_db('loginlog',__design_login);
-init_db('errlogging',__design_log);
+init_db('logs', __design_log);
+init_db('loginlog', __design_login);
+init_db('errlogging', __design_log);
 init_master_user();
 init_default_package();
 
@@ -7021,9 +7088,9 @@ function register(register /*,needbalance*/ , resp) { //needbalance={main:0.5,bu
       js.user.password = js.user.password.trim();
       if (body.length > 0)
         throw new Error('you could not use this username');
-      var v=validatePassword(js.user.password);
+      var v = validatePassword(js.user.password);
       if (v.length)
-        throw new Error('password is invalid form '+v);
+        throw new Error('password is invalid form ' + v);
       // FIND max number can use to register a new account ==>
       findMaxPhoneNumber(js.user).then(function (body) {
 
@@ -7604,35 +7671,43 @@ function findUserByUserName(user) {
   });
   return deferred.promise;
 }
-function usernameValidate(p){
-  return userValidator.validate(p,{list:true});
+
+function usernameValidate(p) {
+  return userValidator.validate(p, {
+    list: true
+  });
 }
-function phonenumberValidate(p){
-  var vp=phoneValidator.validate(p,{list:true});
-  if(!p.indexOf("0205")){
+
+function phonenumberValidate(p) {
+  var vp = phoneValidator.validate(p, {
+    list: true
+  });
+  if (!p.indexOf("0205")) {
     return vp;
   }
-  if(!p.indexOf("0202")){
+  if (!p.indexOf("0202")) {
     return vp;
   }
-  if(!p.indexOf("0207")){
+  if (!p.indexOf("0207")) {
     return vp;
   }
-  if(!p.indexOf("0209")){
+  if (!p.indexOf("0209")) {
     return vp;
-  }
-  else{
+  } else {
     return [];
   }
 }
+
 function validatePassword(p) {
-  p=passValidator.validate(p, { list: true });
+  p = passValidator.validate(p, {
+    list: true
+  });
   return p;
 }
 
 function findMaxPhoneNumber(user) {
   var deferred = Q.defer();
-  var db=create_db('user');
+  var db = create_db('user');
   db.view(__design_view, "findByPhone", {
     key: user.phone1,
     include_docs: true
@@ -7954,7 +8029,7 @@ function get_member_count_by_year_month(js) {
 function getMemberCountByPackageYearMonth(user, package, year, month) {
   var deferred = Q.defer();
   var db = create_db("user");
-  viewUser(user).then(function(res){
+  viewUser(user).then(function (res) {
     if (res.length) {
       db.view(__design_view, "countMembersByPackageValueMonthYear", {
         key: [user.username, package.packagevalue, [year, month]]
@@ -7971,7 +8046,7 @@ function getMemberCountByPackageYearMonth(user, package, year, month) {
     } else {
       deferred.reject(new Error('User not found'));
     }
-  }).catch(function(err){
+  }).catch(function (err) {
     deferred.reject(err);
   });
   return deferred.promise;
@@ -8551,6 +8626,7 @@ function logging(log) {
     }
   });
 }
+
 function errorLogging(log) {
   var db = create_db("errorlogs");
   console.log(log);

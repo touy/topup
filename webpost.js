@@ -441,20 +441,31 @@ app.get('/', function (req, res) {
 // first page here 
 //PUBLIC , count EventAds
 app.post( '/count_event_ads', function (req, res) {
+  // client
+  // return client
+  // client.data.message='OK'
+  // client.data.counteventads=0
   var js = {};
   js.client = req.body;
   js.resp = res;
   countEventAds(js.client.data.ads.gui).then(function (body) {
-    js.client.data.message = body;
+    js.client.data.message = 'OK';
+    js.client.data.counteventads = body;
     js.resp.send(js.client);
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 });
 
 //Public , show front page monthly or weekly ==> event page ads
-app.post( '/show_event_ads', function (req, res) { // client
+app.post( '/show_event_ads', function (req, res) { 
+  // client
+  // client.data.page 
+  //client.data.maxpage
+  // return client
+  // client.data.message='OK'
+  // client.data.ads={arr:{},0}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -463,12 +474,13 @@ app.post( '/show_event_ads', function (req, res) { // client
 
 function showEventAds(js) {
   displayEventAds(true, js.client.data.page, js.client.data.maxpage).then(function (body) {
+    js.client.data.message='OK';
     js.client.data.ads = body;
     js.resp.send(js.client);
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function findCountEventAdsByIsActive(isactive) {
@@ -519,11 +531,17 @@ function displayEventAds(isactive, page, maxpage) {
       });
   }).catch(function (err) {
     deferred.reject(err);
-  }).done();
+  });
   return deferred.promise;
 }
 //ADMIN , show front page monthly or weekly ==> event page ads
-app.post( '/show_event_ads_list', function (req, res) { // client.data.user,
+app.post( '/show_event_ads_list', function (req, res) { 
+  // client.data.user,
+  //client.data.page
+  //client.data.maxpage
+  // return client
+  // client.data.message='OK'
+  // client.data.ads={arr:{},0}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -532,12 +550,13 @@ app.post( '/show_event_ads_list', function (req, res) { // client.data.user,
 
 function showEventAdsList(js) {
   displayEventAdsList(js.client.data.ads.isactive, js.client.data.page, js.client.data.maxpage).then(function (body) {
+    js.client.data.message='OK'
     js.client.data.ads = body;
     js.resp.send(js.client);
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function findCountEventAdsByIsActiveList(isactive) {
@@ -586,11 +605,15 @@ function displayEventAdsList(isactive, page, maxpage) {
       });
   }).catch(function (err) {
     deferred.reject(err);
-  }).done();
+  });
   return deferred.promise;
 }
 //ADMIN update event ads
-app.post( '/update_event_ads', function (req, res) { // client.user, client.data.ads
+app.post( '/update_event_ads', function (req, res) { 
+  // client.user, 
+  //client.data.ads._rev
+  //return client
+  //client.data.message='OK'
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -604,7 +627,7 @@ function updateEventAds(js) {
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function findCountEventAds() {
@@ -666,15 +689,21 @@ function countEventAds(adsgui) {
       deferred.resolve(body);
     }).catch(function (err) {
       deferred.reject(err);
-    }).done();
+    });
   }).catch(function (err) {
     deferred.reject(err);
-  }).done();
+  });
   return deferred.promise;
 }
 
 //PUBLIC , edit Keyword ads
-app.post( '/show_registered_KW_ads', function (req, res) { // client , client.data.page, client.data.maxpage
+app.post( '/show_registered_KW_ads', function (req, res) { 
+  // client ,
+  // client.data.page, 
+  //client.data.maxpage
+  //return client
+  // client.message='OK'
+  // client.data.searchkw ={arr:{},count:0}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -684,11 +713,13 @@ app.post( '/show_registered_KW_ads', function (req, res) { // client , client.da
 function showRegisteredKWAds(js) {
   // check if registered user visit
   getRegisteredKWAds(js.client.data.page, js.client.data.maxpage).then(function (body) {
-    js.resp.send(body);
+    js.client.data.searchkw=body;
+    js.client.data.message='OK'
+    js.resp.send(js.client);
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function getCountRegisteredKWAds() {
@@ -699,6 +730,9 @@ function getCountRegisteredKWAds() {
   }, function (err, res) {
     if (err) deferred.reject(err);
     else {
+      var arr=[];
+      if(res.rows.length)
+        arr.push(res.rows[0].value);
       deferred.resolve(res.rows[0].value);
     }
   });
@@ -737,7 +771,7 @@ function getRegisteredKWAds(page, maxpage) {
     });
   }).catch(function (err) {
     deferred.reject(err);
-  }).done();
+  });
   return deferred.promise;
 }
 
@@ -751,7 +785,7 @@ function findItemByGui(item) {
     else {
       var arr = [];
       if (res.row.length) {
-        arr[0] = res.rows[0].value;
+        arr.push(res.rows[0].value);
       }
       deferred.resolve(arr[0]);
     }
@@ -778,7 +812,13 @@ function updateRegisteredKWAds(ads) {
 }
 
 // PUBLIC , search item
-app.post( '/show_searched_item', function (req, res) { // client.data.sk , client.data.page , client.data.maxpage
+app.post( '/show_searched_item', function (req, res) { 
+  // client.data.sk , 
+  //client.data.page , 
+  //client.data.maxpage
+  //return client
+  // client.data.message='OK'
+  //client.data.item={arr:{},count:0}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -787,12 +827,13 @@ app.post( '/show_searched_item', function (req, res) { // client.data.sk , clien
 
 function showSearchedItems(js) {
   getSearchedItems(js.client.data.sk, js.client.data.page, js.client.data.maxpage).then(function (body) {
+    js.client.data.message='OK';
     js.client.data.item = body;
     js.resp.send(js.client);
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function getSearchedItems(sk, page, maxpage) {
@@ -816,7 +857,11 @@ function getSearchedItems(sk, page, maxpage) {
 }
 
 // User , edit shop
-app.post( '/edit_shop', function (req, res) { //client ,client.data.shop
+app.post( '/edit_shop', function (req, res) { 
+  //client ,
+  //client.data.shop._rev
+  //return client
+  // client.data.message='OK'
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -830,7 +875,7 @@ function editShop(js) {
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function findCountByOwner(ownername) {
@@ -889,20 +934,22 @@ function updateShop(shop) {
           db.insert(shop, shop.gui, function (err, res) {
             if (err) deferred.reject(err);
             else {
-              deferred.resolve('add a new shop completely');
+              deferred.resolve('OK add a new shop completely');
             }
           });
         }
-      }).catch(function (err) {
-        deferred.reject(err);
-      }).done();
+      });
   }).catch(function (err) {
     deferred.reject(err);
-  }).done();
+  });
   return deferred.promise;
 }
 // User , edit shop
-app.post( '/find_exist_shop', function (req, res) { //client ,client.data.shop
+app.post( '/find_exist_shop', function (req, res) { 
+  //client ,
+  //client.data.shop
+  //return client
+  //client.data.message='OK'
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -917,10 +964,15 @@ function findExistShop(js) {
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
-// Public , shop
-app.post( '/show_shop', function (req, res) { //client ,client.data.shop
+// Public , show shop
+app.post( '/show_shop', function (req, res) { 
+  //client ,
+  //client.data.shop
+  //return client
+  // client.data.message='OK'
+  // client.data.shop={}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -929,12 +981,13 @@ app.post( '/show_shop', function (req, res) { //client ,client.data.shop
 
 function showShop(js) {
   displayShop(js.client.data.shop.name).then(function (body) {
+    js.client.data.message='OK';
     js.client.data.shop = body;
     js.resp.send(js.client);
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function displayShop(shopname) {
@@ -952,8 +1005,13 @@ function displayShop(shopname) {
   });
   return deferred.promise;
 }
-//Admin , shop
-app.post( '/show_shop_list', function (req, res) { //client.data.user ,client.data.shop, client.data.page,client.data.maxpage
+//Admin , shop list by admin
+app.post( '/show_shop_list', function (req, res) { 
+  //client.data.page,
+  //client.data.maxpage
+  //return client
+  //client.data.message='OK'
+  //client.data.shop={arr:{},count:0}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -962,12 +1020,13 @@ app.post( '/show_shop_list', function (req, res) { //client.data.user ,client.da
 
 function showShopList(js) {
   displayShopList(js.client.data.page, js.client.data.maxpage).then(function (body) {
+    js.client.data.message='OK';
     js.client.data.shop = body;
     js.resp.send(js.client);
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function findCountShopList() {
@@ -1007,11 +1066,16 @@ function displayShopList(page, maxpage) {
     });
   }).catch(function (err) {
     deferred.reject(err);
-  }).done();
+  });
   return deferred.promise;
 }
 //User  , edit shope
-app.post( '/show_shop_details', function (req, res) { //client.data.user ,client.data.shop
+app.post( '/show_shop_details', function (req, res) { 
+  //client.data.user ,
+  //client.data.shop
+  //return client
+  //client.data.message='OK'
+  //client.data.shop={}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1020,12 +1084,13 @@ app.post( '/show_shop_details', function (req, res) { //client.data.user ,client
 
 function showShopDetails(js) {
   displayShop(js.client.data.shop.name).then(function (body) {
+    js.client.data.message='OK'
     js.client.data.shop = body;
     js.resp.send(js.client);
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function displayShopDetails(shopname) {
@@ -1042,7 +1107,12 @@ function displayShopDetails(shopname) {
   return deferred.promise;
 }
 //User , edit item
-app.post( '/edit_item', function (req, res) { //client.data.user ,client.data.shop, client.data.item
+app.post( '/edit_item', function (req, res) { 
+  //client.data.user ,
+  //client.data.shop, 
+  //client.data.item
+  //return client
+  //client.data.message='OK'
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1052,12 +1122,12 @@ app.post( '/edit_item', function (req, res) { //client.data.user ,client.data.sh
 function editItem(js) {
   updateItem(js.client.data.item, false).then(function (body) {
     js.client.data.message = body;
-    js.client.data.item = item;
+    //js.client.data.item = item;
     js.resp.send(js.client);
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function findCountByItemNameShopName(name, shopname) {
@@ -1104,11 +1174,15 @@ function updateItem(item, approval) {
     }
   }).catch(function (err) {
     deferred.reject(err);
-  }).done();
+  });
   return deferred.promise;
 }
 // FOR ADMIN, edit item
-app.post( '/approve_item', function (req, res) { //client.data.user ,client.data.shop, client.data.item
+app.post( '/approve_item', function (req, res) { 
+  // client.data.item
+  //return client
+  // client.data.message='OK'
+  // client.data.item={}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1123,10 +1197,15 @@ function approveItem(js) {
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 // FOR public , item
-app.post( '/show_item', function (req, res) { // client.data.item , client.data.shop
+app.post( '/show_item', function (req, res) { 
+  // client.data.item , 
+  //client.data.shop
+  //return client
+  //client.data.message='OK'
+  //client.data.item
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1135,12 +1214,13 @@ app.post( '/show_item', function (req, res) { // client.data.item , client.data.
 
 function showItem(js) {
   displayItem(js.client.data.item.name, js.client.data.shop.name).then(function (body) {
+    js.client.data.message='OK';
     js.client.data.item = body;
     js.resp.send(js.client);
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function displayItem(itemname, shopname) {
@@ -1165,7 +1245,13 @@ function displayItem(itemname, shopname) {
   return deferred.promise;
 }
 //FOR user ,edit item
-app.post( '/show_item_details', function (req, res) { //client.data.user ,client.data.shop , client.data.item
+app.post( '/show_item_details', function (req, res) { 
+  //client.data.user ,
+  //client.data.shop , 
+  //client.data.item , 
+  //return client
+  // client.data.message='OK'
+  // client.data.item
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1174,12 +1260,13 @@ app.post( '/show_item_details', function (req, res) { //client.data.user ,client
 
 function showItemDetails(js) {
   displayItemDetails(js.client.data.item.name, js.client.data.shop.name).then(function (body) {
+    js.client.data.message='OK'
     js.client.data.item = body;
     js.resp.send(js.client);
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function displayItemDetails(itemname, shopname) {
@@ -1202,8 +1289,16 @@ function displayItemDetails(itemname, shopname) {
   return deferred.promise;
 }
 
-// FOR user  , item
-app.post( '/show_item_list_by_shop_owner', function (req, res) { //client.data.user ,client.data.shop, client.data.item.isactive, client.data.maxpage, client.data.page
+// FOR user  , items list by shop owner
+app.post( '/show_item_list_by_shop_owner', function (req, res) { 
+  //client.data.user ,
+  //client.data.shop, 
+  //client.data.item.isactive, //
+  //client.data.maxpage, 
+  //client.data.page
+  //return client
+  //client.data.message='OK'
+  //client.data.item={arr:{},count:0}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1212,12 +1307,13 @@ app.post( '/show_item_list_by_shop_owner', function (req, res) { //client.data.u
 
 function showItemListByShopNameOwnerName(js) {
   displayItemListShopNameOwnerName(js.client.data.shop.name, js.client.username, js.client.data.page, js.client.data.maxpage).then(function (body) {
+    js.client.data.message="OK"
     js.client.data.item = body;
     js.resp.send(js.client);
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function findCountItemByShopNameOwnerName(shopname, ownername) {
@@ -1264,13 +1360,21 @@ function displayItemListShopNameOwnerName(shopname, ownername, page, maxpage) {
     });
   }).catch(function (err) {
     deferred.reject(err);
-  }).done();
+  });
 
   return deferred.promise;
 }
 
 // FOR User by Active , item
-app.post( '/show_item_list_by_shop_owner_active', function (req, res) { //client.data.user ,client.data.shop, client.data.item.isactive, client.data.maxpage, client.data.page
+app.post( '/show_item_list_by_shop_owner_active', function (req, res) { 
+  //client.data.user ,
+  //client.data.shop,/
+  // client.data.item.isactive, 
+  //client.data.maxpage, 
+  //client.data.page
+  //return client
+  //client.data.message='OK'
+  //client.data.item={arr:{},count:0}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1279,12 +1383,13 @@ app.post( '/show_item_list_by_shop_owner_active', function (req, res) { //client
 
 function showItemListByShopNameOwnerNameIsActive(js) {
   displayItemListShopNameOwnerName(js.client.data.shop.name, js.client.username, js.client.data.item.isactive, js.client.data.page, js.client.data.maxpage).then(function (body) {
+    js.client.data.message="OK"
     js.client.data.item = body;
     js.resp.send(js.client);
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function findCountItemByShopNameOwnerNameIsActive(shopname, ownername, isactive) {
@@ -1331,13 +1436,20 @@ function displayItemListShopNameOwnerNameIsActive(shopname, ownername, isactive,
     });
   }).catch(function (err) {
     deferred.reject(err);
-  }).done();
+  });
 
   return deferred.promise;
 }
 
-// FOR pulbic , item
-app.post( '/show_item_list_by_shop', function (req, res) { //client.data.user ,client.data.shop , client.data.maxpage, client.data.page
+// FOR pulbic , show item by shop
+app.post( '/show_item_list_by_shop', function (req, res) { 
+  //client.data.user ,
+  //client.data.shop , 
+  //client.data.maxpage, 
+  //client.data.page
+  //return client
+  //client.data.message='OK'
+  //client.data.item={arr:{},count:0}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1345,13 +1457,14 @@ app.post( '/show_item_list_by_shop', function (req, res) { //client.data.user ,c
 });
 
 function showItemListByShop(js) {
-  displayItemListShop(js.client.data.shop.name, js.client.data.page, js.client.dta.maxpage).then(function (body) {
+  displayItemListShop(js.client.data.shop.name, js.client.data.page, js.client.data.maxpage).then(function (body) {
+    js.client.data.message="OK"
     js.client.data.item = body;
     js.resp.send(js.client);
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function findCountItemByShopName(shopname) {
@@ -1398,13 +1511,20 @@ function displayItemListShop(shopname, page, maxpage) {
     });
   }).catch(function (err) {
     deferred.reject(err);
-  }).done();
+  });
 
   return deferred.promise;
 }
 
-//FOR ADMIN , doc
-app.post( '/show_approval_item', function (req, res) { // client.data.maxpage, client.data.page
+//FOR ADMIN , show approved item
+app.post( '/show_approval_item', function (req, res) { 
+  // client.data.maxpage, 
+  //client.data.page
+  //client.data.item.isapproved
+  // client
+  //return client
+  // client.data.message="OK"
+  //client.data.item
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1418,7 +1538,7 @@ function showApprovalItem(js) {
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function findCountByApprovalItem(isapproved) {
@@ -1464,12 +1584,17 @@ function displayByApprovalItem(isapproved) {
       });
   }).catch(function (err) {
     deferred.reject(err);
-  }).done();
+  });
   return deferred.promise;
 }
 
-// FOR USER ONLY , doc
-app.post( '/update_doc_by_user', function (req, res) { //client.data.user, client.data.item, client.data.doc
+// FOR USER ONLY , update doc (photo, other pdf)
+app.post( '/update_doc_by_user', function (req, res) { 
+  //client.data.user, 
+  //client.data.item, 
+  //client.data.doc
+  // return client
+  //client.data.message="OK"
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1483,7 +1608,7 @@ function editDocByUser(js) {
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function findCountDocByItemGui(itemgui) {
@@ -1525,7 +1650,7 @@ function updateDocByUser(doc) {
             });
           }).catch(function (err) {
             deferred.reject(err);
-          }).done();
+          });
         } else {
           doc.content = '';
           db.insert(doc, doc.gui, function (err, res) {
@@ -1537,14 +1662,14 @@ function updateDocByUser(doc) {
                   deferred.resolve(res);
                 }).catch(function (err) {
                   deferred.reject(err);
-                }).done();;
+                });;
               } else if (!doc._rev) {
                 // make a picture from base64
                 makePhotoFromBase64(doc.content, doc.itemgui, doc.name).then(function (body) {
                   deferred.resolve(res);
                 }).catch(function (err) {
                   deferred.reject(err);
-                }).done();
+                });
               }
               //deferred.resolve(res);
             }
@@ -1553,7 +1678,7 @@ function updateDocByUser(doc) {
       }
   }).catch(function (err) {
     deferred.reject(err);
-  }).done();
+  });
   return deferred.promise;
 }
 
@@ -1607,7 +1732,7 @@ function showDocByItemGuiOwnerName(js) {
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function findCountDocByItemGuiOwnerName(itemgui, ownername) {
@@ -1653,7 +1778,7 @@ function displayDocByItemGuiOwner(itemgui, ownername) {
     });
   }).catch(function (err) {
     deferred.reject(err);
-  }).done();
+  });
   return deferred.promise;
 }
 //For PUBLIC , doc
@@ -1671,7 +1796,7 @@ function showDocByItemGui(js) {
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function displayDocByItemGui(itemgui) {
@@ -1698,7 +1823,7 @@ function displayDocByItemGui(itemgui) {
     });
   }).catch(function (err) {
     deferred.reject(err);
-  }).done();
+  });
   return deferred.promise;
 }
 
@@ -1717,7 +1842,7 @@ function registerSearchKW(js) {
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function findCountSearchKW(isactive) {
@@ -1779,7 +1904,7 @@ function showSearchKWList(js) {
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function displaySearchKWList(isactive, page, maxpage) {
@@ -1809,7 +1934,7 @@ function displaySearchKWList(isactive, page, maxpage) {
     });
   }).catch(function (err) {
     deferred.reject(err);
-  }).done();
+  });
   return deferred.promise;
 }
 // USER ONLY
@@ -1827,7 +1952,7 @@ function showSearchKWByUser(js) {
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function displaySearchKWByUser(ownername, shopname, isactive, page, maxpage) {
@@ -1857,7 +1982,7 @@ function displaySearchKWByUser(ownername, shopname, isactive, page, maxpage) {
     });
   }).catch(function (err) {
     deferred.reject(err);
-  }).done();
+  });
   return deferred.promise;
 }
 
@@ -1907,7 +2032,7 @@ function showItemAddOn(js) {
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function displayItemAddOn(page, maxpage) {
@@ -1937,7 +2062,7 @@ function displayItemAddOn(page, maxpage) {
     });
   }).catch(function (err) {
     deferred.reject(err);
-  }).done();
+  });
   return deferred.promise;
 }
 
@@ -1972,7 +2097,7 @@ function showItemAddOnByUser(js) {
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function displayItemAddOnByUser(ownername, shopname, isactive, page, maxpage) {
@@ -2004,7 +2129,7 @@ function displayItemAddOnByUser(ownername, shopname, isactive, page, maxpage) {
     });
   }).catch(function (err) {
     deferred.reject(err);
-  }).done();
+  });
   return deferred.promise;
 }
 
@@ -2048,7 +2173,7 @@ function showDocBase64ByGui(js) {
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function displayDocBase64ByGui(docgui) {
@@ -2066,7 +2191,7 @@ function displayDocBase64ByGui(docgui) {
         deferred.resolve(body);
       }).catch(function (err) {
         deferred.reject(err);
-      }).done();
+      });
     }
   });
   return deferred.promise;
@@ -2168,11 +2293,11 @@ app.all('*', function (req, res, next) {
                 next();
               }).catch(function (err) {
                 res.send(err);
-              }).done();
+              });
             }
           }).catch(function (err) {
             res.send(err);
-          }).done();
+          });
         } else if (auth == 2) //CHECK authorization User 
           var u = {
             username: c.username,
@@ -2184,14 +2309,14 @@ app.all('*', function (req, res, next) {
           next();
         }).catch(function (err) {
           res.send(err);
-        }).done();
+        });
         //   next();
       } else
         res.send(new Error("not Allow"));
     }).catch(function (err) {
       res.send(err);
       //render error
-    }).done();
+    });
   } else if (req.path != '/init_client') {
     // console.log(client.clientuid +" != "+ __cur_client.clientuid);
     // if (client.clientuid != __cur_client.clientuid||__cur_client.clientuid=='undefined') /// HERE IF WE NEED TO CHECK IF EVEN PUBLIC NEED CLIENTUID

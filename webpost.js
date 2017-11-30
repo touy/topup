@@ -6,7 +6,7 @@ const uuidV4 = require('uuid/v4');
 const nano = require('nano')('http://admin:admin@localhost:5984');
 const LTCSERVICE = require('./ltctopup')();
 const fs = require('fs');
-const _current_picture_path = './_doc_item_/';
+const _current_picture_path = './_doc_/';
 const base64 = require('file-base64');
 var __client_ip = '';
 //const nano = require('nano')('http://localhost:5984');
@@ -26,13 +26,49 @@ var Promise = require('bluebird');
 //app.use(express.urlencoded()); // to support URL-encoded bodies
 const bodyParser = require('body-parser');
 app.use(bodyParser());
+var methodOverride = require('method-override');
 app.use(cors());
+app.use(methodOverride());
+
+
+app.use(errorHandler)
+
+function errorHandler(err, req, res, next) {
+  var l = {
+    log: err,
+    logdate: convertTZ(new Date()),
+    type: "error",
+    gui: uuidV4()
+  };
+  errorLogging(l);
+  if (res.headersSent) {
+    return next(err);
+  }
+  res.status(500);
+  res.render('error', {
+    error: err
+  });
+}
+function errorLogging(log) {
+  var db = create_db("errorlogs");
+  console.log(log);
+  db.insert(log, log.gui, function (err, body) {
+    if (err) console.log(err);
+    else {
+      console.log("log oK ");
+    }
+  });
+}
+
+
+
 __design_view = "objectList";
 const requestIp = require('request-ip');
 var __login_kw = 'Authen';
 var __client_ip = "";
 app.use(requestIp.mw());
 var __cur_client = {};
+app.use('/doc_object', express.static('_doc_'));
 
 function convertTZ(fromTZ) {
   return moment.tz(fromTZ, "Asia/Vientiane").format();
@@ -281,6 +317,21 @@ var __design_ads = {
   },
   "language": "javascript"
 };
+var __design_log = {
+  "_id": "_design/objectList",
+  "views": {
+    "findByTime": {
+      "map": "function (doc) {\n  emit(doc.logdate,doc);\n}"
+    },
+    "countByType": {
+      "reduce": "_count",
+      "map": "function (doc) {\n  emit(doc.type,doc);\n}"
+    },
+    "findByType": {
+      "map": "function (doc) {\n  emit(doc.type,doc);\n}"
+    }
+  }
+}
 // var _pp='/pp';
 // var _prp='/prp';
 // var _ap='/ap';
@@ -294,7 +345,7 @@ init_db('approvallist', __design_approvallist);
 init_db('itemaddon', __design_itemaddon);
 init_db('searchkw', __design_searchkw);
 init_db('doc', __design_doc);
-
+init_db('errorlogs', __design_log);
 var ads = {
   photo: '',
   title: '',
@@ -400,8 +451,38 @@ var doc = {
 
 app.use('/public', express.static('public'));
 
+var upload = multer({
+  storage: multer.diskStorage({
+    destination: function (req, file, cb) {
+      cb(null, _current_picture_path);
+    },
+    filename: function (req, file, cb) {
+      cb(null, file.originalname.replace(path.extname(file.originalname), "") + '-' + makeid(6) + '-' + Date.now() + path.extname(file.originalname));
+    }
+  }),
+  fileFilter: function (req, file, cb) {
+    var ext = path.extname(file.originalname).toLowerCase();
+    if (ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg') {
+      return cb(new Error('Only images are allowed'), null);
+    }
+    cb(null, true);
+  }
+}).single('userFile');
 
-
+// UPLOAD image file
+app.post('/upload_img', upload, function (req, res) {
+  // client
+  // return client 
+  // client.data.file
+  var js = {};
+  //  js.client =JSON.parse(req.body.client);//It is special  
+  js.client = JSON.parse(req.body.client) //It is special
+  console.log('Uploade Successful ', req.file, js.client);
+    js.client.data = {};
+    js.client.data.message = "OK file uploaded";
+    js.client.data.file = '/images/' + req.file.filename; // client remove /images/ then save 
+    js.resp.send(js.client);
+});
 
 
 // GET sample data 
@@ -1602,7 +1683,7 @@ app.post( '/update_doc_by_user', function (req, res) {
 });
 
 function editDocByUser(js) {
-  updateDocByUser(js.client.data.item.gui).then(function (body) {
+  updateDocByUser(js.client.data.item.gui,js.client.data.user.username).then(function (body) {
     js.client.data.message = body;
     js.resp.send(js.client);
   }).catch(function (err) {
@@ -1631,25 +1712,21 @@ function findCountDocByItemGui(itemgui) {
   return deferred.promise;
 }
 
-function updateDocByUser(doc) {
+function updateDocByUser(doc,username) {
   var deferred = Q.defer();
   var db = create_db('doc');
-  findCountByItemNameShopName(doc.itemgui).then(function (body) {
+  findCountDocByItemGuiOwnerName(doc.itemgui,username).then(function (body) {
     if (!doc._rev)
       if (6 > body + 1) deferred.resolve('Could not add more than 5 photo');
       else {
         if (!doc._rev) {
           doc.gui = new uuidV4();
-          makePhotoFromBase64(doc.content, doc.gui, doc.name).then(function (body) {
-            doc.link = body;
-            db.insert(doc, doc.gui, function (err, res) {
-              if (err) deferred.reject(err);
-              else {
-                deferred.resolve(res);
-              }
-            });
-          }).catch(function (err) {
-            deferred.reject(err);
+          //doc.link = body;
+          db.insert(doc, doc.gui, function (err, res) {
+            if (err) deferred.reject(err);
+            else {
+              deferred.resolve("OK");
+            }
           });
         } else {
           doc.content = '';
@@ -1658,20 +1735,20 @@ function updateDocByUser(doc) {
             else {
               if (doc._deleted) {
                 // delete picture
-                deleteFile(doc.itemgui, doc.name).then(function (body) {
-                  deferred.resolve(res);
-                }).catch(function (err) {
-                  deferred.reject(err);
-                });;
-              } else if (!doc._rev) {
-                // make a picture from base64
-                makePhotoFromBase64(doc.content, doc.itemgui, doc.name).then(function (body) {
-                  deferred.resolve(res);
+                deleteFile(doc.link).then(function (body) {
+                  deferred.resolve("OK");
                 }).catch(function (err) {
                   deferred.reject(err);
                 });
-              }
-              //deferred.resolve(res);
+              // } else if (doc._rev) {
+              //   // make a picture from base64
+              //   makePhotoFromBase64(doc.content, doc.itemgui, doc.name).then(function (body) {
+              //     deferred.resolve("OK");
+              //   }).catch(function (err) {
+              //     deferred.reject(err);
+              //   });
+              }else
+                deferred.resolve("OK");
             }
           });
         }
@@ -1682,18 +1759,18 @@ function updateDocByUser(doc) {
   return deferred.promise;
 }
 
-function deleteFile(itemgui, name) {
+function deleteFile(link) {
   var deferred = Q.defer();
-  var path = _current_picture_path + '/' + itemgui + '/' + name;
+  var path = _current_picture_path + '/' + link ;
   fs.unlink(path, function (err) {
     if (err && err.code == 'ENOENT') {
       // file doens't exist
       deferred.reject('Could not find this file, so can not delete this file ' + link);
     } else if (err) {
       // other errors, e.g. maybe we don't have enough permission
-      deferred.reject(JSON.parse(err) + ' /' + link);
+      deferred.reject("error "+JSON.parse(err) + ' /' + link);
     } else {
-      deferred.resolve('removed ' + link);
+      deferred.resolve('OK removed ' + link);
     }
   });
   return deferred.promise;
@@ -1717,8 +1794,13 @@ function makeBase64FromFile(itemgui, name) { // IF use only base64 string we can
   return deferred.promise;
 }
 
-//FOR USER , doc
-app.post( '/show_doc_by_itemgui_owner', function (req, res) { //client.data.user,  client.data.doc
+//FOR USER , show doc by item gui and owner
+app.post( '/show_doc_by_itemgui_owner', function (req, res) { 
+  //client.data.user,  
+  //client.data.item.gui
+  //return client
+  // client.message='OK'
+  //client.data.item={arr:{},count:0}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1727,6 +1809,7 @@ app.post( '/show_doc_by_itemgui_owner', function (req, res) { //client.data.user
 
 function showDocByItemGuiOwnerName(js) {
   displayDocByItemGuiOwner(js.client.data.item.gui, js.client.data.user.username).then(function (body) {
+    js.client.data.message='OK';
     js.client.data.doc = body;
     js.resp.send(js.client);
   }).catch(function (err) {

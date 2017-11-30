@@ -337,7 +337,7 @@ app.post('/upload_img', upload, function (req, res) {
     if (res.photo)
       fs.exists(res.photo, function (exists) {
         if (exists) {
-          fs.unlink(res.photo);
+          fs.unlink(_current_picture_path+res.photo);
         } else {
           throw new Error('File not found, so not deleting.');
         }
@@ -1009,7 +1009,7 @@ app.get('/init_default_users', function (req, res) {
   js.client = req.body;
   js.resp = res;
   restoreBackupFile('d20171115015037.js');
-  init_default_users();
+  init_default_users(js);
 });
 var members = {};
 members.member = [];
@@ -1070,18 +1070,18 @@ function init_default_users() {
       docs: members.member
     }).then(function (res) {
       console.log(res);
-    }).catch(function (err) {
-      error_log.push(err);
-    });
-    addBulkUserBinary({
-      docs: members.binarytree
-    }).then(function (res) {
-      console.log(res);
-    }).catch(function (err) {
-      error_log.push(err);
+      addBulkUserBinary({
+        docs: members.binarytree
+      }).then(function (res) {
+        console.log(res);
+        js.client.data.message="OK";
+        js.resp.send(js.client);
+      });
     });
   }).catch(function (err) {
     error_log.push(err);
+    js.client.data.message=err;
+    js.resp.send(js.client);
   });
 }
 
@@ -6435,7 +6435,7 @@ init_db('package', __design_package);
 
 init_db('logs', __design_log);
 init_db('loginlog', __design_login);
-init_db('errlogging', __design_log);
+init_db('errorlogs', __design_log);
 init_master_user();
 init_default_package();
 

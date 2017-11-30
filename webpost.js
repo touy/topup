@@ -450,7 +450,7 @@ var doc = {
 
 
 app.use('/public', express.static('public'));
-
+app.use('/images', express.static('_doc_'));
 var upload = multer({
   storage: multer.diskStorage({
     destination: function (req, file, cb) {

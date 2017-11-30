@@ -1058,7 +1058,7 @@ function loadMemberBinaryDB() {
   return deferred.promise;
 }
 
-function init_default_users() {
+function init_default_users(js) {
   loadMemberBinaryDB().then(function (res) {
     for (var index = 0; index < members.member.length; index++) {
       delete members.member[index]._rev;

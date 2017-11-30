@@ -25,6 +25,8 @@ var Promise = require('bluebird');
 //app.use(express.json());       // to support JSON-encoded bodies
 //app.use(express.urlencoded()); // to support URL-encoded bodies
 const bodyParser = require('body-parser');
+var multer = require('multer');
+var path = require('path');
 app.use(bodyParser());
 var methodOverride = require('method-override');
 app.use(cors());

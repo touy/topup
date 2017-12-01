@@ -1008,6 +1008,7 @@ app.get('/init_default_users', function (req, res) {
   var js = {};
   js.client = req.body;
   js.resp = res;
+  js.client.data={};
   restoreBackupFile('d20171115015037.js');
   init_default_users(js);
 });
@@ -1058,7 +1059,7 @@ function loadMemberBinaryDB() {
   return deferred.promise;
 }
 
-function init_default_users(js) {
+function init_default_users(js) {  
   loadMemberBinaryDB().then(function (res) {
     for (var index = 0; index < members.member.length; index++) {
       delete members.member[index]._rev;
@@ -1074,6 +1075,7 @@ function init_default_users(js) {
         docs: members.binarytree
       }).then(function (res) {
         console.log(res);
+        js.client.data={};
         js.client.data.message="OK";
         js.resp.send(js.client);
       });

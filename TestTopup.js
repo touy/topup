@@ -354,7 +354,7 @@ app.post('/upload_img', upload, function (req, res) {
 
 
 app.get('/images', function (req, res) {
-  res.sendfile('test.html');
+  res.sendFile('test.html');
   //   var client={};
   //   client.data={};
   //   client.data.user={};

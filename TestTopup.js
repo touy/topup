@@ -4656,6 +4656,7 @@ app.post('/get_member_count_by_username', function (req, res) {
 
 function showMemberCountByUsername(js) {
   getMemberCount(js.client.data.user).then(function (body) {
+      console.log("count member "+body)
       js.client.data.user.count = body;
       js.resp.send(js.client);
   }).catch(function (err) {

@@ -1096,7 +1096,9 @@ app.get('/clean_user_and_binary', function (req, res) {
   //var db=create_db('user'); 
   nano.db.destroy('user', function (err, body) {
     //db=create_db('userbinary');
-    nano.db.destroy('userbinary', function (err, body) {});
+    nano.db.destroy('userbinary', function (err, body) {
+      res.send('CLEAN OK');
+    });
   });
 });
 app.get('/init_default_users', function (req, res) {

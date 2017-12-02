@@ -624,12 +624,13 @@ app.get('/get_routes', function (req, res) {
 });
 //GAME
 app.get('/game', function (req, res) {
-  res.sendfile('random.html');
+  res.sendFile(__dirname+'random.html');
 });
 
 //show tree
 app.get('/tree', function (req, res) {
-  res.sendfile('tree.html');
+  console.log(__dirname);
+  res.sendFile(__dirname+'/tree.html');
 });
 
 // CHANGE PASSWORD
@@ -969,8 +970,8 @@ function logTelecomTopup(res) {
 }
 
 function sendSMSPassword(pass, phone) {
-  if (phone.length < 8)
-    throw new Error('number is not 8 digit and start with 020');
+  if (phone.length < 10)
+    throw new Error('number is not 8 digit and start with 20');
   if (phone.slice(1, phone.length).indexOf('205') == 0) {
     ltc.checkBalanceCenterLTC().then(logCenterBalance).catch(logTelecomError);
     ltc.checkBalanceLTC(phone).then(logPhoneBalance).catch(logTelecomError);
@@ -1498,8 +1499,11 @@ function viewUser(user) {
           var arr = [];
           if (res.rows.length) {
             arr.push(res.rows[0].value);
+            deferred.resolve(arr);
           }
-          deferred.resolve(arr);
+          else{
+            deferred.reject(new Error("username not found "+user.username));
+          }
         }
       });
   else
@@ -1590,7 +1594,24 @@ function updateUser(user) {
 // GET CURRENT USER INFO TO CHECK IF IT'S HAS BEEN LOGGING IN 
 // THIS IS FOR TESTING
 app.post('/get_current_user', function (req, res) {
-  res.send(__cur_client);
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  viewUser(js.client.data.user).then(function(res){    
+    if(res.length){ // for testing only
+      js.client.data.user=res[0];
+      js.client.data.message='OK';
+      js.resp.send(js.client);
+    }
+    else if(js.client.data.user.username==__cur_client.username){
+      js.client.data.user=res[0];
+      js.client.data.message='OK';
+      js.resp.send(js.client);
+    }
+  }).catch(function(err){
+    js.client.data.message=err;
+    js.resp.send(js.client);
+  });  
 });
 // CHECK MAX PHONE ALLOW FOR REGISTRATION
 app.post('/check_register_max_phone', function (req, res) {
@@ -1791,12 +1812,13 @@ function showMemberListByParent(js) {
   viewUser(js.client.data.user).then(function (res) {
     //var indexes=findIndexOfMembers(res.index,19-res.memberlevel);// max member should be within 20  , 2^19;
     if (!res.length) throw new Error('User not found');
-    res = res[0];
-    getMemberListByParent(res.username, js.client.data.page, js.client.data.maxpage).then(
+    var user = res[0];
+    getMemberListByParent(user.username, js.client.data.page, js.client.data.maxpage).then(
       function (res) {
-        getMemberCount(res).then(function (count) {
+        var users=res;
+        getMemberCount(user).then(function (count) {
           js.client.data.user = {
-            arr: res,
+            arr: users,
             count: count
           };
           js.client.data.message = 'OK';
@@ -1828,6 +1850,7 @@ function getMemberListByParent(username, page, maxpage) {
   }, function (err, res) {
     if (err) deferred.reject(err);
     else {
+      //console.log(res);
       var arr = [];
       if (res.rows.length) {
         for (var index = 0; index < res.rows.length; index++) {
@@ -1872,48 +1895,37 @@ function findIndexOfMembers(x, maxlevel) {
 
 function showUserBinaryTree(js) {
   var db = create_db('userbinary');
-  checkYourMember(js.client.data.user.username).then(function (res) {
-    if (!res) {
-      js.client.data.message = 'User not found';
-      js.resp.send(js.client);
-      return;
-    }
-
-    db.view(__design_view, 'findByUsername', {
-      key: js.client.data.user.username
-    }, function (err, res) {
-      if (err) {
-        js.client.data.message = err;
-        js.resp.send(js.client);
-      } else {
-        if (res.rows.length) {
-          var u = res.rows[0].value;
-          var indexes = findIndexOfMembers(u.index, js.client.data.user.memberlevel);
-          indexes = findAvailableIndexes(indexes);
-          getUserBinaryByUser(indexes, js.client.data.user.memberlevel).then(function (body) {
-            if (body) {
-              js.client.data.userbinary = body;
-              getUserInfoListByUser(indexes).then(function (body) {
-                js.client.data.user = body;
-                js.client.data.message = 'OK';
-                js.resp.send(js.client);
-              }).catch(function (err) {
-                error_log.push(err);
-              });
-            }
-          }).catch(function (err) {
-            console.log(err);
-            js.client.data.message = err;
-            js.resp.send(js.client);
-          });
+      db.view(__design_view, 'findByUsername', {
+        key: js.client.data.user.username
+      }, function (err, res) {
+        if (err) {
+          js.client.data.message = err;
+          js.resp.send(js.client);
+        } else {
+          if (res.rows.length) {
+            var u = res.rows[0].value;
+            var indexes = findIndexOfMembers(u.index, js.client.data.user.memberlevel);
+            indexes = findAvailableIndexes(indexes);
+            getUserBinaryByUser(indexes, js.client.data.user.memberlevel).then(function (body) {
+              if (body) {
+                js.client.data.userbinary = body;
+                getUserInfoListByUser(indexes).then(function (body) {
+                  js.client.data.user = body;
+                  js.client.data.message = 'OK';
+                  js.resp.send(js.client);
+                }).catch(function (err) {
+                  js.client.data.message = err;
+                  js.resp.send(js.client);
+                });
+              }
+            }).catch(function (err) {
+              //console.log(err);
+              js.client.data.message = err;
+              js.resp.send(js.client);
+            });
+          }
         }
-      }
-    });
-  }).catch(function (err) {
-    js.client.data.message = err;
-    js.resp.send(js.client);
-  }).done();
-
+      });
 }
 // WHEN RETISTER NEED TO record AVAILABLE INDEX
 var __available_indexes = [];
@@ -4651,7 +4663,7 @@ function showMemberCountByUsername(js) {
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 }
 
 function getMemberCount(user) {
@@ -4659,7 +4671,6 @@ function getMemberCount(user) {
   var db = create_db("user");
   viewUser(user).then(function (res) {
     if (res.length) {
-
       db.view(__design_view, "countMembers", {
         key: user.username
       }, function (err, res) {
@@ -4669,11 +4680,15 @@ function getMemberCount(user) {
           // if (user.ismember)
           //   deferred.resolve(res.rows[0].value + 1);
           // else
-          deferred.resolve(res.rows[0].value);
+          var arr=[];
+          if(res.rows.length){
+            arr.push(res.rows[0].value);
+          }
+          deferred.resolve(arr[0]);
         }
       });
     } else {
-      deferred.reject("User not found");
+      deferred.reject("error User not found");
     }
   }).catch(function (err) {
     deferred.reject(err);
@@ -5106,7 +5121,7 @@ app.post('/check_your_member', function (req, res) {
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
-  }).done();
+  });
 });
 
 function checkYourMember(username) {
@@ -5115,7 +5130,8 @@ function checkYourMember(username) {
   viewUser({
     username: username
   }).then(function (res) {
-    if (res.aboveparents.indexOf(__cur_client.username) > -1)
+    var user=res[0];
+    if (user.aboveparents.indexOf(username) > -1)
       deferred.resolve(username);
   }).catch(function (err) {
     deferred.reject(err);
@@ -7684,16 +7700,16 @@ function phonenumberValidate(p) {
   var vp = phoneValidator.validate(p, {
     list: true
   });
-  if (!p.indexOf("0205")) {
+  if (!p.indexOf("205")) {
     return vp;
   }
-  if (!p.indexOf("0202")) {
+  if (!p.indexOf("202")) {
     return vp;
   }
-  if (!p.indexOf("0207")) {
+  if (!p.indexOf("207")) {
     return vp;
   }
-  if (!p.indexOf("0209")) {
+  if (!p.indexOf("209")) {
     return vp;
   } else {
     return [];

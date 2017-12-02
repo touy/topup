@@ -40,7 +40,9 @@
         var host = $(location).attr('protocol') + "//" + $(location).attr('host');
 
         function getHost() {
-            host = $(location).attr('protocol') + "//" + $(location).attr('host');
+            host = $(location).attr('protocol') + "//" + $(location).attr('host')+$(location).attr('pathname');
+            host =host.replace("/tree","");
+            console.log(host)
             return host;
         }
 
@@ -302,7 +304,7 @@
             client.data.user = {};
             client.data.user.username = username;
             client.data.user.memberlevel = needlevel
-            jsonPost("/get_user_binary_tree", client, cb); // URL : /get_user_binary_tree
+            jsonPost(getHost() + "/get_user_binary_tree", client, cb); // URL : /get_user_binary_tree
         };
         function getBinaryDataByMemberLevel(level, arr) {
             var ar = [];
@@ -334,14 +336,14 @@
                 c.data.user={};
                 c.data.user.username=p;
                 c.data.page=0;
-                c.maxpage=10000;
-                jsonPost('/get_member_list_by_parent_name',c,function(res){
+                c.maxpage=10000000;
+                console.log(c);
+                jsonPost(getHost()+'/get_member_list_by_parent_name',c,function(res){
                     //console.log('res');
                     //console.log(res);
                     var count=res.data.user.count;
                     res.data.user=res.data.user.arr;
-                    res.data.user.sort(compareIndex);
-                    
+                    res.data.user.sort(compareIndex);                    
                     if(res){
                         $("#memberlist").empty();
                         var str="<p>member List total: "+(res.data.user.length+1)+"</p>";
@@ -363,6 +365,7 @@
             }
         }
         function prepareBinaryData(username, needlevel) {
+            console.log("search :"+username);
             if (username == '') {
                 username = 'souk@TheFriendd'
                 //return;
@@ -373,7 +376,9 @@
                 $("#topname").empty().text(currentUsername);
             else
                 $("#topname").empty().text(currentUsername + "/" + username);
+            //console.log('getmember list by parent');
             getMemberListByParent(username);
+            console.log('get binary user');
             getBinaryDataByUser(username, needlevel, function (res) {
                 js.client.data = {};
                 js.client.data.user = {};
@@ -382,7 +387,7 @@
                 js.client.data.userbinary = res.data.userbinary;                
                 arr = [];
                 var f_userbinary = js.client.data.userbinary;
-                //console.log(res);
+                console.log(res);
                 f_userbinary = fillUpMembers(username, needlevel, js.client.data.userbinary);
                 indexingJson(username, '', f_userbinary, needlevel, -1, username);
                 arr.splice(0, 0, {}); // ignore the first item                    
@@ -401,10 +406,10 @@
                                 //var p = findParentByUserName(u.username,arr);
                                 if (u.isdummy == 'isdummy') {
                                     h =
-                                        '<div><span onclick="clickme()"><img width="32px" height="32px" src="public/icons/forbidden-128.png" /></span></div>';
+                                        '<div><span onclick="clickme()"><img width="32px" height="32px" src="'+getHost()+'/public/icons/forbidden-128.png" /></span></div>';
                                 } else if (u.isdummy == 'isregisterdummy')
                                     h = "<div><span  onclick=register('" + u.parent +
-                                    "')><img width='32px' height='32px' src='public/icons/add-user2-512.png'/></span></div>";
+                                    "')><img width='32px' height='32px' src='"+getHost()+"/public/icons/add-user2-512.png'/></span></div>";
                             } else {
                                 h = "<div  style='border-style: unset;' ><span id='" + gui +
                                     "' onclick=\"prepareBinaryData('" + arr[index].username + "',"+maxrange+")\"  title='" +
@@ -418,11 +423,11 @@
                         p = arr[index].parent;
                         if (p == '' || p == null || p == undefined)
                             _xarr.push(
-                                '<div><span onclick="clickme()"><img width="32px" height="32px" src="/public/icons/forbidden-128.png" /></span></div>'
+                                '<div><span onclick="clickme()"><img width="32px" height="32px" src="'+getHost()+'/public/icons/forbidden-128.png" /></span></div>'
                             );
                         else {
                             _xarr.push("<div><span  onclick=register('" + p +
-                                "')><img width='32px' height='32px' src='/public/icons/add-user2-512.png'/></span></div>"
+                                "')><img width='32px' height='32px' src='"+getHost()+"/public/icons/add-user2-512.png'/></span></div>"
                             );
                         }
                     }
@@ -430,7 +435,7 @@
                 // mapping
                 // console.log(arr);
                 // console.log(_xarr.length);
-                console.log('mapping');
+                //console.log('mapping');
                 var _arr = [];
                 $(function () {                    
                     _arr.push(_xarr[8]);
@@ -500,14 +505,14 @@
             $("#" + b.gui).empty();
             imgurl = "";
             if (user.packagename == "The Best Friend") {
-                imgurl = "http://thefriendd.com/assets/img/Glod_Friend.png";
+                imgurl = getHost()+"/public/img/best_friend.png";
             } else if (user.packagename == "Close Friend") {
-                imgurl = "http://thefriendd.com/assets/img/Close_Friend.png";
+                imgurl = getHost()+"/public/img/close_friend.png";
             } else if (user.packagename == "Friend") {
-                imgurl = "http://thefriendd.com/assets/img/Friend.png";
+                imgurl = getHost()+"/public/img/friend.png";
             } else {
                 // PUT X                 
-                imgurl = "public/icons/forbidden-128.png";
+                imgurl = getHost()+"/public/icons/forbidden-128.png";
             }
             if (!user.leftuser) user.leftuser = 0;
             if (!user.rightuser) user.rightuser = 0;
@@ -543,10 +548,10 @@
             client.data.user={};
             client.data.user.introductioncode=p;
             $(location).attr('href', '/#/Register')
-            console.log('no one here');
+            //console.log('no one here');
         }
         function clickme() {
-            console.log('nothing here');
+            //console.log('nothing here');
         }
         var maxrange = 4;
 
@@ -554,10 +559,10 @@
             client={};
             client.data={};
             client.data.user={};
-            jsonPost( '/get_current_user', client, function (res) { 
-                
+            client.data.user.username="souk@TheFriendd";
+            jsonPost(getHost() + '/get_current_user', client, function (res) {                 
                 //currentUsername=res.username;
-                console.log(res);
+                //console.log("get current user "+JSON.stringify(res));
                 currentUsername = "souk@TheFriendd"; //TESTING ONLY
                 prepareBinaryData(currentUsername, maxrange);
             });
@@ -567,7 +572,7 @@
         }
 
         function toTop() {
-            console.log(currentUsername);
+            //console.log(currentUsername);
             if (currentUsername)
                 prepareBinaryData(currentUsername, maxrange);
         }
@@ -581,15 +586,15 @@
         }
 
         function checkExistUser(username) {
-            url ="/check_your_member";
+            url = getHost() + "/check_your_member";
             var client = {};
             client.data = {};
             client.data.user = {};
             client.data.user.username = username;
             jsonPost(url, client, function (res) {
                 //console.log(res);  
-                prepareBinaryData(username, maxrange); // TESTING ONLY
-                return;
+                // prepareBinaryData(username, maxrange); // TESTING ONLY
+                // return;
                 if (res.data.message.indexOf('OK') < 0) {
                     $("#topname").empty().text = 'Not exist';
                 } else {

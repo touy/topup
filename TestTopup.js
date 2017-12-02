@@ -27,8 +27,8 @@ var passValidator = new passwordValidator();
 var userValidator = new passwordValidator();
 var phoneValidator = new passwordValidator();
 phoneValidator
-  .is().min(11) // Minimum length 8 
-  .is().max(11) // Maximum length 100 
+  .is().min(10) // Minimum length 8 
+  .is().max(10) // Maximum length 100 
   .has().not().letters() // Must not have lowercase letters 
   .has().digits() // Must have digits 
   .has().not().symbols()
@@ -773,7 +773,90 @@ function changeUserNameAndPhoneNumber(js) {
   }
 
 }
-
+function findUserBinary(user){
+  var deferred=Q.defer();
+  var db=create_db('userbinary');
+  db.view(__design_view,"findByUsername",{key:user.username},function(err,res){
+    if(err)deferred.reject(err);
+    else{
+      var arr=[];
+      if(res.rows.length){        
+        arr.push(res.rows[0].value);
+      }
+      deferred.resolve(arr);
+    }
+  });
+  return deferred.promise;
+}
+function updateUserBinary(user,newuser){
+  var deferred=Q.defer();
+  var db=create_db('userbinary');
+  findUserBinary(user).then(function(res){
+    if(res.length){
+      var u=res[0];
+      u.username=newuser.username;
+      u.parent=newuser.parent;
+      u.luser=newuser.luser;
+      u.ruser=newuser.ruser;
+      u.updateddate=convertTZ(new Date());
+      db.insert(u,u.gui,function(err,res){
+        if(err)deferred.reject(err);
+        else{
+          findUserBinary(u.luser).then(function(res){
+            res.parent=u.username;
+            res.updateddate=convertTZ(new Date());
+            db.insert(res,res.gui,function(err,res){
+              if(err)deferred.reject(err);
+              else{
+                findUserBinary(u.ruser).then(function(res1){
+                  res1.parent=u.username;
+                  res1.updateddate=convertTZ(new Date());
+                  db.insert(res1.res1.gui,function(err,res){
+                    if(err)deferred.reject(err);
+                    else{
+                      deferred.resolve('OK');
+                    }
+                  });
+                });
+              }
+            })            
+          });
+        }
+      });
+    }
+    else{
+      deferred.reject(new Error('Error username not found'));
+    }
+  }).catch(function(err){
+    deferred.reject(err);
+  });
+  return deferred.promise;
+}
+function updateAboveParents(user,newuser){
+  var deferred=Q.defer();
+  var db=create_db('user');
+  db.view(__design_view,'findMembersByUsername',{key:user.username},function(err,res){
+    if(err)deferred.reject(err);
+    else{
+      var arr=[];
+      if(res.rows.length){
+        for (let index = 0; index < res.rows.length; index++) {
+          const element=res.rows[index].value;
+          const i=element.aboveparents.indexOf(user.username);
+          element.aboveparents[i]=newuser.username;    
+          arr.push(element);               
+        }
+        db.bulk(arr,{},function(err,res){
+          if(err) deferred.reject(err);
+          else{            
+              deferred.resolve('OK');
+          }
+        }); 
+      }      
+    }
+  });
+  return deferred.promise;
+}
 function changeDefaultInfo(js) {
   var deferred = Q.defer();
   var db = create_db('user');
@@ -789,13 +872,14 @@ function changeDefaultInfo(js) {
     else {
       if (res.rows.length) {
         u = res.rows[0].value;
+        var olduser=u;
         u.username = js.client.data.user.username;
         u.usercode = u.username;
         u.phone1 = js.client.data.user.phone1;
         var vuser = usernameValidate(u.username);
         var vphone = phonenumberValidate(u.phone1);
         if (vuser.length || vphone.length) {
-          deferred.reject(new Error("invalid username: " + vuser + " invalide phonenumber: " + vphone));
+          deferred.reject(new Error("invalid username: " + vuser + " invalid phonenumber: " + vphone));
         } else
           findMaxPhoneNumber(u).then(function (res) {
             if (res.length > 3) {
@@ -819,8 +903,17 @@ function changeDefaultInfo(js) {
                   logging(l);
                   deferred.reject(err);
                 } else {
+                  updateAboveParents(olduser,js.client.data.user).then(function(res){                    
+                    findUserBinary(olduser).then(function(res){
+                      newuserbinary=res;
+                      newuserbinary.username=js.client.data.user.username;
+                      updateUserBinary(res,newuserbinary).then(function(res){
+                        deferred.resolve("OK");
+                      });
+                    });
+                  });
                   //console.log('before change username and phone2');
-                  deferred.resolve('OK');
+                  //deferred.resolve('OK');
                 }
               });
           });
@@ -5728,7 +5821,7 @@ var __design_user = {
       "map": "function(doc) {\r\n    if(doc.phone1&&doc.username) {\r\n        emit([doc.username,doc.phone1],doc);\r\n    }\r\n}"
     },
     "findMembersByUsername": {
-      "map": "function(doc) {\r\n    for(var word in doc.aboveparents) {\r\n      emit(doc.aboveparents[word],doc);\r\n    }\r\n}"
+      "map": "function(doc) {\n if( doc.aboveparents ) {\n for( var i=0, l=doc.aboveparents.length; i<l; i++) {\n            emit( doc.aboveparents[i], doc );     }\n}\n    }"
     },
     "findByParent": {
       "map": "function(doc) {\r\n    if(doc.parent) {\r\n        emit(doc.parent,doc);\r\n    }\r\n}"

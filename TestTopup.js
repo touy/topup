@@ -764,11 +764,11 @@ function changeUserNameAndPhoneNumber(js) {
     var l = {
       log: "phone number or username not match",
       logdate: convertTZ(new Date()),
-      type: "error change username and phone number " + js.client.data.user.username,
+      type: "error phone number or username not match " + js.client.data.user.username,
       gui: uuidV4(),
     }
     logging(l);
-    js.client.data.message = 'Error change username and phone number';
+    js.client.data.message = 'Error phone number or username not match';
     js.resp.send(js.client);
   }
 
@@ -897,20 +897,20 @@ function changeDefaultInfo(js) {
             findMaxPhoneNumber(u).then(function (res) {
               if (res.length > 3) {
                 var l = {
-                  log: "this phonenumber has more than 3 in the databaseh",
+                  log: "this phonenumber has more than 3 in the database",
                   logdate: convertTZ(new Date()),
-                  type: "error change username and phone number " + js.client.data.user.username,
+                  type: "error this phonenumber has more than 3 in the database " + js.client.data.user.username,
                   gui: uuidV4(),
                 }
                 logging(l);
-                deferred.reject(new Error('this phonenumber has more than 3 in the database'));
+                deferred.reject(new Error('error this phonenumber has more than 3 in the database'));
               } else
                 db.insert(u, u._id, function (err, res) {
                   if (err) {
                     var l = {
                       log: err,
                       logdate: convertTZ(new Date()),
-                      type: "error change username and phone number " + js.client.data.user.username,
+                      type: "error update user info " + js.client.data.user.username,
                       gui: uuidV4(),
                     }
                     logging(l);
@@ -947,7 +947,7 @@ function changeDefaultInfo(js) {
           var l = {
             log: "no matching this username and phone",
             logdate: convertTZ(new Date()),
-            type: "error change username and phone number " + js.client.data.user.username,
+            type: "error no matching this username and phone" + js.client.data.user.username,
             gui: uuidV4(),
           }
           logging(l);

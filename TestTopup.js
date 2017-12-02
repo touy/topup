@@ -857,7 +857,10 @@ function updateAboveParents(user,newuser){
         }  
         console.log('members:'+arr.length);
         db.bulk(arr,{},function(err,res){
-          console.log('bulk update user');          
+          console.log('bulk update user');  
+          console.log(res);        
+          console.log('Error bulk update user');  
+          console.log(err);        
           if(err) deferred.reject(err);
           else{            
               deferred.resolve('OK');

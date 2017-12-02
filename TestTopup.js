@@ -4655,12 +4655,9 @@ app.post('/get_member_count_by_username', function (req, res) {
 });
 
 function showMemberCountByUsername(js) {
-  var db = create_db('user')
   getMemberCount(js.client.data.user).then(function (body) {
-    if (body) {
       js.client.data.user.count = body;
       js.resp.send(js.client);
-    }
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);

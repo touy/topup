@@ -338,7 +338,7 @@ app.post('/upload_img', upload, function (req, res) {
     if (res.photo)
       fs.exists(res.photo, function (exists) {
         if (exists) {
-          fs.unlink(_current_picture_path+res.photo);
+          fs.unlink(_current_picture_path + res.photo);
         } else {
           throw new Error('File not found, so not deleting.');
         }
@@ -625,13 +625,13 @@ app.get('/get_routes', function (req, res) {
 });
 //GAME
 app.get('/game', function (req, res) {
-  res.sendFile(__dirname+'random.html');
+  res.sendFile(__dirname + 'random.html');
 });
 
 //show tree
 app.get('/tree', function (req, res) {
   console.log(__dirname);
-  res.sendFile(__dirname+'/tree.html');
+  res.sendFile(__dirname + '/tree.html');
 });
 
 // CHANGE PASSWORD
@@ -738,49 +738,58 @@ app.post('/change_default_user_info', function (req, res) {
 });
 
 function changeUserNameAndPhoneNumber(js) {
-  if (js.client.data.user.oldusername && js.client.data.user.oldphone1 && js.client.data.user.username && js.client.data.user.phone1) {
-    changeDefaultInfo(js).then(function (body) {
+  try {
+    if (js.client.data.user.oldusername && js.client.data.user.oldphone1 && js.client.data.user.username && js.client.data.user.phone1) {
+      changeDefaultInfo(js).then(function (body) {
+        var l = {
+          log: body,
+          logdate: convertTZ(new Date()),
+          type: "OK change username and phone number " + js.client.data.user.username,
+          gui: uuidV4(),
+        }
+        logging(l);
+        js.client.data.message = body;
+        js.resp.send(js.client);
+      }).catch(function (err) {
+        var l = {
+          log: err,
+          logdate: convertTZ(new Date()),
+          type: "error change username and phone number " + js.client.data.user.username,
+          gui: uuidV4(),
+        }
+        logging(l);
+        js.client.data.message = err;
+        js.resp.send(js.client);
+      });
+    } else {
       var l = {
-        log: body,
+        log: "phone number or username not match",
         logdate: convertTZ(new Date()),
-        type: "OK change username and phone number " + js.client.data.user.username,
+        type: "error phone number or username not match " + js.client.data.user.username,
         gui: uuidV4(),
       }
       logging(l);
-      js.client.data.message = body;
+      js.client.data.message = 'Error phone number or username not match';
       js.resp.send(js.client);
-    }).catch(function (err) {
-      var l = {
-        log: err,
-        logdate: convertTZ(new Date()),
-        type: "error change username and phone number " + js.client.data.user.username,
-        gui: uuidV4(),
-      }
-      logging(l);
-      js.client.data.message = err;
-      js.resp.send(js.client);
-    });
-  } else {
-    var l = {
-      log: "phone number or username not match",
-      logdate: convertTZ(new Date()),
-      type: "error phone number or username not match " + js.client.data.user.username,
-      gui: uuidV4(),
     }
-    logging(l);
-    js.client.data.message = 'Error phone number or username not match';
-    js.resp.send(js.client);
+  } catch (error) {
+    console.log(error);
+    js.resp.send(error);
   }
 
+
 }
-function findUserBinary(user){
-  var deferred=Q.defer();
-  var db=create_db('userbinary');
-  db.view(__design_view,"findByUsername",{key:user.username},function(err,res){
-    if(err)deferred.reject(err);
-    else{
-      var arr=[];
-      if(res.rows.length){        
+
+function findUserBinary(user) {
+  var deferred = Q.defer();
+  var db = create_db('userbinary');
+  db.view(__design_view, "findByUsername", {
+    key: user.username
+  }, function (err, res) {
+    if (err) deferred.reject(err);
+    else {
+      var arr = [];
+      if (res.rows.length) {
         arr.push(res.rows[0].value);
       }
       deferred.resolve(arr);
@@ -788,48 +797,108 @@ function findUserBinary(user){
   });
   return deferred.promise;
 }
-function updateUserBinary(user,newuser){
-  var deferred=Q.defer();
-  
-  var db=create_db('userbinary');
+
+function findParentIndex(i) {
+  if (isNaN(i))
+    throw new Error('error it is not a number');
+  else if (!i)
+    return i;
+  else if ((i % 2)===0)
+    return (i - 2) / 2;
+  else
+    return (i - 1) / 2;
+}
+
+function findLuserIndex(i) {
+  return 2 * i + 1;
+}
+
+function findRuserIndex(i) {
+  return 2 * i + 2;
+}
+
+function updateUserBinary(user, newuser) {
+  var deferred = Q.defer();
+  var db = create_db('userbinary');
   try {
-    findUserBinary(user).then(function(res){
-      if(res.length){
-        var u=res[0];
-        u.username=newuser.username;
-        u.parent=newuser.parent;
-        u.luser=newuser.luser;
-        u.ruser=newuser.ruser;
-        u.updateddate=convertTZ(new Date());
-        db.insert(u,u.gui,function(err,res){
-          if(err)deferred.reject(err);
-          else{
-            findUserBinary(u.luser).then(function(res){
-              res.parent=u.username;
-              res.updateddate=convertTZ(new Date());
-              db.insert(res,res.gui,function(err,res){
-                if(err)deferred.reject(err);
-                else{
-                  findUserBinary(u.ruser).then(function(res1){
-                    res1.parent=u.username;
-                    res1.updateddate=convertTZ(new Date());
-                    db.insert(res1.res1.gui,function(err,res){
-                      if(err)deferred.reject(err);
-                      else{
-                        deferred.resolve('OK');
-                      }
+    findUserBinary(user).then(function (res) {
+      if (res.length) {
+        var u = res[0];
+        u.username = newuser.username;
+        // u.parent=newuser.parent;
+        // u.luser=newuser.luser;
+        // u.ruser=newuser.ruser;        
+        u.updateddate = convertTZ(new Date());
+        db.insert(u, u._id, function (err, res) {
+          if (err) deferred.reject(err);
+          else {
+            var i = []
+            i.push(findParentIndex(u.index));
+            console.log(i);
+            getUserBinaryMembersByIndex(i, true).then(function (res) {              
+              var p = res[0];
+              if((u.index%2)===0)
+                p.ruser=u.username;
+              else
+                p.luser=u.username;
+              db.insert(p, p._id, function (err, res) {
+                if (err) deferred.reject(err);
+                else {
+                  if (u.luser && u.luser != undefined)
+                    findUserBinary(u.luser).then(function (res) {
+                      res = res[0];
+                      res.parent = u.username;
+                      res.updateddate = convertTZ(new Date());
+                      db.insert(res, res._id, function (err, res) {
+                        if (err) deferred.reject(err);
+                        else {
+                          if (u.ruser)
+                            findUserBinary(u.ruser).then(function (res1) {
+                              console.log('find right 1 ' + u.ruser);
+                              res1 = res1[0];
+                              res1.parent = u.username;
+                              res1.updateddate = convertTZ(new Date());
+                              db.insert(res1, res1._id, function (err, res) {
+                                console.log('update ruser ' + res);
+                                if (err) deferred.reject(err);
+                                else {
+                                  deferred.resolve('OK');
+                                }
+                              });
+                            });
+                        }
+                      })
                     });
-                  });
+                  else if (u.ruser && u.ruser != undefined) {
+                    console.log('u2')
+                    console.log(u);
+                    findUserBinary(u.ruser).then(function (res1) {
+                      console.log('find right 2' + u.ruser);
+                      res1 = res1[0];
+                      res1.parent = u.username;
+                      res1.updateddate = convertTZ(new Date());
+                      console.log('right 2');
+                      console.log(res1);
+                      db.insert(res1, res1._id, function (err, res) {
+                        console.log('update ruser ' + res);
+                        if (err) deferred.reject(err);
+                        else {
+                          deferred.resolve('OK');
+                        }
+                      });
+                    });
+                  }
                 }
-              })            
+              });
+            }).catch(function (err) {
+              deferred.reject(err);
             });
           }
         });
-      }
-      else{
+      } else {
         deferred.reject(new Error('Error username not found'));
       }
-    }).catch(function(err){
+    }).catch(function (err) {
       deferred.reject(err);
     });
   } catch (error) {
@@ -837,35 +906,46 @@ function updateUserBinary(user,newuser){
   }
   return deferred.promise;
 }
-function updateAboveParents(user,newuser){
-  var deferred=Q.defer();
+
+function updateAboveParents(user, newuser) {
+  var deferred = Q.defer();
   console.log('updateAboveParents');
   try {
-    var db=create_db('user');
-    db.view(__design_view,'findMembersByUsername',{key:user.username},function(err,res){
+    var db = create_db('user');
+    console.log('find member user: ' + user.username);
+    console.log('new member user: ' + newuser.username);
+    db.view(__design_view, 'findMembersByUsername', {
+      key: user.username
+    }, function (err, res) {
       console.log('findMembersByUsername');
-      if(err)deferred.reject(err);
-      else{
-        var arr=[];
-        if(res.rows.length){
+      if (err) deferred.reject(err);
+      else {
+        var arr = [];
+        if (res.rows.length) {
           for (index = 0; index < res.rows.length; index++) {
-            element=res.rows[index].value;
-            i=element.aboveparents.indexOf(user.username);
-            element.aboveparents[i]=newuser.username;    
-            arr.push(element);               
-          }       
-        }  
-        console.log('members:'+arr.length);
-        db.bulk(arr,{},function(err,res){
-          console.log('bulk update user');  
-          console.log(res);        
-          console.log('Error bulk update user');  
-          console.log(err);        
-          if(err) deferred.reject(err);
-          else{            
-              deferred.resolve('OK');
+            element = res.rows[index].value;
+            i = element.aboveparents.indexOf(user.username);
+            element.aboveparents[i] = newuser.username;
+            arr.push(element);
           }
-        });     
+        }
+        console.log('members:' + arr.length);
+        db.bulk({
+          docs: arr
+        }, {}, function (err, res) {
+          // console.log('bulk update user');  
+          // console.log(res);        
+          // console.log('Error bulk update user');  
+          // console.log(err);        
+          if (err) {
+            console.log(err);
+            deferred.reject(err);
+
+          } else {
+            console.log("bulk ok");
+            deferred.resolve('OK');
+          }
+        });
       }
     });
   } catch (error) {
@@ -873,6 +953,11 @@ function updateAboveParents(user,newuser){
   }
   return deferred.promise;
 }
+
+function cloneJSON(o) {
+  return JSON.parse(JSON.stringify(o));
+}
+
 function changeDefaultInfo(js) {
   var deferred = Q.defer();
   var db = create_db('user');
@@ -887,11 +972,13 @@ function changeDefaultInfo(js) {
       if (err) deferred.reject(err);
       else {
         if (res.rows.length) {
-          u = res.rows[0].value;
-          var olduser=u;
+          var u = res.rows[0].value;
+          var olduser = cloneJSON(res.rows[0].value);
+
           u.username = js.client.data.user.username;
           u.usercode = u.username;
           u.phone1 = js.client.data.user.phone1;
+
           var vuser = usernameValidate(u.username);
           var vphone = phonenumberValidate(u.phone1);
           if (vuser.length || vphone.length) {
@@ -908,44 +995,55 @@ function changeDefaultInfo(js) {
                 logging(l);
                 deferred.reject(new Error('error this phonenumber has more than 3 in the database'));
               } else
-                db.insert(u, u._id, function (err, res) {
-                  if (err) {
-                    var l = {
-                      log: err,
-                      logdate: convertTZ(new Date()),
-                      type: "error update user info " + js.client.data.user.username,
-                      gui: uuidV4(),
-                    }
-                    logging(l);
-                    deferred.reject(err);
-                  } else {
-                    updateAboveParents(olduser,u).then(function(res){    
-                      console.log('updateAboveParents');
-                      console.log(res);
-                      findUserBinary(olduser).then(function(res){
-                        console.log('findUserBinary');
-                        console.log(res);
-                        newuserbinary=res;
-                        newuserbinary.username=js.client.data.user.username;
-                        updateUserBinary(res,newuserbinary).then(function(res){
-                          console.log('updateUserBinary');
-                          console.log(res);
-                          var l = {
-                            log: "change default user info",
-                            logdate: convertTZ(new Date()),
-                            type: "change default user info " + js.client.data.user.username,
-                            gui: uuidV4(),
-                          }
-                          logging(l);
-                          deferred.resolve("OK");
-                        });
-                      });
-                    });
-                    console.log('before change username and phone2');
-                    //deferred.resolve('OK');
+                console.log()
+              db.insert(u, u._id, function (err, res) {
+                if (err) {
+                  var l = {
+                    log: err,
+                    logdate: convertTZ(new Date()),
+                    type: "error update user info " + js.client.data.user.username,
+                    gui: uuidV4(),
                   }
-                });
-            });
+                  logging(l);
+                  deferred.reject(err);
+                } else {
+                  updateAboveParents(olduser, u).then(function (res) {
+                    console.log('updateAboveParents');
+                    //console.log(res);
+                    findUserBinary(olduser).then(function (res) {
+                      console.log('findUserBinary');
+                      console.log(res);
+                      res = res[0];
+                      newuserbinary = cloneJSON(res);
+                      newuserbinary.username = js.client.data.user.username;
+                      newuserbinary.updateddate = convertTZ(new Date());
+                      updateUserBinary(res, newuserbinary).then(function (res) {
+                        console.log('updateUserBinary');
+                        console.log(res);
+                        var l = {
+                          log: "change default user info",
+                          logdate: convertTZ(new Date()),
+                          type: "change default user info " + js.client.data.user.username,
+                          gui: uuidV4(),
+                        }
+                        logging(l);
+                        deferred.resolve("OK");
+                      }).catch(function (err) {
+                        deferred.reject(err);
+                      });
+                    }).catch(function (err) {
+                      deferred.reject(err);
+                    });;
+                  }).catch(function (err) {
+                    deferred.reject(err);
+                  });;
+                  console.log('before change username and phone2');
+                  //deferred.resolve('OK');
+                }
+              });
+            }).catch(function (err) {
+              deferred.reject(err);
+            });;
         } else {
           var l = {
             log: "no matching this username and phone",
@@ -1138,7 +1236,7 @@ app.get('/init_default_users', function (req, res) {
   var js = {};
   js.client = req.body;
   js.resp = res;
-  js.client.data={};
+  js.client.data = {};
   restoreBackupFile('d20171115015037.js');
   init_default_users(js);
 });
@@ -1189,7 +1287,7 @@ function loadMemberBinaryDB() {
   return deferred.promise;
 }
 
-function init_default_users(js) {  
+function init_default_users(js) {
   loadMemberBinaryDB().then(function (res) {
     for (var index = 0; index < members.member.length; index++) {
       delete members.member[index]._rev;
@@ -1205,14 +1303,14 @@ function init_default_users(js) {
         docs: members.binarytree
       }).then(function (res) {
         console.log(res);
-        js.client.data={};
-        js.client.data.message="OK";
+        js.client.data = {};
+        js.client.data.message = "OK";
         js.resp.send(js.client);
       });
     });
   }).catch(function (err) {
     error_log.push(err);
-    js.client.data.message=err;
+    js.client.data.message = err;
     js.resp.send(js.client);
   });
 }
@@ -1629,9 +1727,8 @@ function viewUser(user) {
           if (res.rows.length) {
             arr.push(res.rows[0].value);
             deferred.resolve(arr);
-          }
-          else{
-            deferred.reject(new Error("username not found "+user.username));
+          } else {
+            deferred.reject(new Error("username not found " + user.username));
           }
         }
       });
@@ -1710,7 +1807,7 @@ function updateUser(user) {
   try {
     db = create_db("user");
     if (user._rev && user._rev != undefined)
-      db.insert(user, user.gui, function (err, res) {
+      db.insert(user, user._id, function (err, res) {
         if (err) {
           deferred.reject(err);
         } else {
@@ -1731,21 +1828,20 @@ app.post('/get_current_user', function (req, res) {
   var js = {};
   js.client = req.body;
   js.resp = res;
-  viewUser(js.client.data.user).then(function(res){    
-    if(res.length){ // for testing only
-      js.client.data.user=res[0];
-      js.client.data.message='OK';
+  viewUser(js.client.data.user).then(function (res) {
+    if (res.length) { // for testing only
+      js.client.data.user = res[0];
+      js.client.data.message = 'OK';
+      js.resp.send(js.client);
+    } else if (js.client.data.user.username == __cur_client.username) {
+      js.client.data.user = res[0];
+      js.client.data.message = 'OK';
       js.resp.send(js.client);
     }
-    else if(js.client.data.user.username==__cur_client.username){
-      js.client.data.user=res[0];
-      js.client.data.message='OK';
-      js.resp.send(js.client);
-    }
-  }).catch(function(err){
-    js.client.data.message=err;
+  }).catch(function (err) {
+    js.client.data.message = err;
     js.resp.send(js.client);
-  });  
+  });
 });
 // CHECK MAX PHONE ALLOW FOR REGISTRATION
 app.post('/check_register_max_phone', function (req, res) {
@@ -1949,7 +2045,7 @@ function showMemberListByParent(js) {
     var user = res[0];
     getMemberListByParent(user.username, js.client.data.page, js.client.data.maxpage).then(
       function (res) {
-        var users=res;
+        var users = res;
         getMemberCount(user).then(function (count) {
           js.client.data.user = {
             arr: users,
@@ -2029,37 +2125,37 @@ function findIndexOfMembers(x, maxlevel) {
 
 function showUserBinaryTree(js) {
   var db = create_db('userbinary');
-      db.view(__design_view, 'findByUsername', {
-        key: js.client.data.user.username
-      }, function (err, res) {
-        if (err) {
-          js.client.data.message = err;
-          js.resp.send(js.client);
-        } else {
-          if (res.rows.length) {
-            var u = res.rows[0].value;
-            var indexes = findIndexOfMembers(u.index, js.client.data.user.memberlevel);
-            indexes = findAvailableIndexes(indexes);
-            getUserBinaryByUser(indexes, js.client.data.user.memberlevel).then(function (body) {
-              if (body) {
-                js.client.data.userbinary = body;
-                getUserInfoListByUser(indexes).then(function (body) {
-                  js.client.data.user = body;
-                  js.client.data.message = 'OK';
-                  js.resp.send(js.client);
-                }).catch(function (err) {
-                  js.client.data.message = err;
-                  js.resp.send(js.client);
-                });
-              }
+  db.view(__design_view, 'findByUsername', {
+    key: js.client.data.user.username
+  }, function (err, res) {
+    if (err) {
+      js.client.data.message = err;
+      js.resp.send(js.client);
+    } else {
+      if (res.rows.length) {
+        var u = res.rows[0].value;
+        var indexes = findIndexOfMembers(u.index, js.client.data.user.memberlevel);
+        indexes = findAvailableIndexes(indexes);
+        getUserBinaryByIndex(indexes, js.client.data.user.memberlevel).then(function (body) {
+          if (body) {
+            js.client.data.userbinary = body;
+            getUserInfoListByUser(indexes).then(function (body) {
+              js.client.data.user = body;
+              js.client.data.message = 'OK';
+              js.resp.send(js.client);
             }).catch(function (err) {
-              //console.log(err);
               js.client.data.message = err;
               js.resp.send(js.client);
             });
           }
-        }
-      });
+        }).catch(function (err) {
+          //console.log(err);
+          js.client.data.message = err;
+          js.resp.send(js.client);
+        });
+      }
+    }
+  });
 }
 // WHEN RETISTER NEED TO record AVAILABLE INDEX
 var __available_indexes = [];
@@ -2116,7 +2212,7 @@ function getUserInfoListByUser(indexes) {
   return deferred.promise;
 }
 
-function getUserBinaryMembers(indexes) {
+function getUserBinaryMembersByIndex(indexes, isedit) {
   var deferred = Q.defer();
   var db = create_db('userbinary');
   db.view(__design_view, "findMembersByIndexes", {
@@ -2131,7 +2227,7 @@ function getUserBinaryMembers(indexes) {
         if (res.rows.length) {
           for (var index = 0; index < res.rows.length; index++) {
             var element = res.rows[index].value;
-            e = { // for current user
+            var e = { // for current user
               usergui: element.usergui,
               username: element.username,
               createddate: element.createddate,
@@ -2142,7 +2238,10 @@ function getUserBinaryMembers(indexes) {
               index: element.index,
               gui: element.gui
             };
-            arr.push(e);
+            if (isedit)
+              arr.push(element);
+            else
+              arr.push(e);
           }
         }
         deferred.resolve(arr);
@@ -2163,7 +2262,7 @@ function getIndexes(n, level) {
   return arr;
 }
 
-function getUserBinaryByUser(indexes, needlevel) {
+function getUserBinaryByIndex(indexes, needlevel) {
   var deferred = Q.defer();
   var db = create_db('userbinary');
   db.view(__design_view, "findMembersByIndexes", {
@@ -2194,7 +2293,7 @@ function getUserBinaryByUser(indexes, needlevel) {
           var indexes = [];
           indexes.push(arr[0].index);
           indexes = indexes.concat(getIndexes(arr[0].index, needlevel));
-          getUserBinaryMembers(indexes).then(function (res) {
+          getUserBinaryMembersByIndex(indexes, false).then(function (res) {
             deferred.resolve(res);
           }).catch(function (err) {
             deferred.reject(err);
@@ -4789,9 +4888,9 @@ app.post('/get_member_count_by_username', function (req, res) {
 
 function showMemberCountByUsername(js) {
   getMemberCount(js.client.data.user).then(function (body) {
-      console.log("count member "+body)
-      js.client.data.user.count = body;
-      js.resp.send(js.client);
+    console.log("count member " + body)
+    js.client.data.user.count = body;
+    js.resp.send(js.client);
   }).catch(function (err) {
     js.client.data.message = err;
     js.resp.send(js.client);
@@ -4812,8 +4911,8 @@ function getMemberCount(user) {
           // if (user.ismember)
           //   deferred.resolve(res.rows[0].value + 1);
           // else
-          var arr=[];
-          if(res.rows.length){
+          var arr = [];
+          if (res.rows.length) {
             arr.push(res.rows[0].value);
           }
           deferred.resolve(arr[0]);
@@ -5262,7 +5361,7 @@ function checkYourMember(username) {
   viewUser({
     username: username
   }).then(function (res) {
-    var user=res[0];
+    var user = res[0];
     if (user.aboveparents.indexOf(username) > -1)
       deferred.resolve(username);
   }).catch(function (err) {
@@ -5929,7 +6028,7 @@ var __design_binary = {
       "map": "function (doc) {\n  emit(doc.username, doc);\n}"
     },
     "findMembersByUsername": {
-      "map": "function (doc) {\n  if(doc.username||doc.luser||doc.ruser) \n\r emit(doc.username, doc);\n}"
+      "map": "function (doc) {\n  if(doc.username) \n\r emit(doc.username, doc);\n}"
     },
     "findMembersByIndexes": {
       "map": "function (doc) {\n\r emit(doc.index, doc);\n}"

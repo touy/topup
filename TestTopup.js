@@ -77,6 +77,7 @@ app.use(cors());
 app.use(errorHandler)
 
 function errorHandler(err, req, res, next) {
+  console.log(err);
   var l = {
     log: err,
     logdate: convertTZ(new Date()),

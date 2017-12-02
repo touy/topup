@@ -790,6 +790,7 @@ function findUserBinary(user){
 }
 function updateUserBinary(user,newuser){
   var deferred=Q.defer();
+  
   var db=create_db('userbinary');
   try {
     findUserBinary(user).then(function(res){
@@ -845,9 +846,9 @@ function updateAboveParents(user,newuser){
       else{
         var arr=[];
         if(res.rows.length){
-          for (let index = 0; index < res.rows.length; index++) {
-            const element=res.rows[index].value;
-            const i=element.aboveparents.indexOf(user.username);
+          for (index = 0; index < res.rows.length; index++) {
+            element=res.rows[index].value;
+            i=element.aboveparents.indexOf(user.username);
             element.aboveparents[i]=newuser.username;    
             arr.push(element);               
           }       
@@ -911,11 +912,17 @@ function changeDefaultInfo(js) {
                     logging(l);
                     deferred.reject(err);
                   } else {
-                    updateAboveParents(olduser,u).then(function(res){                    
+                    updateAboveParents(olduser,u).then(function(res){    
+                      console.log('updateAboveParents');
+                      console.log(res);
                       findUserBinary(olduser).then(function(res){
+                        console.log('findUserBinary');
+                        console.log(res);
                         newuserbinary=res;
                         newuserbinary.username=js.client.data.user.username;
                         updateUserBinary(res,newuserbinary).then(function(res){
+                          console.log('updateUserBinary');
+                          console.log(res);
                           var l = {
                             log: "change default user info",
                             logdate: convertTZ(new Date()),
@@ -1693,17 +1700,22 @@ function editUser(js) {
 
 function updateUser(user) {
   var deferred = Q.defer();
-  db = create_db("user");
-  if (user._rev && user._rev != undefined)
-    db.insert(user, user.gui, function (err, res) {
-      if (err) {
-        deferred.reject(err);
-      } else {
-        deferred.resolve('OK');
-      }
-    });
-  else
-    deferred.reject(Error('_rev is not define'));
+  try {
+    db = create_db("user");
+    if (user._rev && user._rev != undefined)
+      db.insert(user, user.gui, function (err, res) {
+        if (err) {
+          deferred.reject(err);
+        } else {
+          deferred.resolve('OK');
+        }
+      });
+    else
+      deferred.reject(Error('_rev is not define'));
+  } catch (error) {
+    deferred.reject(error);
+  }
+
   return deferred.promise;
 }
 // GET CURRENT USER INFO TO CHECK IF IT'S HAS BEEN LOGGING IN 

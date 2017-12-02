@@ -791,70 +791,78 @@ function findUserBinary(user){
 function updateUserBinary(user,newuser){
   var deferred=Q.defer();
   var db=create_db('userbinary');
-  findUserBinary(user).then(function(res){
-    if(res.length){
-      var u=res[0];
-      u.username=newuser.username;
-      u.parent=newuser.parent;
-      u.luser=newuser.luser;
-      u.ruser=newuser.ruser;
-      u.updateddate=convertTZ(new Date());
-      db.insert(u,u.gui,function(err,res){
-        if(err)deferred.reject(err);
-        else{
-          findUserBinary(u.luser).then(function(res){
-            res.parent=u.username;
-            res.updateddate=convertTZ(new Date());
-            db.insert(res,res.gui,function(err,res){
-              if(err)deferred.reject(err);
-              else{
-                findUserBinary(u.ruser).then(function(res1){
-                  res1.parent=u.username;
-                  res1.updateddate=convertTZ(new Date());
-                  db.insert(res1.res1.gui,function(err,res){
-                    if(err)deferred.reject(err);
-                    else{
-                      deferred.resolve('OK');
-                    }
+  try {
+    findUserBinary(user).then(function(res){
+      if(res.length){
+        var u=res[0];
+        u.username=newuser.username;
+        u.parent=newuser.parent;
+        u.luser=newuser.luser;
+        u.ruser=newuser.ruser;
+        u.updateddate=convertTZ(new Date());
+        db.insert(u,u.gui,function(err,res){
+          if(err)deferred.reject(err);
+          else{
+            findUserBinary(u.luser).then(function(res){
+              res.parent=u.username;
+              res.updateddate=convertTZ(new Date());
+              db.insert(res,res.gui,function(err,res){
+                if(err)deferred.reject(err);
+                else{
+                  findUserBinary(u.ruser).then(function(res1){
+                    res1.parent=u.username;
+                    res1.updateddate=convertTZ(new Date());
+                    db.insert(res1.res1.gui,function(err,res){
+                      if(err)deferred.reject(err);
+                      else{
+                        deferred.resolve('OK');
+                      }
+                    });
                   });
-                });
-              }
-            })            
-          });
-        }
-      });
-    }
-    else{
-      deferred.reject(new Error('Error username not found'));
-    }
-  }).catch(function(err){
-    deferred.reject(err);
-  });
+                }
+              })            
+            });
+          }
+        });
+      }
+      else{
+        deferred.reject(new Error('Error username not found'));
+      }
+    }).catch(function(err){
+      deferred.reject(err);
+    });
+  } catch (error) {
+    deferred.reject(error);
+  }
   return deferred.promise;
 }
 function updateAboveParents(user,newuser){
   var deferred=Q.defer();
-  var db=create_db('user');
-  db.view(__design_view,'findMembersByUsername',{key:user.username},function(err,res){
-    if(err)deferred.reject(err);
-    else{
-      var arr=[];
-      if(res.rows.length){
-        for (let index = 0; index < res.rows.length; index++) {
-          const element=res.rows[index].value;
-          const i=element.aboveparents.indexOf(user.username);
-          element.aboveparents[i]=newuser.username;    
-          arr.push(element);               
-        }
+  try {
+    var db=create_db('user');
+    db.view(__design_view,'findMembersByUsername',{key:user.username},function(err,res){
+      if(err)deferred.reject(err);
+      else{
+        var arr=[];
+        if(res.rows.length){
+          for (let index = 0; index < res.rows.length; index++) {
+            const element=res.rows[index].value;
+            const i=element.aboveparents.indexOf(user.username);
+            element.aboveparents[i]=newuser.username;    
+            arr.push(element);               
+          }       
+        }  
         db.bulk(arr,{},function(err,res){
           if(err) deferred.reject(err);
           else{            
               deferred.resolve('OK');
           }
-        }); 
-      }      
-    }
-  });
+        });     
+      }
+    });
+  } catch (error) {
+    deferred.reject(error);
+  }
   return deferred.promise;
 }
 function changeDefaultInfo(js) {
@@ -862,73 +870,84 @@ function changeDefaultInfo(js) {
   var db = create_db('user');
   var username = js.client.data.user.oldusername;
   var phone1 = js.client.data.user.oldphone1;
-
-  db.view(__design_view, 'findUserByUsernameAndPhone1', {
-    key: [username, phone1],
-    include_docs: true
-  }, function (err, res) {
-    console.log('before change username and phone1');
-    if (err) deferred.reject(err);
-    else {
-      if (res.rows.length) {
-        u = res.rows[0].value;
-        var olduser=u;
-        u.username = js.client.data.user.username;
-        u.usercode = u.username;
-        u.phone1 = js.client.data.user.phone1;
-        var vuser = usernameValidate(u.username);
-        var vphone = phonenumberValidate(u.phone1);
-        if (vuser.length || vphone.length) {
-          deferred.reject(new Error("invalid username: " + vuser + " invalid phonenumber: " + vphone));
-        } else
-          findMaxPhoneNumber(u).then(function (res) {
-            if (res.length > 3) {
-              var l = {
-                log: "this phonenumber has more than 3 in the databaseh",
-                logdate: convertTZ(new Date()),
-                type: "error change username and phone number " + js.client.data.user.username,
-                gui: uuidV4(),
-              }
-              logging(l);
-              deferred.reject(new Error('this phonenumber has more than 3 in the database'));
-            } else
-              db.insert(u, u._id, function (err, res) {
-                if (err) {
-                  var l = {
-                    log: err,
-                    logdate: convertTZ(new Date()),
-                    type: "error change username and phone number " + js.client.data.user.username,
-                    gui: uuidV4(),
-                  }
-                  logging(l);
-                  deferred.reject(err);
-                } else {
-                  updateAboveParents(olduser,js.client.data.user).then(function(res){                    
-                    findUserBinary(olduser).then(function(res){
-                      newuserbinary=res;
-                      newuserbinary.username=js.client.data.user.username;
-                      updateUserBinary(res,newuserbinary).then(function(res){
-                        deferred.resolve("OK");
+  try {
+    db.view(__design_view, 'findUserByUsernameAndPhone1', {
+      key: [username, phone1],
+      include_docs: true
+    }, function (err, res) {
+      console.log('before change username and phone1');
+      if (err) deferred.reject(err);
+      else {
+        if (res.rows.length) {
+          u = res.rows[0].value;
+          var olduser=u;
+          u.username = js.client.data.user.username;
+          u.usercode = u.username;
+          u.phone1 = js.client.data.user.phone1;
+          var vuser = usernameValidate(u.username);
+          var vphone = phonenumberValidate(u.phone1);
+          if (vuser.length || vphone.length) {
+            deferred.reject(new Error("invalid username: " + vuser + " invalid phonenumber: " + vphone));
+          } else
+            findMaxPhoneNumber(u).then(function (res) {
+              if (res.length > 3) {
+                var l = {
+                  log: "this phonenumber has more than 3 in the databaseh",
+                  logdate: convertTZ(new Date()),
+                  type: "error change username and phone number " + js.client.data.user.username,
+                  gui: uuidV4(),
+                }
+                logging(l);
+                deferred.reject(new Error('this phonenumber has more than 3 in the database'));
+              } else
+                db.insert(u, u._id, function (err, res) {
+                  if (err) {
+                    var l = {
+                      log: err,
+                      logdate: convertTZ(new Date()),
+                      type: "error change username and phone number " + js.client.data.user.username,
+                      gui: uuidV4(),
+                    }
+                    logging(l);
+                    deferred.reject(err);
+                  } else {
+                    updateAboveParents(olduser,u).then(function(res){                    
+                      findUserBinary(olduser).then(function(res){
+                        newuserbinary=res;
+                        newuserbinary.username=js.client.data.user.username;
+                        updateUserBinary(res,newuserbinary).then(function(res){
+                          var l = {
+                            log: "change default user info",
+                            logdate: convertTZ(new Date()),
+                            type: "change default user info " + js.client.data.user.username,
+                            gui: uuidV4(),
+                          }
+                          logging(l);
+                          deferred.resolve("OK");
+                        });
                       });
                     });
-                  });
-                  //console.log('before change username and phone2');
-                  //deferred.resolve('OK');
-                }
-              });
-          });
-      } else {
-        var l = {
-          log: "no matching this username and phone",
-          logdate: convertTZ(new Date()),
-          type: "error change username and phone number " + js.client.data.user.username,
-          gui: uuidV4(),
+                    console.log('before change username and phone2');
+                    //deferred.resolve('OK');
+                  }
+                });
+            });
+        } else {
+          var l = {
+            log: "no matching this username and phone",
+            logdate: convertTZ(new Date()),
+            type: "error change username and phone number " + js.client.data.user.username,
+            gui: uuidV4(),
+          }
+          logging(l);
+          deferred.reject(Error('Error no matching this username and phone'));
         }
-        logging(l);
-        deferred.reject(Error('Error no matching this username and phone'));
       }
-    }
-  });
+    });
+  } catch (error) {
+    deferred.reject(error);
+  }
+
   return deferred.promise;
 }
 

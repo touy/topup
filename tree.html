@@ -302,7 +302,7 @@
             client.data.user = {};
             client.data.user.username = username;
             client.data.user.memberlevel = needlevel
-            jsonPost(getHost() + "/get_user_binary_tree", client, cb); // URL : /get_user_binary_tree
+            jsonPost("/get_user_binary_tree", client, cb); // URL : /get_user_binary_tree
         };
         function getBinaryDataByMemberLevel(level, arr) {
             var ar = [];
@@ -335,7 +335,7 @@
                 c.data.user.username=p;
                 c.data.page=0;
                 c.maxpage=10000;
-                jsonPost(getHost()+'/get_member_list_by_parent_name',c,function(res){
+                jsonPost('/get_member_list_by_parent_name',c,function(res){
                     //console.log('res');
                     //console.log(res);
                     var count=res.data.user.count;
@@ -418,11 +418,11 @@
                         p = arr[index].parent;
                         if (p == '' || p == null || p == undefined)
                             _xarr.push(
-                                '<div><span onclick="clickme()"><img width="32px" height="32px" src="public/icons/forbidden-128.png" /></span></div>'
+                                '<div><span onclick="clickme()"><img width="32px" height="32px" src="/public/icons/forbidden-128.png" /></span></div>'
                             );
                         else {
                             _xarr.push("<div><span  onclick=register('" + p +
-                                "')><img width='32px' height='32px' src='public/icons/add-user2-512.png'/></span></div>"
+                                "')><img width='32px' height='32px' src='/public/icons/add-user2-512.png'/></span></div>"
                             );
                         }
                     }
@@ -554,7 +554,7 @@
             client={};
             client.data={};
             client.data.user={};
-            jsonPost(getHost() + '/get_current_user', client, function (res) { 
+            jsonPost( '/get_current_user', client, function (res) { 
                 
                 //currentUsername=res.username;
                 console.log(res);
@@ -581,7 +581,7 @@
         }
 
         function checkExistUser(username) {
-            url = getHost() + "/check_your_member";
+            url ="/check_your_member";
             var client = {};
             client.data = {};
             client.data.user = {};

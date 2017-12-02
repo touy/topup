@@ -839,9 +839,11 @@ function updateUserBinary(user,newuser){
 }
 function updateAboveParents(user,newuser){
   var deferred=Q.defer();
+  console.log('updateAboveParents');
   try {
     var db=create_db('user');
     db.view(__design_view,'findMembersByUsername',{key:user.username},function(err,res){
+      console.log('findMembersByUsername');
       if(err)deferred.reject(err);
       else{
         var arr=[];
@@ -853,7 +855,9 @@ function updateAboveParents(user,newuser){
             arr.push(element);               
           }       
         }  
+        console.log('members:'+arr.length);
         db.bulk(arr,{},function(err,res){
+          console.log('bulk update user');          
           if(err) deferred.reject(err);
           else{            
               deferred.resolve('OK');

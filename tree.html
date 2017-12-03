@@ -127,7 +127,7 @@
             }
             // fill up    
             //console.log("before" + b.length)
-            if (b.length < (2*Math.pow(2,maxrange))-1) {
+            if (b.length < (2*Math.pow(2,maxrange)-1)) {
                 var max = findMaxLevel(u.level, b);
                 //var n=max-u.level;
                 //console.log(maxrange + "maxrange / level:" + u.level);
@@ -513,16 +513,71 @@
             } else {
                 // PUT X                 
                 imgurl = getHost()+"/public/icons/forbidden-128.png";
-            }
-            if (!user.leftuser) user.leftuser = 0;
-            if (!user.rightuser) user.rightuser = 0;
-            if (!user.LCoupling) user.LCoupling = 0;
-            if (!user.RCoupling) user.RCoupling = 0;
-
+            } 
+            user.LCoupling = 0;
+            user.RCoupling = 0;
+            user.leftuser=0;
+            user.rightuser=0;
+            
             $("#" + b.gui).append("<img title='" + user.username + "' width='48px' height='48px' src='" + imgurl +
                 "'/>");
-            $("#" + b.gui).append("<div class='small'>" + user.LCoupling + "| " + user.username + " |" + user.RCoupling +
-                "<div>" + user.leftuser + "|" + user.rightuser + "</div></div>");            
+            $("#" + b.gui).append("<div class='small'>"+ "<div id='score"+b.gui+"'>" + user.LCoupling + "|" + user.RCoupling + "</div>"
+                +user.username+
+                "<div id='qtty"+b.gui+"'>" + user.leftuser + "|" + user.rightuser + "</div></div>");            
+                  
+            if (b.luser&&b.luser!=undefined) {                
+                c={};
+                c.data={};
+                c.data.user={};
+                c.data.user.username=b.luser;
+                jsonPost(getHost()+'/get_member_count_by_username',c,function(res){                    
+                    user.leftuser= res.data.user.count;
+                    if(user.leftuser==undefined)user.leftuser=0;
+                    var rightuser=$("#qtty"+b.gui).text().split('|')[1];
+                    console.log("right user "+rightuser);
+                    $("#qtty"+b.gui).empty().html(user.leftuser+"|"+rightuser);                    
+                });   
+                jsonPost(getHost()+'/show_latest_coupling_by_user',c,function(res){                    
+                    var couplingscore= res.data.couplingscore[0];
+                    console.log(res);
+                    if(res.data.message.indexOf('OK')>-1){
+                        if(res.data.couplingscore.length)
+                            $("#score"+b.gui).empty().html(couplingscore.LCoupling+"|"+couplingscore.RCoupling); 
+                        else
+                            $("#score"+b.gui).empty().html(0+"|"+0); 
+                    }
+                    else{
+                        console.log(res);
+                        $("#score"+b.gui).empty().html(0+"|"+0);  
+                    }                       
+                });              
+            }
+            if(b.ruser&&b.ruser!=undefined){
+                c={};
+                c.data={};
+                c.data.user={};
+                c.data.user.username=b.ruser;
+                        jsonPost(getHost()+'/get_member_count_by_username',c,function(res){
+                            user.rightuser= res.data.user.count;
+                            if(user.rightuser==undefined)user.rightuser=0;
+                            var leftuser=$("#qtty"+b.gui).text().split('|')[0];
+                            console.log("left user "+leftuser);
+                            $("#qtty"+b.gui).empty().html(leftuser+"|"+user.rightuser);
+                        });
+                        jsonPost(getHost()+'/show_latest_coupling_by_user',c,function(res){                    
+                    var couplingscore= res.data.couplingscore;
+                    if(res.data.message.indexOf('OK')>-1){
+                        if(res.data.couplingscore.length)
+                            $("#score"+b.gui).empty().html(couplingscore.LCoupling+"|"+couplingscore.RCoupling);  
+                        else 
+                            $("#score"+b.gui).empty().html(0+"|"+0); 
+                    }
+                    else{
+                        console.log(res);
+                        $("#score"+b.gui).empty().html(0+"|"+0);  
+                    }                                      
+                }); 
+            }             
         }
 
         $(function () {
@@ -553,7 +608,7 @@
         function clickme() {
             //console.log('nothing here');
         }
-        var maxrange = 4;
+        var maxrange = 3;
 
         function init() {
             client={};
@@ -627,7 +682,7 @@
 <body  onload="init()">
     <div class="center">
     <div id='topname'></div>
-    <div >level 3 or 4 <input id='maxrange' value='4'/></div>
+    <div >level 3 or 4 <input id='maxrange' value='3'/></div>
     <input  id='searchtext' placeholder="Search.." />    
     <button  id='gototop' onclick="toTop()">Top</button>
     <button  id='goback' onclick="goBack()"><==</button>    

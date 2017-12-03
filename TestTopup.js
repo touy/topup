@@ -35,8 +35,8 @@ phoneValidator
   .has().not().spaces() // Should not have spaces 
 // start with 0205 , 0207, 0209 ,0202
 userValidator
-  .is().min(6) // Minimum length 8 
-  .is().max(100) // Maximum length 100 
+  .is().min(3) // Minimum length 8 
+  .is().max(6) // Maximum length 100 
   //.has().uppercase()                              // Must have uppercase letters 
   .has().lowercase() // Must have lowercase letters 
   //.has().digits()                                 // Must have digits 
@@ -45,7 +45,7 @@ userValidator
 //.is().not().oneOf(['Passw0rd', 'Password123']); // Blacklist these values 
 passValidator
   .is().min(6) // Minimum length 8 
-  .is().max(100) // Maximum length 100 
+  .is().max(10) // Maximum length 100 
   //.has().uppercase()                              // Must have uppercase letters 
   //.has().lowercase()                              // Must have lowercase letters 
   //.has().digits()                                 // Must have digits 
@@ -4929,6 +4929,50 @@ function getMemberCount(user) {
   return deferred.promise;
 }
 
+// show latest coupling score  by user
+app.post('/show_latest_coupling_by_user', function (req, res) {
+  //client.data.user
+  // return client 
+  // client.data.couplingscore=[]
+  var js = {};
+  js.client = req.body;
+  js.resp = res;
+  showLatestCouplingByUser(js); 
+});
+function showLatestCouplingByUser(js){
+  getLatestCouplingByUser(js.client.data.user).then(function(res){    
+    js.client.data.couplingscore=res;
+    js.client.data.message="OK";
+    js.resp.send(js.client);
+  }).catch(function(err){
+    js.client.data.message=JSON.stringify(err);
+    js.resp.send(js.client);
+  });
+}
+function getLatestCouplingByUser(user){
+  var deferred=Q.defer();
+  var db=create_db('couplingscore');
+  db.view(__design_view, "findByUsername", {
+    key: user.username,
+    include_docs: true,
+    descending: true,
+    skip:0,
+    limit:1
+  }, function (err, res) {
+    if (err)
+      deferred.reject(err);
+    else {
+      var arr = [];
+      if (res.rows.length) {
+        for (var index = 0; index < res.rows.length; index++) {
+          res.rows.push(res.rows[index].value);
+        }
+      }
+      deferred.resolve(arr);
+    }
+  });
+  return deferred.promise;
+}
 // show coupling score list by user
 app.post('/show_coupling_list_by_user', function (req, res) {
   //client.data.user
@@ -4939,7 +4983,6 @@ app.post('/show_coupling_list_by_user', function (req, res) {
   js.resp = res;
   showCouplingScoreByUser(js); // show who has the most introduction codes by month
 });
-
 
 function showCouplingScoreByUser(js) {
   getCouplingScoreByUser(js).then(function (body) {
@@ -5359,7 +5402,7 @@ app.post('/check_your_member', function (req, res) {
 function checkYourMember(currentusername,user) {
   var deferred = Q.defer();
   var db = create_db('user'); 
-  
+
   // console.log(currentusername);
   // console.log(user.username);
   viewUser(user).then(function (res) {

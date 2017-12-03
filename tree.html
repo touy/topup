@@ -588,15 +588,13 @@
         function checkExistUser(username) {
             url = getHost() + "/check_your_member";
             var client = {};
+            client.username=currentUsername;//
             client.data = {};
             client.data.user = {};
             client.data.user.username = username;
             jsonPost(url, client, function (res) {
-                //console.log(res);  
-                // prepareBinaryData(username, maxrange); // TESTING ONLY
-                // return;
                 if (res.data.message.indexOf('OK') < 0) {
-                    $("#topname").empty().text = 'Not exist';
+                    $("#topname").empty().text('Not exist');
                 } else {
                     //$("#topname").empty().text=currentUsername+"/"+username;
                     prepareBinaryData(username, maxrange);
@@ -606,7 +604,7 @@
 
         $(function () {
             $("#searchtext").keypress(function (e) {
-                console.log(e.which);
+               // console.log(e.which);
                 if (e.which == 10 || e.which == 13) {
                     search();
                 }

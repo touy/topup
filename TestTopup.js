@@ -5346,24 +5346,25 @@ app.post('/check_your_member', function (req, res) {
   var js = {};
   js.client = req.body;
   js.resp = res;
-  checkYourMember(js.client.username,js.client.data.user.username).then(function (res) {
-    js.client.data.message = 'OK';
+  checkYourMember(js.client.username,js.client.data.user).then(function (res) {
+    js.client.data.message = 'OK '+res;
     js.resp.send(js.client);
   }).catch(function (err) {
-    js.client.data.message = err;
+    js.client.data.message = JSON.stringify(err)+js.client.data.user;
     js.resp.send(js.client);
   });
 });
 
-function checkYourMember(currentusername,username) {
+
+function checkYourMember(currentusername,user) {
   var deferred = Q.defer();
   var db = create_db('user');
-  viewUser({
-    username: username
-  }).then(function (res) {
+  // console.log(currentusername);
+  // console.log(user.username);
+  viewUser(user).then(function (res) {
     var user = res[0];
     if (user.aboveparents.indexOf(currentusername) > -1)
-      deferred.resolve(username);
+      deferred.resolve(user.username);
     else
       deferred.reject(new Error('Error it is not your member'));
   }).catch(function (err) {

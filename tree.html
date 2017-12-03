@@ -562,7 +562,7 @@
                             if(user.rightuser==undefined)user.rightuser=0;
                             var leftuser=$("#qtty"+b.gui).text().split('|')[0];
                             console.log("left user "+leftuser);
-                            $("#qtty"+b.gui).empty().html(leftuser+"|"+(user.rightuser+1);
+                            $("#qtty"+b.gui).empty().html(leftuser+"|"+(user.rightuser));
                         });
                         jsonPost(getHost()+'/show_latest_coupling_by_user',c,function(res){                    
                     var couplingscore= res.data.couplingscore;

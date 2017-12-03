@@ -531,11 +531,11 @@
                 c.data.user={};
                 c.data.user.username=b.luser;
                 jsonPost(getHost()+'/get_member_count_by_username',c,function(res){                    
-                    user.leftuser= res.data.user.count+1;
+                    user.leftuser= res.data.user.count;
                     if(user.leftuser==undefined)user.leftuser=0;
                     var rightuser=$("#qtty"+b.gui).text().split('|')[1];
                     console.log("right user "+rightuser);
-                    $("#qtty"+b.gui).empty().html(user.leftuser+"|"+rightuser);                    
+                    $("#qtty"+b.gui).empty().html((user.leftuser+1)+"|"+rightuser);                    
                 });   
                 jsonPost(getHost()+'/show_latest_coupling_by_user',c,function(res){                    
                     var couplingscore= res.data.couplingscore[0];
@@ -558,11 +558,11 @@
                 c.data.user={};
                 c.data.user.username=b.ruser;
                         jsonPost(getHost()+'/get_member_count_by_username',c,function(res){
-                            user.rightuser= res.data.user.count+1;
+                            user.rightuser= res.data.user.count;
                             if(user.rightuser==undefined)user.rightuser=0;
                             var leftuser=$("#qtty"+b.gui).text().split('|')[0];
                             console.log("left user "+leftuser);
-                            $("#qtty"+b.gui).empty().html(leftuser+"|"+user.rightuser);
+                            $("#qtty"+b.gui).empty().html(leftuser+"|"+(user.rightuser+1);
                         });
                         jsonPost(getHost()+'/show_latest_coupling_by_user',c,function(res){                    
                     var couplingscore= res.data.couplingscore;

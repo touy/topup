@@ -579,7 +579,7 @@
 
         function search() {
             var username = $('#searchtext').val();
-            //console.log('search text:'+username)
+            console.log('search text:'+username)
             if (username) {
                 checkExistUser(username);
             }
@@ -606,6 +606,7 @@
 
         $(function () {
             $("#searchtext").keypress(function (e) {
+                console.log(e.which);
                 if (e.which == 10 || e.which == 13) {
                     search();
                 }

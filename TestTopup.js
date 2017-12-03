@@ -816,7 +816,7 @@ function findLuserIndex(i) {
 function findRuserIndex(i) {
   return 2 * i + 2;
 }
-
+//MUST DO , update use _id , use cloneJSON
 function updateUserBinary(user, newuser) {
   var deferred = Q.defer();
   var db = create_db('userbinary');
@@ -5346,7 +5346,7 @@ app.post('/check_your_member', function (req, res) {
   var js = {};
   js.client = req.body;
   js.resp = res;
-  checkYourMember(js.client.data.user.username).then(function (res) {
+  checkYourMember(js.client.username,js.client.data.user.username).then(function (res) {
     js.client.data.message = 'OK';
     js.resp.send(js.client);
   }).catch(function (err) {
@@ -5355,15 +5355,17 @@ app.post('/check_your_member', function (req, res) {
   });
 });
 
-function checkYourMember(username) {
+function checkYourMember(currentusername,username) {
   var deferred = Q.defer();
   var db = create_db('user');
   viewUser({
     username: username
   }).then(function (res) {
     var user = res[0];
-    if (user.aboveparents.indexOf(username) > -1)
+    if (user.aboveparents.indexOf(currentusername) > -1)
       deferred.resolve(username);
+    else
+      deferred.reject(new Error('Error it is not your member'));
   }).catch(function (err) {
     deferred.reject(err);
   });

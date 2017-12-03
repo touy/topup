@@ -531,7 +531,7 @@
                 c.data.user={};
                 c.data.user.username=b.luser;
                 jsonPost(getHost()+'/get_member_count_by_username',c,function(res){                    
-                    user.leftuser= res.data.user.count;
+                    user.leftuser= res.data.user.count+1;
                     if(user.leftuser==undefined)user.leftuser=0;
                     var rightuser=$("#qtty"+b.gui).text().split('|')[1];
                     console.log("right user "+rightuser);
@@ -558,7 +558,7 @@
                 c.data.user={};
                 c.data.user.username=b.ruser;
                         jsonPost(getHost()+'/get_member_count_by_username',c,function(res){
-                            user.rightuser= res.data.user.count;
+                            user.rightuser= res.data.user.count+1;
                             if(user.rightuser==undefined)user.rightuser=0;
                             var leftuser=$("#qtty"+b.gui).text().split('|')[0];
                             console.log("left user "+leftuser);

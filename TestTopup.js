@@ -5358,7 +5358,8 @@ app.post('/check_your_member', function (req, res) {
 
 function checkYourMember(currentusername,user) {
   var deferred = Q.defer();
-  var db = create_db('user');
+  var db = create_db('user'); 
+  
   // console.log(currentusername);
   // console.log(user.username);
   viewUser(user).then(function (res) {

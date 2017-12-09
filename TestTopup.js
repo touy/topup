@@ -298,6 +298,7 @@ __master_user.parentname = __master_user.username;
 // });
 app.use('/public', express.static(__dirname+'public'));
 app.use('/images', express.static(__dirname+'_doc_item_'));
+app.use('/temp', express.static(__dirname+'temp'));
 
 app.get('/', function (req, res) {
   res.send("hello");
@@ -355,7 +356,7 @@ app.post('/upload_img', upload, function (req, res) {
 
 
 app.get('/images', function (req, res) {
-  res.sendFile('test.html');
+  res.sendFile(__dirname+'test.html');
   //   var client={};
   //   client.data={};
   //   client.data.user={};

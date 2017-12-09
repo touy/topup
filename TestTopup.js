@@ -296,8 +296,8 @@ __master_user.parentname = __master_user.username;
 //   else
 //     console.log("create master completedly");
 // });
-app.use('/public', express.static('public'));
-app.use('/images', express.static('_doc_item_'));
+app.use('/public', express.static(__dirname+'public'));
+app.use('/images', express.static(__dirname+'_doc_item_'));
 
 app.get('/', function (req, res) {
   res.send("hello");
@@ -1376,7 +1376,7 @@ function addUser(user) {
 
 
 // INIT CLIENT GET CIENT GUI
-app.get('/init_client', function (req, res) { // GET new GUI
+app.all('/init_client', function (req, res) { // GET new GUI
   //return client
   // client.data.message='OK';
   client_ip = req.clientIp;

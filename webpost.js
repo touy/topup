@@ -51,6 +51,7 @@ function errorHandler(err, req, res, next) {
     error: err
   });
 }
+
 function errorLogging(log) {
   var db = create_db("errorlogs");
   console.log(log);
@@ -353,7 +354,7 @@ var ads = {
   title: '',
   url: '',
   gui: '',
-  isslide:false,
+  isslide: false,
   createddate: '',
   visitcount: '',
   isactive: true,
@@ -472,6 +473,7 @@ var upload = multer({
 }).single('userFile');
 
 // UPLOAD image file
+
 app.post('/upload_img', upload, function (req, res) {
   // client
   // return client 
@@ -480,15 +482,15 @@ app.post('/upload_img', upload, function (req, res) {
   //  js.client =JSON.parse(req.body.client);//It is special  
   js.client = JSON.parse(req.body.client) //It is special
   console.log('Uploade Successful ', req.file, js.client);
-    js.client.data = {};
-    js.client.data.message = "OK file uploaded";
-    js.client.data.file = '/images/' + req.file.filename; // client remove /images/ then save 
-    js.resp.send(js.client);
+  js.client.data = {};
+  js.client.data.message = "OK file uploaded";
+  js.client.data.file = '/images/' + req.file.filename; // client remove /images/ then save 
+  js.resp.send(js.client);
 });
 
 
 // GET sample data 
-app.get( '/get_sample', function (req, res) {
+app.get('/get_sample', function (req, res) {
   var arr = [];
   ads._property_name = 'ads';
   arr.push(ads);
@@ -507,7 +509,7 @@ app.get( '/get_sample', function (req, res) {
   html = displayJson(arr);
   return res.send(html);
 });
-app.get( '/get_routes', function (req, res) {
+app.get('/get_routes', function (req, res) {
   var rr = app._router.stack;
   for (var index = 0; index < rr.length; index++) {
     var r = rr[index];
@@ -523,7 +525,7 @@ app.get('/', function (req, res) {
 });
 // first page here 
 //PUBLIC , count EventAds
-app.post( '/count_event_ads', function (req, res) {
+app.post('/count_event_ads', function (req, res) {
   // client
   // return client
   // client.data.message='OK'
@@ -542,7 +544,7 @@ app.post( '/count_event_ads', function (req, res) {
 });
 
 //Public , show front page monthly or weekly ==> event page ads
-app.post( '/show_event_ads', function (req, res) { 
+app.post('/show_event_ads', function (req, res) {
   // client
   // client.data.page 
   //client.data.maxpage
@@ -557,7 +559,7 @@ app.post( '/show_event_ads', function (req, res) {
 
 function showEventAds(js) {
   displayEventAds(true, js.client.data.page, js.client.data.maxpage).then(function (body) {
-    js.client.data.message='OK';
+    js.client.data.message = 'OK';
     js.client.data.ads = body;
     js.resp.send(js.client);
   }).catch(function (err) {
@@ -618,7 +620,7 @@ function displayEventAds(isactive, page, maxpage) {
   return deferred.promise;
 }
 //ADMIN , show front page monthly or weekly ==> event page ads
-app.post( '/show_event_ads_list', function (req, res) { 
+app.post('/show_event_ads_list', function (req, res) {
   // client.data.user,
   //client.data.page
   //client.data.maxpage
@@ -633,7 +635,7 @@ app.post( '/show_event_ads_list', function (req, res) {
 
 function showEventAdsList(js) {
   displayEventAdsList(js.client.data.ads.isactive, js.client.data.page, js.client.data.maxpage).then(function (body) {
-    js.client.data.message='OK'
+    js.client.data.message = 'OK'
     js.client.data.ads = body;
     js.resp.send(js.client);
   }).catch(function (err) {
@@ -692,7 +694,7 @@ function displayEventAdsList(isactive, page, maxpage) {
   return deferred.promise;
 }
 //ADMIN update event ads
-app.post( '/update_event_ads', function (req, res) { 
+app.post('/update_event_ads', function (req, res) {
   // client.user, 
   //client.data.ads._rev
   //return client
@@ -780,7 +782,7 @@ function countEventAds(adsgui) {
 }
 
 //PUBLIC , edit Keyword ads
-app.post( '/show_registered_KW_ads', function (req, res) { 
+app.post('/show_registered_KW_ads', function (req, res) {
   // client ,
   // client.data.page, 
   //client.data.maxpage
@@ -796,8 +798,8 @@ app.post( '/show_registered_KW_ads', function (req, res) {
 function showRegisteredKWAds(js) {
   // check if registered user visit
   getRegisteredKWAds(js.client.data.page, js.client.data.maxpage).then(function (body) {
-    js.client.data.searchkw=body;
-    js.client.data.message='OK'
+    js.client.data.searchkw = body;
+    js.client.data.message = 'OK'
     js.resp.send(js.client);
   }).catch(function (err) {
     js.client.data.message = err;
@@ -813,8 +815,8 @@ function getCountRegisteredKWAds() {
   }, function (err, res) {
     if (err) deferred.reject(err);
     else {
-      var arr=[];
-      if(res.rows.length)
+      var arr = [];
+      if (res.rows.length)
         arr.push(res.rows[0].value);
       deferred.resolve(res.rows[0].value);
     }
@@ -895,7 +897,7 @@ function updateRegisteredKWAds(ads) {
 }
 
 // PUBLIC , search item
-app.post( '/show_searched_item', function (req, res) { 
+app.post('/show_searched_item', function (req, res) {
   // client.data.sk , 
   //client.data.page , 
   //client.data.maxpage
@@ -910,7 +912,7 @@ app.post( '/show_searched_item', function (req, res) {
 
 function showSearchedItems(js) {
   getSearchedItems(js.client.data.sk, js.client.data.page, js.client.data.maxpage).then(function (body) {
-    js.client.data.message='OK';
+    js.client.data.message = 'OK';
     js.client.data.item = body;
     js.resp.send(js.client);
   }).catch(function (err) {
@@ -940,7 +942,7 @@ function getSearchedItems(sk, page, maxpage) {
 }
 
 // User , edit shop
-app.post( '/edit_shop', function (req, res) { 
+app.post('/edit_shop', function (req, res) {
   //client ,
   //client.data.shop._rev
   //return client
@@ -1028,7 +1030,7 @@ function updateShop(shop) {
   return deferred.promise;
 }
 // User , edit shop
-app.post( '/find_exist_shop', function (req, res) { 
+app.post('/find_exist_shop', function (req, res) {
   //client ,
   //client.data.shop
   //return client
@@ -1050,7 +1052,7 @@ function findExistShop(js) {
   });
 }
 // Public , show shop
-app.post( '/show_shop', function (req, res) { 
+app.post('/show_shop', function (req, res) {
   //client ,
   //client.data.shop
   //return client
@@ -1064,7 +1066,7 @@ app.post( '/show_shop', function (req, res) {
 
 function showShop(js) {
   displayShop(js.client.data.shop.name).then(function (body) {
-    js.client.data.message='OK';
+    js.client.data.message = 'OK';
     js.client.data.shop = body;
     js.resp.send(js.client);
   }).catch(function (err) {
@@ -1089,7 +1091,7 @@ function displayShop(shopname) {
   return deferred.promise;
 }
 //Admin , shop list by admin
-app.post( '/show_shop_list', function (req, res) { 
+app.post('/show_shop_list', function (req, res) {
   //client.data.page,
   //client.data.maxpage
   //return client
@@ -1103,7 +1105,7 @@ app.post( '/show_shop_list', function (req, res) {
 
 function showShopList(js) {
   displayShopList(js.client.data.page, js.client.data.maxpage).then(function (body) {
-    js.client.data.message='OK';
+    js.client.data.message = 'OK';
     js.client.data.shop = body;
     js.resp.send(js.client);
   }).catch(function (err) {
@@ -1153,7 +1155,7 @@ function displayShopList(page, maxpage) {
   return deferred.promise;
 }
 //User  , edit shope
-app.post( '/show_shop_details', function (req, res) { 
+app.post('/show_shop_details', function (req, res) {
   //client.data.user ,
   //client.data.shop
   //return client
@@ -1167,7 +1169,7 @@ app.post( '/show_shop_details', function (req, res) {
 
 function showShopDetails(js) {
   displayShop(js.client.data.shop.name).then(function (body) {
-    js.client.data.message='OK'
+    js.client.data.message = 'OK'
     js.client.data.shop = body;
     js.resp.send(js.client);
   }).catch(function (err) {
@@ -1190,7 +1192,7 @@ function displayShopDetails(shopname) {
   return deferred.promise;
 }
 //User , edit item
-app.post( '/edit_item', function (req, res) { 
+app.post('/edit_item', function (req, res) {
   //client.data.user ,
   //client.data.shop, 
   //client.data.item
@@ -1261,7 +1263,7 @@ function updateItem(item, approval) {
   return deferred.promise;
 }
 // FOR ADMIN, edit item
-app.post( '/approve_item', function (req, res) { 
+app.post('/approve_item', function (req, res) {
   // client.data.item
   //return client
   // client.data.message='OK'
@@ -1283,7 +1285,7 @@ function approveItem(js) {
   });
 }
 // FOR public , item
-app.post( '/show_item', function (req, res) { 
+app.post('/show_item', function (req, res) {
   // client.data.item , 
   //client.data.shop
   //return client
@@ -1297,7 +1299,7 @@ app.post( '/show_item', function (req, res) {
 
 function showItem(js) {
   displayItem(js.client.data.item.name, js.client.data.shop.name).then(function (body) {
-    js.client.data.message='OK';
+    js.client.data.message = 'OK';
     js.client.data.item = body;
     js.resp.send(js.client);
   }).catch(function (err) {
@@ -1328,7 +1330,7 @@ function displayItem(itemname, shopname) {
   return deferred.promise;
 }
 //FOR user ,edit item
-app.post( '/show_item_details', function (req, res) { 
+app.post('/show_item_details', function (req, res) {
   //client.data.user ,
   //client.data.shop , 
   //client.data.item , 
@@ -1343,7 +1345,7 @@ app.post( '/show_item_details', function (req, res) {
 
 function showItemDetails(js) {
   displayItemDetails(js.client.data.item.name, js.client.data.shop.name).then(function (body) {
-    js.client.data.message='OK'
+    js.client.data.message = 'OK'
     js.client.data.item = body;
     js.resp.send(js.client);
   }).catch(function (err) {
@@ -1373,7 +1375,7 @@ function displayItemDetails(itemname, shopname) {
 }
 
 // FOR user  , items list by shop owner
-app.post( '/show_item_list_by_shop_owner', function (req, res) { 
+app.post('/show_item_list_by_shop_owner', function (req, res) {
   //client.data.user ,
   //client.data.shop, 
   //client.data.item.isactive, //
@@ -1390,7 +1392,7 @@ app.post( '/show_item_list_by_shop_owner', function (req, res) {
 
 function showItemListByShopNameOwnerName(js) {
   displayItemListShopNameOwnerName(js.client.data.shop.name, js.client.username, js.client.data.page, js.client.data.maxpage).then(function (body) {
-    js.client.data.message="OK"
+    js.client.data.message = "OK"
     js.client.data.item = body;
     js.resp.send(js.client);
   }).catch(function (err) {
@@ -1449,7 +1451,7 @@ function displayItemListShopNameOwnerName(shopname, ownername, page, maxpage) {
 }
 
 // FOR User by Active , item
-app.post( '/show_item_list_by_shop_owner_active', function (req, res) { 
+app.post('/show_item_list_by_shop_owner_active', function (req, res) {
   //client.data.user ,
   //client.data.shop,/
   // client.data.item.isactive, 
@@ -1466,7 +1468,7 @@ app.post( '/show_item_list_by_shop_owner_active', function (req, res) {
 
 function showItemListByShopNameOwnerNameIsActive(js) {
   displayItemListShopNameOwnerName(js.client.data.shop.name, js.client.username, js.client.data.item.isactive, js.client.data.page, js.client.data.maxpage).then(function (body) {
-    js.client.data.message="OK"
+    js.client.data.message = "OK"
     js.client.data.item = body;
     js.resp.send(js.client);
   }).catch(function (err) {
@@ -1525,7 +1527,7 @@ function displayItemListShopNameOwnerNameIsActive(shopname, ownername, isactive,
 }
 
 // FOR pulbic , show item by shop
-app.post( '/show_item_list_by_shop', function (req, res) { 
+app.post('/show_item_list_by_shop', function (req, res) {
   //client.data.user ,
   //client.data.shop , 
   //client.data.maxpage, 
@@ -1541,7 +1543,7 @@ app.post( '/show_item_list_by_shop', function (req, res) {
 
 function showItemListByShop(js) {
   displayItemListShop(js.client.data.shop.name, js.client.data.page, js.client.data.maxpage).then(function (body) {
-    js.client.data.message="OK"
+    js.client.data.message = "OK"
     js.client.data.item = body;
     js.resp.send(js.client);
   }).catch(function (err) {
@@ -1600,7 +1602,7 @@ function displayItemListShop(shopname, page, maxpage) {
 }
 
 //FOR ADMIN , show approved item
-app.post( '/show_approval_item', function (req, res) { 
+app.post('/show_approval_item', function (req, res) {
   // client.data.maxpage, 
   //client.data.page
   //client.data.item.isapproved
@@ -1672,7 +1674,7 @@ function displayByApprovalItem(isapproved) {
 }
 
 // FOR USER ONLY , update doc (photo, other pdf)
-app.post( '/update_doc_by_user', function (req, res) { 
+app.post('/update_doc_by_user', function (req, res) {
   //client.data.user, 
   //client.data.item, 
   //client.data.doc
@@ -1685,7 +1687,7 @@ app.post( '/update_doc_by_user', function (req, res) {
 });
 
 function editDocByUser(js) {
-  updateDocByUser(js.client.data.item.gui,js.client.data.user.username).then(function (body) {
+  updateDocByUser(js.client.data.item.gui, js.client.data.user.username).then(function (body) {
     js.client.data.message = body;
     js.resp.send(js.client);
   }).catch(function (err) {
@@ -1714,10 +1716,10 @@ function findCountDocByItemGui(itemgui) {
   return deferred.promise;
 }
 
-function updateDocByUser(doc,username) {
+function updateDocByUser(doc, username) {
   var deferred = Q.defer();
   var db = create_db('doc');
-  findCountDocByItemGuiOwnerName(doc.itemgui,username).then(function (body) {
+  findCountDocByItemGuiOwnerName(doc.itemgui, username).then(function (body) {
     if (!doc._rev)
       if (6 > body + 1) deferred.resolve('Could not add more than 5 photo');
       else {
@@ -1742,14 +1744,14 @@ function updateDocByUser(doc,username) {
                 }).catch(function (err) {
                   deferred.reject(err);
                 });
-              // } else if (doc._rev) {
-              //   // make a picture from base64
-              //   makePhotoFromBase64(doc.content, doc.itemgui, doc.name).then(function (body) {
-              //     deferred.resolve("OK");
-              //   }).catch(function (err) {
-              //     deferred.reject(err);
-              //   });
-              }else
+                // } else if (doc._rev) {
+                //   // make a picture from base64
+                //   makePhotoFromBase64(doc.content, doc.itemgui, doc.name).then(function (body) {
+                //     deferred.resolve("OK");
+                //   }).catch(function (err) {
+                //     deferred.reject(err);
+                //   });
+              } else
                 deferred.resolve("OK");
             }
           });
@@ -1763,14 +1765,14 @@ function updateDocByUser(doc,username) {
 
 function deleteFile(link) {
   var deferred = Q.defer();
-  var path = _current_picture_path + '/' + link ;
+  var path = _current_picture_path + '/' + link;
   fs.unlink(path, function (err) {
     if (err && err.code == 'ENOENT') {
       // file doens't exist
       deferred.reject('Could not find this file, so can not delete this file ' + link);
     } else if (err) {
       // other errors, e.g. maybe we don't have enough permission
-      deferred.reject("error "+JSON.parse(err) + ' /' + link);
+      deferred.reject("error " + JSON.parse(err) + ' /' + link);
     } else {
       deferred.resolve('OK removed ' + link);
     }
@@ -1797,7 +1799,7 @@ function makeBase64FromFile(itemgui, name) { // IF use only base64 string we can
 }
 
 //FOR USER , show doc by item gui and owner
-app.post( '/show_doc_by_itemgui_owner', function (req, res) { 
+app.post('/show_doc_by_itemgui_owner', function (req, res) {
   //client.data.user,  
   //client.data.item.gui
   //return client
@@ -1811,7 +1813,7 @@ app.post( '/show_doc_by_itemgui_owner', function (req, res) {
 
 function showDocByItemGuiOwnerName(js) {
   displayDocByItemGuiOwner(js.client.data.item.gui, js.client.data.user.username).then(function (body) {
-    js.client.data.message='OK';
+    js.client.data.message = 'OK';
     js.client.data.doc = body;
     js.resp.send(js.client);
   }).catch(function (err) {
@@ -1867,7 +1869,11 @@ function displayDocByItemGuiOwner(itemgui, ownername) {
   return deferred.promise;
 }
 //For PUBLIC , doc
-app.post( '/show_doc_by_itemgui', function (req, res) { // client.data.doc
+app.post('/show_doc_by_itemgui', function (req, res) {
+  // client.data.item
+  //return client
+  //client.data.doc={arr:{},count:0}
+  //client.data.message='OK'
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1912,8 +1918,12 @@ function displayDocByItemGui(itemgui) {
   return deferred.promise;
 }
 
-//ADMIN ONLY , search keyword
-app.post( '/register_search_kw', function (req, res) { //client.data.keyword,  client.data.user
+//ADMIN ONLY , register search keyword
+app.post('/register_search_kw', function (req, res) {
+  //client.data.keyword, 
+  // client.data.user
+  //return client
+  // client.data.message='OK';
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -1974,8 +1984,13 @@ function updateSearchKW(kw) {
   return deferred.promise;
 }
 
-// ADMIN ONLY
-app.post( '/show_search_kw_list', function (req, res) { //client.data.keyword, client.data.maxpage, client.data.page
+// ADMIN ONLY show keyword list
+app.post('/show_search_kw_list', function (req, res) {
+  //client.data.keyword, 
+  //client.data.maxpage, client.data.page
+  //return client
+  //client.data.message='OK'
+  //client.data.keyword={arr:{},count=0}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -2022,8 +2037,15 @@ function displaySearchKWList(isactive, page, maxpage) {
   });
   return deferred.promise;
 }
-// USER ONLY
-app.post( '/show_search_kw_by_user', function (req, res) { //client.data.user, client.data.maxpage,client.data.page, client.data.shop
+
+// USER ONLY , search keywords list
+app.post('/show_search_kw_by_user', function (req, res) {
+  //client.data.user, 
+  //client.data.maxpage,client.data.page, 
+  //client.data.shop
+  //return client
+  //client.data.message='OK'
+  //client.data.keyword={arr:{},count=0}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -2088,22 +2110,60 @@ function findCountSearchKWByUser(ownername, shopname, isactive) {
   });
   return deferred.promise;
 }
-//ADMIN ONLY
-app.post( '/edit_itemaddon', function (req, res) { //client.data.user, client.data.shop
+//ADMIN ONLY , edit item add on
+app.post('/edit_itemaddon', function (req, res) {
+  //client.data.user, 
+  //client.data.shop
+  //client.data.itemaddon
+  //return client
+  //client.data.message='OK'
+
   var js = {};
   js.client = req.body;
   js.resp = res;
   editItemAddon(js);
 });
 
-function editItemAddon(js) {}
-
-function updateItemaddon(itemaddon) {
-
+function editItemAddon(js) {
+  var itemaddon = js.clien.data.itemaddon;
+  itemaddon.gui = uuidV4();
+  itemaddon.createddate = convertTZ(new Date());
+  updateItemaddon(itemaddon).then((res) => {
+    js.client.data.message = res;
+    js.resp.send(js.client);
+  }).catch((err) => {
+    js.client.data.message = JSON.stringify(err);
+    js.resp.send(js.client);
+  });
 }
 
-//ADMIN , itemaddon
-app.post( '/show_item_addon', function (req, res) { //client.data.maxpage,client.data.page, 
+function updateItemaddon(itemaddon) {
+  var deferred = Q.defer();
+  var db = create_db('itemaddon');
+  if (itemaddon._id && itemaddon._id != undefined) {
+    db.insert(itemaddon, itemaddon._id, (err, res) => {
+      if (err) deferred.reject(err);
+      else {
+        deferred.resolve('OK');
+      }
+    });
+  } else {
+    db.insert(itemaddon, itemaddon._id, (err, res) => {
+      if (err) deferred.reject(err);
+      else {
+        deferred.resolve('OK');
+      }
+    });
+  }
+  return deferred.promise;
+}
+
+//ADMIN , show itemaddon
+app.post('/show_item_addon', function (req, res) {
+  //client.data.maxpage,client.data.page, 
+  //return client
+  //client.data.message='OK'
+  //client.data.itemaddon={arr:{},count:0}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -2168,7 +2228,11 @@ function findCountItemAddOn() {
 }
 
 // User , itemaddon
-app.post( '/show_item_addon_by_user', function (req, res) { //client.data.user, client.data.maxpage,client.data.page, client.data.shop
+app.post('/show_item_addon_by_user', function (req, res) {
+  //client.data.user, client.data.maxpage,client.data.page, client.data.shop
+  //return client
+  // client.data.message='OK'
+  //client.data.itemaddon={arr:{},count:0}
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -2203,6 +2267,7 @@ function displayItemAddOnByUser(ownername, shopname, isactive, page, maxpage) {
           for (var index = 0; index < res.rows.length; index++) {
             delete res.rows[0].value._rev;
             delete res.rows[0].value.gui;
+            delete res.rows[0].value._id;
             arr.push(res.rows[0].value);
           }
         }
@@ -2236,15 +2301,18 @@ function findCountItemAddOnByUser(ownername, shopname) {
   return deferred.promise;
 }
 
-// public , set client
-app.all( '/init_client', function (req, res) { //client.data.user, client.data.maxpage,client.data.page, client.data.shop
+// public, init client
+app.all('/init_client', function (req, res) {
+  //client
+  //return client
   var js = {};
   js.client = req.body;
   js.resp = res;
   __cur_client = js.client;
+
 })
 //Public , doc
-app.post( '/show_doc_base64_by_gui', function (req, res) { //client.data.user,  client.data.doc
+app.post('/show_doc_base64_by_gui', function (req, res) { //client.data.user,  client.data.doc
   var js = {};
   js.client = req.body;
   js.resp = res;
@@ -2467,11 +2535,9 @@ function checkAdmin(client) {
 function authentication_path(path) {
   switch (path) {
     case '/edit_shop':
-
       return 2;
       break;
     case '/find_exist_shop':
-
       return 2;
       break;
     case '/show_shop_details':
@@ -2562,6 +2628,7 @@ function authentication_path(path) {
   }
   return 0;
 }
+
 function makeid(length) {
   var text = "";
   var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";

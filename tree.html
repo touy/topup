@@ -113,34 +113,22 @@
                 //console.log(maxlevel);
                 if (element.level > level) {
                     maxlevel = element.level;
-                    //console.log(maxlevel);
                 }
             }
             return maxlevel;
         }
 
         function fillUpMembers(username, level, b) {
-            var u = getUserBinaryByUsername(username, b);
-            //var b1 = b;            
+            var u = getUserBinaryByUsername(username, b);          
             if (!b.length) {
                 return [];
             }
-            // fill up    
-            //console.log("before" + b.length)
             if (b.length < (2*Math.pow(2,maxrange)-1)) {
                 var max = findMaxLevel(u.level, b);
-                //var n=max-u.level;
-                //console.log(maxrange + "maxrange / level:" + u.level);
-                //b=[];
-                //return;
                 for (var index =0; index < maxrange; index++) {
                     u1 = getBinaryDataByMemberLevel(u.level + index, b);
-                    //console.log("u1."+u1.length);
-                    //return;
                     if (u1.length) {
                         needmore = Math.pow(2, index) - u1.length;
-                        // console.log("index: "+index);
-                        // console.log(b.length+" b.length,needmore:" + needmore + " 2^n" + Math.pow(2, index));
                         if (needmore > 0 && needmore < Math.pow(2, index))
                             for (var i = 0; i < needmore; i++) {
                                 console.log("i:" + i);
@@ -181,9 +169,6 @@
                                     gui: makeid(6, 1)
                                 });
                             }
-                        // console.log('extending' + index);
-                        // console.log("b length:" + b.length);
-                        //continue;
                         u1 = getBinaryDataByMemberLevel(u.level + index, b);
                         if(((u.level+ index + 1)>u.level+maxrange-1)) continue;
                         for (var i = 0; i < u1.length; i++) {
@@ -227,7 +212,6 @@
                         }
                         console.log("end extending b length:" + b.length);
                     }
-
                 }
             }
             return b;
@@ -518,14 +502,9 @@
             user.RCoupling = 0;
             user.leftuser=0;
             user.rightuser=0;
-            
-            $("#" + b.gui).append("<img title='" + user.username + "' width='48px' height='48px' src='" + imgurl +
-                "'/>");
-            $("#" + b.gui).append("<div class='small'>"+ "<div id='score"+b.gui+"'>" + user.LCoupling + "|" + user.RCoupling + "</div>"
-                +user.username+
-                "<div id='qtty"+b.gui+"'>" + user.leftuser + "|" + user.rightuser + "</div></div>");            
-                  
-            if (b.luser&&b.luser!=undefined) {                
+                        
+            if (b.luser&&b.luser!=undefined&&b.isdummy==undefined) {
+                user.leftuser= 1;                
                 c={};
                 c.data={};
                 c.data.user={};
@@ -533,9 +512,11 @@
                 jsonPost(getHost()+'/get_member_count_by_username',c,function(res){                    
                     user.leftuser= res.data.user.count;
                     if(user.leftuser==undefined)user.leftuser=0;
-                    var rightuser=$("#qtty"+b.gui).text().split('|')[1];
-                    console.log("right user "+rightuser);
-                    $("#qtty"+b.gui).empty().html((user.leftuser+1)+"|"+rightuser);                    
+                   // else
+                    user.leftuser++;
+                    $("#qtty"+b.gui).find('l').empty().html(user.leftuser);
+                    //console.log("right user "+rightuser);
+                    //$("#qtty"+b.gui).empty().html(user.leftuser+"|"+rightuser);                    
                 });   
                 jsonPost(getHost()+'/show_latest_coupling_by_user',c,function(res){                    
                     var couplingscore= res.data.couplingscore[0];
@@ -552,7 +533,8 @@
                     }                       
                 });              
             }
-            if(b.ruser&&b.ruser!=undefined){
+            if(b.ruser&&b.ruser!=undefined&b.isdummy==undefined){
+                user.rightuser= 1;
                 c={};
                 c.data={};
                 c.data.user={};
@@ -560,9 +542,11 @@
                         jsonPost(getHost()+'/get_member_count_by_username',c,function(res){
                             user.rightuser= res.data.user.count;
                             if(user.rightuser==undefined)user.rightuser=0;
-                            var leftuser=$("#qtty"+b.gui).text().split('|')[0];
-                            console.log("left user "+leftuser);
-                            $("#qtty"+b.gui).empty().html(leftuser+"|"+(user.rightuser));
+                            //else
+                            user.rightuser++;
+                            $("#qtty"+b.gui).find('r').empty().html(user.rightuser);
+                            // console.log("left user "+leftuser);
+                            // $("#qtty"+b.gui).empty().html(leftuser+"|"+user.rightuser);
                         });
                         jsonPost(getHost()+'/show_latest_coupling_by_user',c,function(res){                    
                     var couplingscore= res.data.couplingscore;
@@ -577,7 +561,13 @@
                         $("#score"+b.gui).empty().html(0+"|"+0);  
                     }                                      
                 }); 
-            }             
+                $("#" + b.gui).append("<img title='" + user.username + "' width='48px' height='48px' src='" + imgurl +
+                "'/>");
+           }
+           $("#" + b.gui).append("<div class='small'>"+ "<div id='score"+b.gui+"'>" + user.LCoupling + "|" + user.RCoupling + "</div>"
+                +user.username+
+                "<div id='qtty"+b.gui+"'><l>" + user.leftuser + "</l>|<r>" + user.rightuser + "</r></div></div>");                              
+                         
         }
 
         $(function () {

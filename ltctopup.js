@@ -1,9 +1,9 @@
-module.exports = function () {
+module.exports = function (__secret='',__user='') {
     const uuidV4 = require('uuid/v4');
     const Q=require('q');
     const crypto = require('crypto');
-    const ltcScretKeys="kP0SwtIzUA1pLBwsnZz3VA==";
-    const ltcUser="THEFRIEND";
+    const ltcScretKeys=__secret;
+    const ltcUser=__user;
     module.ltcEncrypt=function (query){
         var deferred=Q.defer();
         var exec = require('child_process').exec;
@@ -60,8 +60,8 @@ module.exports = function () {
             soap.createClient(url, function(err, client) {
                 client.Topup(args, function(err, result) {
                     console.log(result);
-                    var res=[];res.push(result);
-                    deferred.resolve(res);
+                    //var res=[];res.push(result);
+                    deferred.resolve(result);
                 });
             });
         }).catch(function(err){
@@ -85,8 +85,8 @@ module.exports = function () {
             soap.createClient(url, function(err, client) {
                 client.Payment(args, function(err, result) {
                     console.log(result);
-                    var res=[];res.push(result);
-                    deferred.resolve(res);
+                    //var res=[];res.push(result);
+                    deferred.resolve(result);
                 });
             });
         }).catch(function(err){
@@ -108,9 +108,9 @@ module.exports = function () {
             var args = {message:message,header:header,msisdn:phone,user_id:ltcUser,key:body};
             soap.createClient(url, function(err, client) {
                 client.SendSMS (args, function(err, result) {
-                    var res=[];res.push(result);
-                    deferred.resolve(res);
-                    console.log(result);
+                    //var res=[];res.push(result);
+                    deferred.resolve(result);
+                    //console.log(result);
                 });
             });
         }).catch(function(err){
@@ -131,9 +131,9 @@ module.exports = function () {
             var args = {type:type,startDate:startdate,endDate:enddate,user_id:ltcUser,key:body};
             soap.createClient(url, function(err, client) {
                 client.queryDetail(args, function(err, result) {
-                    console.log(JSON.stringify( result));
-                    var res=[];res.push(result);
-                    deferred.resolve(res);
+                   // console.log(JSON.stringify( result));
+                    //var res=[];res.push(result);
+                    deferred.resolve(result);
                 });
             });
         }).catch(function(err){
@@ -151,9 +151,9 @@ module.exports = function () {
             var args = {user_id:ltcUser,key:body};
             soap.createClient(url, function(err, client) {
                 client.CheckBalanceCenter(args, function(err, result) {
-                    console.log(result);
-                    var res=[];res.push(result);
-                    deferred.resolve(res);
+                    //console.log(result);
+                   // var res=[];res.push(result);
+                    deferred.resolve(result);
                 });
             });
         }).catch(function(err){
@@ -174,9 +174,9 @@ module.exports = function () {
             var args = {type:type,msisdn:phone,user_id:ltcUser,key:body};
             soap.createClient(url, function(err, client) {
                 client.CheckBalance (args, function(err, result) {
-                    console.log(result);
-                    var res=[];res.push(result);
-                    deferred.resolve(res);
+                    //console.log(result);
+                    //var res=[];res.push(result);
+                    deferred.resolve(result);
                 });
             });
         }).catch(function(err){

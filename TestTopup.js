@@ -296,9 +296,9 @@ __master_user.parentname = __master_user.username;
 //   else
 //     console.log("create master completedly");
 // });
-app.use('/public', express.static(__dirname+'public'));
-app.use('/images', express.static(__dirname+'_doc_item_'));
-app.use('/temp', express.static(__dirname+'temp'));
+app.use('/public', express.static('public'));
+app.use('/images', express.static('_doc_item_'));
+app.use('/temp', express.static('temp'));
 
 app.get('/', function (req, res) {
   res.send("hello");

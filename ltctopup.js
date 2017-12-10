@@ -209,30 +209,6 @@ module.exports = function (__secret='',__user='') {
             return 'value must be lower than 500.001 and higher than 4.999';        
         return 'OK';
     }
-
-    // checkBalanceCenterLTC();
-    // checkBalanceLTC('2054445447');
-    
-    // var sd=new Date();
-    // sd=sd.getTime()-(2*60*60*1000);
-    // var ed=new Date();
-    // queryDetailsLTC(new Date(sd).toISOString(),ed.toISOString());
-    
-    // sendSMSLTC('2054445447','OK','header');
-    // paymentLTC('2054445447',5000);
-    // topupLTC('2054445447',5000);
-    /*
-    Generating random numbers in specific range using crypto.randomBytes from crypto library
-    Maximum available range is 281474976710655 or 256^6-1
-    Maximum number for range must be equal or less than Number.MAX_SAFE_INTEGER (usually 9007199254740991)
-    Usage examples:
-    cryptoRandomNumber(0, 350);
-    cryptoRandomNumber(556, 1250425);
-    cryptoRandomNumber(0, 281474976710655);
-    cryptoRandomNumber((Number.MAX_SAFE_INTEGER-281474976710655), Number.MAX_SAFE_INTEGER);
-    
-    Tested and working on 64bit Windows and Unix operation systems.
-    */
     
     
     function cryptoRandomNumber(minimum, maximum){

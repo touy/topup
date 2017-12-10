@@ -71,7 +71,7 @@ var __login_kw = 'Authen';
 var __client_ip = "";
 app.use(requestIp.mw());
 var __cur_client = {};
-app.use('/doc_object', express.static('_doc_'));
+app.use('/doc_object', express.static(path.join(__dirname, '_doc_')));
 
 function convertTZ(fromTZ) {
   return moment.tz(fromTZ, "Asia/Vientiane").format();
@@ -443,17 +443,8 @@ var doc = {
   content: ''
 }
 
-
-
-
-
-
-
-
-
-
-app.use('/public', express.static('public'));
-app.use('/images', express.static('_doc_'));
+app.use('/public', express.static(path.join(__dirname, 'public')));
+app.use('/images', express.static(path.join(__dirname, '_doc_')));
 var upload = multer({
   storage: multer.diskStorage({
     destination: function (req, file, cb) {

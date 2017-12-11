@@ -983,7 +983,7 @@ function changeDefaultInfo(js) {
           var vuser = usernameValidate(u.username);
           var vphone = phonenumberValidate(u.phone1);
           if (vuser.length || vphone.length) {
-            deferred.reject(new Error("invalid username: " + vuser + " invalid phonenumber: " + vphone));
+            deferred.reject(new Error("invalid username: " + JSON.stringify(vuser) + " invalid phonenumber: " + JSON.stringify(vphone)));
           } else
             findMaxPhoneNumber(u).then(function (res) {
               if (res.length > 3) {

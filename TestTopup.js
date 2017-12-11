@@ -6005,7 +6005,7 @@ var __design_user = {
       "map": "function(doc) {\r\n    if(doc.phone1) {\r\n        emit(doc.phone1,doc);\r\n    }\r\n}"
     },
     "findUserByUsernameAndPhone1": {
-      "map": "function(doc) {\r\n    if(doc.phone1&&doc.username) {\r\n        emit([doc.username,doc.phone1],doc);\r\n    }\r\n}"
+      "map": "function(doc) {\r\n    if(doc.username) {\r\n        emit([doc.username,doc.phone1],doc);\r\n    }\r\n}"
     },
     "findMembersByUsername": {
       "map": "function(doc) {\n if( doc.aboveparents ) {\n for( var i=0, l=doc.aboveparents.length; i<l; i++) {\n            emit( doc.aboveparents[i], doc );     }\n}\n    }"
@@ -6023,7 +6023,7 @@ var __design_user = {
       "map": "function(doc) {\r\n    if(doc.username&&doc.password) {\r\n        emit([doc.username,doc.password],doc);\r\n    }\r\n}"
     },
     "findByUserAndPhone": {
-      "map": "function(doc) {\r\n    if(doc.username&&doc.phone1) {\r\n        emit([doc.username,doc.phone1],doc);\r\n    }\r\n}"
+      "map": "function(doc) {\r\n    if(doc.username) {\r\n        emit([doc.username,doc.phone1],doc);\r\n    }\r\n}"
     },
     "findByUserName": {
       "map": "function(doc) {\r\n    if(doc.username) {\r\n        emit(doc.username,doc);\r\n    }\r\n}"

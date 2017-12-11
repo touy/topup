@@ -740,7 +740,7 @@ app.post('/change_default_user_info', function (req, res) {
 
 function changeUserNameAndPhoneNumber(js) {
   try {
-    if (js.client.data.user.oldusername && js.client.data.user.oldphone1 && js.client.data.user.username && js.client.data.user.phone1) {
+    if (js.client.data.user.oldusername /*&& js.client.data.user.oldphone1*/ && js.client.data.user.username && js.client.data.user.phone1) {
       changeDefaultInfo(js).then(function (body) {
         var l = {
           log: body,
@@ -976,7 +976,7 @@ function changeDefaultInfo(js) {
           var u = res.rows[0].value;
           var olduser = cloneJSON(res.rows[0].value);
 
-          u.username = js.client.data.user.username;
+          u.username = js.client.data.user.username.toLowerCase();
           u.usercode = u.username;
           u.phone1 = js.client.data.user.phone1;
 

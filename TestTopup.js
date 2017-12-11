@@ -28,7 +28,7 @@ var userValidator = new passwordValidator();
 var phoneValidator = new passwordValidator();
 phoneValidator
   .is().min(10) // Minimum length 8 
-  .is().max(10) // Maximum length 100 
+  .is().max(11) // Maximum length 100 
   .has().not().letters() // Must not have lowercase letters 
   .has().digits() // Must have digits 
   .has().not().symbols()
@@ -36,7 +36,7 @@ phoneValidator
 // start with 0205 , 0207, 0209 ,0202
 userValidator
   .is().min(3) // Minimum length 8 
-  .is().max(6) // Maximum length 100 
+  .is().max(20) // Maximum length 100 
   //.has().uppercase()                              // Must have uppercase letters 
   .has().lowercase() // Must have lowercase letters 
   //.has().digits()                                 // Must have digits 

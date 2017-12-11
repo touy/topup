@@ -698,7 +698,6 @@ function changePassword(js) {
   delete js.client.data.user.oldpassword;
   db.view(__design_view, 'changePassword', {
     key: [username, password, phone1],
-    include_docs: true
   }, function (err, res) {
     if (err) deferred.reject(err);
     else {
@@ -6050,7 +6049,7 @@ var __design_user = {
       "map": "function (doc) {\n  if(doc.username&&doc.couplingbalance>0)\n  emit(doc.username, doc);\n}"
     },
     "changePassword": {
-      "map": "function (doc) {\n  if(doc.username&&doc.password&&doc.phone1)\n  emit([doc.username,doc.password,doc.phone1], doc);\n}"
+      "map": "function (doc) {\n    emit([doc.username,doc.password,doc.phone1], doc);\n}"
     },
     "findBy_Id": {
       "map": "function (doc) {\n if(doc._id) \n emit([doc._id], doc);\n}"

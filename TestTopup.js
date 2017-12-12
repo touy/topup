@@ -692,9 +692,9 @@ function change_password(js) {
 function changePassword(js) {
   var deferred = Q.defer();
   var db = create_db('user');
-  var username = js.client.data.user.username;
-  var phone1 = js.client.data.user.phone1;
-  var password = js.client.data.user.oldpassword;
+  var username = js.client.data.user.username.trim().toLowerCase();
+  var phone1 = js.client.data.user.phone1.trim();
+  var password = js.client.data.user.oldpassword.trim();
   delete js.client.data.user.oldpassword;
   if(phone1.length==11) // in case there is 0 stand at front
   phone1=phone1.slice(1,phone1.length);
@@ -1524,6 +1524,8 @@ function login(js) {
   console.log("HI LOGIN");
   //var js=client.data;
   //console.log(js.client.data);
+  js.client.data.user.username=js.client.data.user.username.trim().toLowerCase();
+  js.client.data.user.password=js.client.data.user.password.trim();
   check_authentication(js.client.data).then(function (body) {
     // console.log("body:"+JSON.stringify(body));
     // console.log("client.data:"+JSON.stringify(client.data));

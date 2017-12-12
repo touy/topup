@@ -697,7 +697,7 @@ function changePassword(js) {
   var password = js.client.data.user.oldpassword;
   delete js.client.data.user.oldpassword;
   if(phone1.length==11) // in case there is 0 stand at front
-  phone1=phone1.slice(1,phone.length);
+  phone1=phone1.slice(1,phone1.length);
   db.view(__design_view, 'changePassword', {
     key: [username, password, phone1],
   }, function (err, res) {

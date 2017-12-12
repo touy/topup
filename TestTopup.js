@@ -1581,10 +1581,12 @@ app.post('/logout', function (req, res) { //client
 
 function logout(js) {
   var keyword = __login_kw;
-  r_client.getAsync(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken).then(function (res) {
+  var key=keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken;
+  console.log(key);
+  r_client.getAsync(key).then(function (res) {
     console.log("log out"+JSON.stringify(res));
     if (res) {
-      r_client.del(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken, function (err, res) {
+      r_client.del(key, function (err, res) {
         js.client.logintoken = "";
         js.client.logintime = "";
         js.client.username = "";
@@ -1600,6 +1602,10 @@ function logout(js) {
         logging(l);
         js.resp.send(js.client);
       });
+    }
+    else{
+      js.client.data.message = "error can't logout , key is not correct";
+      js.resp.send(js.client);
     }
   }).catch(function (err) {
     var l = {

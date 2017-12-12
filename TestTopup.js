@@ -704,6 +704,8 @@ function changePassword(js) {
       console.log('change password'); 
       console.log("username "+username+ " oldpwd "+password+" phone1 "+phone1+" ");
       console.log(res);      
+      if(phone1.length==11) // in case there is 0 stand at front
+        phone1=phone1.slice(1,phone.length);
       if (res.rows.length) {
         u = res.rows[0].value;
         u.password = js.client.data.user.password1;

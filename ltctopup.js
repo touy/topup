@@ -67,7 +67,7 @@ module.exports = function (__secret='',__user='') {
         }).catch(function(err){
             console.log(err);
             deferred.reject(err);
-        }).done();
+        });
         return deferred.promise;
       }
       module.paymentLTC=function(phone,value){
@@ -92,7 +92,7 @@ module.exports = function (__secret='',__user='') {
         }).catch(function(err){
             console.log(err);
             deferred.reject(err);
-        }).done();
+        });
         return defered.promise;
       }
       module.sendSMSLTC=function(phone,message,header){
@@ -116,7 +116,7 @@ module.exports = function (__secret='',__user='') {
         }).catch(function(err){
             console.log(err);
             deferred.reject(err);
-        }).done();
+        });
         return deferred.promise;
       }
       module.queryDetailsLTC=function(startdate,enddate){
@@ -139,7 +139,7 @@ module.exports = function (__secret='',__user='') {
         }).catch(function(err){
             console.log(err);
             deferred.reject(err);
-        }).done();
+        });
         return deferred.promise;
       }
     
@@ -159,7 +159,7 @@ module.exports = function (__secret='',__user='') {
         }).catch(function(err){
             console.log(err);
             deferred.reject(err);
-        }).done();
+        });
         return deferred.promise;
       }
       module.checkBalanceLTC=function(phone){
@@ -182,7 +182,7 @@ module.exports = function (__secret='',__user='') {
         }).catch(function(err){
             console.log(err);
             deferred.reject(err);
-        }).done();
+        });
         return deferred.promise;
     }
     function validateTime(time){

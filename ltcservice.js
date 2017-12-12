@@ -267,10 +267,10 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
                         }
                     });
                 } else {
-                    throw new Error(res);
+                    throw new Error(JSON.stringify(res));
                 }
             }).catch((err) => {
-                throw err;
+                deferred.reject(err);
             });
         } catch (error) {
             deferred.reject(err);
@@ -362,10 +362,10 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
                         }
                     });
                 } else {
-                    throw new Error(res);
+                    throw new Error(JSON.stringify(res));
                 }
             }).catch((err) => {
-                throw err;
+                deferred.reject(err);
             });
         } catch (error) {
             deferred.reject(err);
@@ -418,7 +418,7 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
                                         }
                                     });
                                 } else {
-                                    throw new Error(res);
+                                    throw new Error(JSON.stringify(res));
                                 }
                             }).catch((err) => {
                                 throw err;
@@ -432,13 +432,13 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
                             });
                         }
                     }).catch((err) => {
-                        throw err;
+                        deferred.reject(err);
                     });
                 } else {
-                    throw new Error(res)
+                    throw new Error(JSON.stringify(res))
                 }
             }).catch((err) => {
-                throw err;
+                deferred.reject(err);
             })
         } catch (error) {
             addRetryList(phone, topupvalue, target, owner);
@@ -482,7 +482,7 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
                                         }
                                     });
                                 } else {
-                                    throw new Error(res);
+                                    throw new Error(JSON.stringify(res));
                                 }
                             }).catch((err) => {
                                 throw err;
@@ -499,10 +499,10 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
                         throw err;
                     });
                 } else {
-                    throw new Error(res);
+                    throw new Error(JSON.stringify(res));
                 }
             }).catch((err) => {
-                throw err;
+                deferred.reject(err);
             });
         } catch (error) {
             deferred.reject(error);
@@ -675,7 +675,7 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
                             deferred.reject(err);
                         });
             }).catch((err)=>{
-
+                deferred.reject(err);
             });
             
         } else if (type=='target') {
@@ -1078,7 +1078,7 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
                     deferred.resolve(res);
                 }
             }).catch((err) => {
-                throw err;
+                deferred.reject(err);
             });
         } catch (error) {
             addFailedList(phone, toupvalue, target, owner);
@@ -1092,7 +1092,7 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
             ltc.sendSMSLTC(phone,message,header).then((res)=>{
                 deferred.resolve(res);
                 }).catch((err)=>{
-                    throw err;
+                    deferred.reject(err);
                 });   
         } catch (error) {
             deferred.reject(error);
@@ -1105,7 +1105,7 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
             ltc.paymentLTC(phone,value).then((res)=>{
                 deferred.resolve(res);
                 }).catch((err)=>{
-                    throw err;
+                    deferred.reject(err);
                 });   
         } catch (error) {
             deferred.reject(error);
@@ -1118,7 +1118,7 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
             ltc.queryDetails(startdate,enddate).then((res)=>{
                 deferred.resolve(res);
                 }).catch((err)=>{
-                    throw err;
+                    deferred.reject(err);
                 });   
         } catch (error) {
             deferred.reject(error);

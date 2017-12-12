@@ -45,10 +45,10 @@ userValidator
 //.is().not().oneOf(['Passw0rd', 'Password123']); // Blacklist these values 
 passValidator
   .is().min(6) // Minimum length 8 
-  .is().max(10) // Maximum length 100 
-  //.has().uppercase()                              // Must have uppercase letters 
-  //.has().lowercase()                              // Must have lowercase letters 
-  //.has().digits()                                 // Must have digits 
+  .is().max(50) // Maximum length 100 
+  .has().uppercase()                              // Must have uppercase letters 
+  .has().lowercase()                              // Must have lowercase letters 
+  .has().digits()                                 // Must have digits 
   .has().not().spaces() // Should not have spaces 
 //.is().not().oneOf(['Passw0rd', 'Password123']); // Blacklist these values 
 
@@ -701,6 +701,9 @@ function changePassword(js) {
   }, function (err, res) {
     if (err) deferred.reject(err);
     else {
+      console.log('change password'); 
+      console.log("username "+username+ " oldpwd "+password+" phone1 "+phone1+" ");
+      console.log(res);      
       if (res.rows.length) {
         u = res.rows[0].value;
         u.password = js.client.data.user.password1;

@@ -1580,7 +1580,7 @@ app.post('/logout', function (req, res) { //client
 function logout(js) {
   var keyword = __login_kw;
   r_client.getAsync(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken).then(function (res) {
-    //console.log("res"+JSON.stringify(res));
+    console.log("log out"+JSON.stringify(res));
     if (res) {
       r_client.del(keyword + ' ' + js.client.clientuid + ' ' + js.client.logintoken, function (err, res) {
         js.client.logintoken = "";

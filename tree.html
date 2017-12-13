@@ -46,7 +46,7 @@
             return host;
         }
 
-        function makeid(length, type = 0) {
+        function makeid(length, type ) {
             var text = "";
             var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             if (type == 1) {
@@ -227,7 +227,7 @@
             }
         }
 
-        function indexingJson(lusername, rusername, c, needlevel = 1, i = -1, parent) {
+        function indexingJson(lusername, rusername, c, needlevel, i, parent) {
             //console.log("1 arr length:"+arr.lenghth);
             if (lusername) {
                 if (res = findTreeByUsername(c, lusername)) {
@@ -349,6 +349,7 @@
             }
         }
         function prepareBinaryData(username, needlevel) {
+            username=username.trim().toLowerCase();
             console.log("search :"+username);
             if (username == '') {
                 username = 'souk@TheFriendd'

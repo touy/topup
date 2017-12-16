@@ -980,7 +980,7 @@ function changeDefaultInfo(js) {
           var u = res.rows[0].value;
           var olduser = cloneJSON(res.rows[0].value);
 
-          u.username = js.client.data.user.username;
+          u.username = js.client.data.user.username.trim().toLowerCase();
           u.usercode = u.username;
           u.phone1 = js.client.data.user.phone1;
 

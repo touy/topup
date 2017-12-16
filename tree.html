@@ -117,103 +117,184 @@
             }
             return maxlevel;
         }
-
+        function getIndexes(n, level) {
+            var arr = [];
+            for (var index = 1; index < level; index++) {
+                if (index > 1)
+                n = n * 2 + 1;
+                for (var i = 0; i < Math.pow(2, index); i++) {
+                    arr.push(2 * n + 1 + i);
+                }
+            }
+            return arr;
+        }
         function fillUpMembers(username, level, b) {
             var u = getUserBinaryByUsername(username, b);          
             if (!b.length) {
                 return [];
             }
-            if (b.length < (2*Math.pow(2,maxrange)-1)) {
-                var max = findMaxLevel(u.level, b);
-                for (var index =0; index < maxrange; index++) {
-                    u1 = getBinaryDataByMemberLevel(u.level + index, b);
-                    if (u1.length) {
-                        needmore = Math.pow(2, index) - u1.length;
-                        if (needmore > 0 && needmore < Math.pow(2, index))
-                            for (var i = 0; i < needmore; i++) {
-                                console.log("i:" + i);
-                                username = makeid(6, 1);
+            var indexes=getIndexes(u.index,maxrange);
+            for (let index = 0; index < indexes.length; index++) {
+                const element = indexes[index];
+                var exist=false;
+                for (let index = 0; index < b.length; index++) {
+                    const e = b[index];
+                    if(element==e.index){
+                        exist=true;
+                    }
+                }
+                if(!exist){
+                    var pindex=(element-((element%2)?1:2))/2;
+                    if(pindex>=u.index){
+                        var p=null;
+                        for (let index = 0; index < b.length; index++) {
+                            const e = b[index];
+                            if(pindex==e.index){
+                                p=e;
+                            }
+                        }
+                        if(p){
+                            var dummy='isregisterdummy';
+                            if(p.isdummy=="isregisterdummy"){
+                                dummy='isdummy';
+                            }
+                            if(p.isdummy=='isdummy')
+                                dummy='isdummy';
+                            if(element%2){
                                 luser = makeid(6, 1);
-                                ruser = makeid(6, 1);
-                                b.push({
-                                    username: username,
-                                    createddate: '',
-                                    updateddate: '',
-                                    luser: luser,
-                                    ruser: ruser,
-                                    level: u.level+ index,
-                                    isdummy: 'isregisterdummy',
-                                    parent: '',
-                                    gui: makeid(6, 1)
-                                });
+                                p.luser=luser;
                                 b.push({
                                     username: luser,
                                     createddate: '',
                                     updateddate: '',
                                     luser: '',
                                     ruser: '',
-                                    level: u.level+ index + 1,
-                                    isdummy: 'isdummy',
-                                    parent: username,
+                                    index:element,
+                                    level: p.level+1,
+                                    isdummy: dummy,
+                                    parent: p.username,
                                     gui: makeid(6, 1)
                                 });
+                            }else{
+                                ruser = makeid(6, 1);
+                                p.ruser=ruser;
                                 b.push({
                                     username: ruser,
                                     createddate: '',
                                     updateddate: '',
                                     luser: '',
                                     ruser: '',
-                                    level: u.level+ index + 1,
-                                    isdummy: 'isdummy',
-                                    parent: username,
+                                    index:element,
+                                    level: p.level+1,
+                                    isdummy: dummy,
+                                    parent: p.username,
                                     gui: makeid(6, 1)
                                 });
                             }
-                        u1 = getBinaryDataByMemberLevel(u.level + index, b);
-                        if(((u.level+ index + 1)>u.level+maxrange-1)) continue;
-                        for (var i = 0; i < u1.length; i++) {
-                            var element = u1[i];
-                            if (!element.luser) {
-                                element.luser = makeid(6, 1);
-                                var isdummy = 'isdummy';
-                                if (element.isdummy == undefined)
-                                    isdummy = 'isregisterdummy';
-                                b.push({
-                                    username: element.luser,
-                                    createddate: '',
-                                    updateddate: '',
-                                    luser: '',
-                                    ruser: '',
-                                    level: u.level+ index+1,
-                                    isdummy: isdummy,
-                                    parent: element.username,
-                                    gui: makeid(6, 1)
-                                });
-                                updateUserBinaryByUsername(element.username, b, element)
-                            }
-                            if (!element.ruser) {
-                                element.ruser = makeid(6, 1);
-                                var isdummy = 'isdummy';
-                                if (element.isdummy == undefined)
-                                    isdummy = 'isregisterdummy';
-                                b.push({
-                                    username: element.ruser,
-                                    createddate: '',
-                                    updateddate: '',
-                                    luser: '',
-                                    ruser: '',
-                                    level: u.level+ index +1,
-                                    isdummy: isdummy,
-                                    parent: element.username,
-                                    gui: makeid(6, 1)
-                                });
-                                updateUserBinaryByUsername(element.username, b, element)
-                            }
+                            
+                        }else{
+                            console.log('could not find parent '+pindex+" ");
+                            return; 
                         }
-                        console.log("end extending b length:" + b.length);
+                    }
+                    else{
+                        console.log('this index not belong to this parent '+u.index);
+                        return;
                     }
                 }
             }
+            
+            // if (b.length < (2*Math.pow(2,maxrange)-1)) {
+            //     var max = findMaxLevel(u.level, b);
+            //     for (var index =0; index < maxrange; index++) {
+            //         u1 = getBinaryDataByMemberLevel(u.level + index, b);
+            //         if (u1.length) {
+            //             needmore = Math.pow(2, index) - u1.length;
+            //             if (needmore > 0 && needmore < Math.pow(2, index))
+            //                 for (var i = 0; i < needmore; i++) {
+            //                     console.log("i:" + i);
+            //                     username = makeid(6, 1);
+            //                     luser = makeid(6, 1);
+            //                     ruser = makeid(6, 1);
+            //                     b.push({
+            //                         username: username,
+            //                         createddate: '',
+            //                         updateddate: '',
+            //                         luser: luser,
+            //                         ruser: ruser,
+            //                         level: u.level+ index,
+            //                         isdummy: 'isregisterdummy',
+            //                         parent: '',
+            //                         gui: makeid(6, 1)
+            //                     });
+            //                     b.push({
+            //                         username: luser,
+            //                         createddate: '',
+            //                         updateddate: '',
+            //                         luser: '',
+            //                         ruser: '',
+            //                         level: u.level+ index + 1,
+            //                         isdummy: 'isdummy',
+            //                         parent: username,
+            //                         gui: makeid(6, 1)
+            //                     });
+            //                     b.push({
+            //                         username: ruser,
+            //                         createddate: '',
+            //                         updateddate: '',
+            //                         luser: '',
+            //                         ruser: '',
+            //                         level: u.level+ index + 1,
+            //                         isdummy: 'isdummy',
+            //                         parent: username,
+            //                         gui: makeid(6, 1)
+            //                     });
+            //                 }
+            //             u1 = getBinaryDataByMemberLevel(u.level + index, b);
+            //             if(((u.level+ index + 1)>u.level+maxrange-1)) continue;
+            //             for (var i = 0; i < u1.length; i++) {
+            //                 var element = u1[i];
+            //                 if (!element.luser) {
+            //                     element.luser = makeid(6, 1);
+            //                     var isdummy = 'isdummy';
+            //                     if (element.isdummy == undefined)
+            //                         isdummy = 'isregisterdummy';
+            //                     b.push({
+            //                         username: element.luser,
+            //                         createddate: '',
+            //                         updateddate: '',
+            //                         luser: '',
+            //                         ruser: '',
+            //                         level: u.level+ index+1,
+            //                         isdummy: isdummy,
+            //                         parent: element.username,
+            //                         gui: makeid(6, 1)
+            //                     });
+            //                     updateUserBinaryByUsername(element.username, b, element)
+            //                 }
+            //                 if (!element.ruser) {
+            //                     element.ruser = makeid(6, 1);
+            //                     var isdummy = 'isdummy';
+            //                     if (element.isdummy == undefined)
+            //                         isdummy = 'isregisterdummy';
+            //                     b.push({
+            //                         username: element.ruser,
+            //                         createddate: '',
+            //                         updateddate: '',
+            //                         luser: '',
+            //                         ruser: '',
+            //                         level: u.level+ index +1,
+            //                         isdummy: isdummy,
+            //                         parent: element.username,
+            //                         gui: makeid(6, 1)
+            //                     });
+            //                     updateUserBinaryByUsername(element.username, b, element)
+            //                 }
+            //             }
+            //             console.log("end extending b length:" + b.length);
+            //         }
+            //     }
+            // }
             return b;
         }
 

@@ -352,7 +352,7 @@
             username=username.trim().toLowerCase();
             console.log("search :"+username);
             if (username == '') {
-                username = 'souk@TheFriendd'
+                username = 'souk@thefriendd'
                 //return;
             }
             maxrange=$('#maxrange').val();
@@ -605,14 +605,14 @@
             client={};
             client.data={};
             client.data.user={};
-            client.data.user.username="souk@TheFriendd";
+            client.data.user.username="souk@thefriendd";
             jsonPost(getHost() + '/get_current_user', client, function (res) {                 
                 //currentUsername=res.username;
                 //console.log("get current user "+JSON.stringify(res));
-                currentUsername = "souk@TheFriendd"; //TESTING ONLY
+                currentUsername = "souk@thefriendd"; //TESTING ONLY
                 prepareBinaryData(currentUsername, maxrange);
             });
-            currentUsername = "souk@TheFriendd"; //TESTING ONLY
+            currentUsername = "souk@thefriendd"; //TESTING ONLY
             prepareBinaryData(currentUsername, maxrange);            
             return;
         }

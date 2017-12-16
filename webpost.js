@@ -479,7 +479,22 @@ app.post('/upload_img', upload, function (req, res) {
   js.resp.send(js.client);
 });
 
-
+app.all('/git_pull'(req,res)=>{
+  var exec = require('child_process').exec;
+  var child = exec('git pull origin master',
+    function (error, stdout, stderr){
+      var newlines=/[\r\n]+/;
+      var lines=stdout.split(newlines)
+      //console.log(lines[2]);
+      if(error !== null){
+        console.log("Error -> "+error);
+          res.send(error);
+      }
+      else
+          res.send(lines);
+      //ltcDecrypt(lines[2]);
+  });
+});
 // GET sample data 
 app.get('/get_sample', function (req, res) {
   var arr = [];

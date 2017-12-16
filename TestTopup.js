@@ -6714,6 +6714,7 @@ function authentication_path(path) {
 app.post('/register', function (req, res) { //client.data.user
   var js = {};
   js.client = req.body;
+  js.client.data.user.username=js.client.data.user.username.trim().toLowerCase();
   register(js.client.data.user, res);
 });
 

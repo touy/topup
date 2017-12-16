@@ -46,7 +46,7 @@
             return host;
         }
 
-        function makeid(length, type ) {
+        function makeid(length, type = 0) {
             var text = "";
             var possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             if (type == 1) {
@@ -227,7 +227,7 @@
             }
         }
 
-        function indexingJson(lusername, rusername, c, needlevel, i, parent) {
+        function indexingJson(lusername, rusername, c, needlevel = 1, i = -1, parent) {
             //console.log("1 arr length:"+arr.lenghth);
             if (lusername) {
                 if (res = findTreeByUsername(c, lusername)) {
@@ -349,10 +349,9 @@
             }
         }
         function prepareBinaryData(username, needlevel) {
-            username=username.trim().toLowerCase();
             console.log("search :"+username);
             if (username == '') {
-                username = 'souk@thefriendd'
+                username = 'souk@TheFriendd'
                 //return;
             }
             maxrange=$('#maxrange').val();
@@ -460,7 +459,8 @@
         function getUserBinaryByUsername(username, b) {            
             for (var index = 0; index < b.length; index++) {
                 var element = b[index];
-                if (element) {                    
+                if (element) {           
+                    console.log(element);         
                     if (username == element.username) {
                         
                         return element;
@@ -605,14 +605,14 @@
             client={};
             client.data={};
             client.data.user={};
-            client.data.user.username="souk@thefriendd";
+            client.data.user.username="souk@TheFriendd";
             jsonPost(getHost() + '/get_current_user', client, function (res) {                 
                 //currentUsername=res.username;
                 //console.log("get current user "+JSON.stringify(res));
-                currentUsername = "souk@thefriendd"; //TESTING ONLY
+                currentUsername = "souk@TheFriendd"; //TESTING ONLY
                 prepareBinaryData(currentUsername, maxrange);
             });
-            currentUsername = "souk@thefriendd"; //TESTING ONLY
+            currentUsername = "souk@TheFriendd"; //TESTING ONLY
             prepareBinaryData(currentUsername, maxrange);            
             return;
         }

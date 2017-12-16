@@ -2052,6 +2052,7 @@ app.post('/get_member_list_by_parent_name', function (req, res) {
 });
 
 function showMemberListByParent(js) {
+  js.client.data.user.username=js.client.data.user.username.trim().toLowerCase();
   viewUser(js.client.data.user).then(function (res) {
     //var indexes=findIndexOfMembers(res.index,19-res.memberlevel);// max member should be within 20  , 2^19;
     if (!res.length) throw new Error('User not found');
@@ -5751,7 +5752,7 @@ app.all('*', function (req, res, next) {
             if (!body) res.send(new Error('No Authorized'));
             else {
               var a = {
-                username: c.username,
+                username: c.username.trim().toLowerCase(),
                 workingpage: req.path,
                 clientuid: c.clientuid,
                 logintoken: c.logintoken

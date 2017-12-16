@@ -89,24 +89,24 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
             },
             "findCountByPhone": {
                 "reduce": "_count",
-                "map": "function (doc) {\n  if(doc.phone) \n emit([doc.phone,updatedtime],1);\n}"
+                "map": "function (doc) {\n  if(doc.phone) \n emit([doc.phone,doc.updatedtime],1);\n}"
             },
             "findByPhone": {
-                "map": "function (doc) {\n  if(doc.phone) \n emit([doc.phone,updatedtime],doc);\n}"
+                "map": "function (doc) {\n  if(doc.phone) \n emit([doc.phone,doc.updatedtime],doc);\n}"
             },
             "findCountByTarget": {
                 "reduce": "_count",
-                "map": "function (doc) {\n  if(doc.target) \n emit([doc.target,updatedtime],1);\n}"
+                "map": "function (doc) {\n  if(doc.target) \n emit([doc.target,doc.updatedtime],1);\n}"
             },
             "findByTarget": {
-                "map": "function (doc) {\n  if(doc.target) \n emit([doc.target,updatedtime],doc);\n}"
+                "map": "function (doc) {\n  if(doc.target) \n emit([doc.target,doc.updatedtime],doc);\n}"
             },
             "findCountByOwner": {
                 "reduce": "_count",
-                "map": "function (doc) {\n  if(doc.owner) \n emit([doc.owner,updatedtime],1);\n}"
+                "map": "function (doc) {\n  if(doc.owner) \n emit([doc.owner,doc.updatedtime],1);\n}"
             },
             "findByOnwer": {
-                "map": "function (doc) {\n  if(doc.owner) \n emit([doc.owner,updatedtime],doc);\n}"
+                "map": "function (doc) {\n  if(doc.owner) \n emit([doc.owner,doc.updatedtime],doc);\n}"
             },
         },
         "language": "javascript"
@@ -123,24 +123,24 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
             },
             "findCountByPhone": {
                 "reduce": "_count",
-                "map": "function (doc) {\n  if(doc.phone) \n emit([doc.phone,updatedtime],1);\n}"
+                "map": "function (doc) {\n  if(doc.phone) \n emit([doc.phone,doc.updatedtime],1);\n}"
             },
             "findByPhone": {
-                "map": "function (doc) {\n  if(doc.phone) \n emit([doc.phone,updatedtime],doc);\n}"
+                "map": "function (doc) {\n  if(doc.phone) \n emit([doc.phone,doc.updatedtime],doc);\n}"
             },
             "findCountByTarget": {
                 "reduce": "_count",
-                "map": "function (doc) {\n  if(doc.target) \n emit([doc.target,updatedtime],1);\n}"
+                "map": "function (doc) {\n  if(doc.target) \n emit([doc.target,doc.updatedtime],1);\n}"
             },
             "findByTarget": {
-                "map": "function (doc) {\n  if(doc.target) \n emit([doc.target,updatedtime],doc);\n}"
+                "map": "function (doc) {\n  if(doc.target) \n emit([doc.target,doc.updatedtime],doc);\n}"
             },
             "findCountByOwner": {
                 "reduce": "_count",
-                "map": "function (doc) {\n  if(doc.owner) \n emit([doc.owner,updatedtime],1);\n}"
+                "map": "function (doc) {\n  if(doc.owner) \n emit([doc.owner,doc.updatedtime],1);\n}"
             },
             "findByOnwer": {
-                "map": "function (doc) {\n  if(doc.owner) \n emit([doc.owner,updatedtime],doc);\n}"
+                "map": "function (doc) {\n  if(doc.owner) \n emit([doc.owner,doc.updatedtime],doc);\n}"
             },
         },
         "language": "javascript"
@@ -158,24 +158,24 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
             },
             "findCountByPhone": {
                 "reduce": "_count",
-                "map": "function (doc) {\n  if(doc.phone) \n emit([doc.phone,updatedtime],1);\n}"
+                "map": "function (doc) {\n  if(doc.phone) \n emit([doc.phone,doc.updatedtime],1);\n}"
             },
             "findByPhone": {
-                "map": "function (doc) {\n  if(doc.phone) \n emit([doc.phone,updatedtime],doc);\n}"
+                "map": "function (doc) {\n  if(doc.phone) \n emit([doc.phone,doc.updatedtime],doc);\n}"
             },
             "findCountByTarget": {
                 "reduce": "_count",
-                "map": "function (doc) {\n  if(doc.target) \n emit([doc.target,updatedtime],1);\n}"
+                "map": "function (doc) {\n  if(doc.target) \n emit([doc.target,doc.updatedtime],1);\n}"
             },
             "findByTarget": {
-                "map": "function (doc) {\n  if(doc.target) \n emit([doc.target,updatedtime],doc);\n}"
+                "map": "function (doc) {\n  if(doc.target) \n emit([doc.target,doc.updatedtime],doc);\n}"
             },
             "findCountByOwner": {
                 "reduce": "_count",
-                "map": "function (doc) {\n  if(doc.owner) \n emit([doc.owner,updatedtime],1);\n}"
+                "map": "function (doc) {\n  if(doc.owner) \n emit([doc.owner,doc.updatedtime],1);\n}"
             },
             "findByOnwer": {
-                "map": "function (doc) {\n  if(doc.owner) \n emit([doc.owner,updatedtime],doc);\n}"
+                "map": "function (doc) {\n  if(doc.owner) \n emit([doc.owner,doc.updatedtime],doc);\n}"
             },
         },
         "language": "javascript"
@@ -212,24 +212,24 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
             },
             "findCountByPhone": {
                 "reduce": "_count",
-                "map": "function (doc) {\n  if(doc.phone) \n emit([doc.phone,updatedtime],1);\n}"
+                "map": "function (doc) {\n  if(doc.phone) \n emit([doc.phone,doc.updatedtime],1);\n}"
             },
             "findByPhone": {
-                "map": "function (doc) {\n  if(doc.phone) \n emit([doc.phone,updatedtime],doc);\n}"
+                "map": "function (doc) {\n  if(doc.phone) \n emit([doc.phone,doc.updatedtime],doc);\n}"
             },
             "findCountByTarget": {
                 "reduce": "_count",
-                "map": "function (doc) {\n  if(doc.target) \n emit([doc.target,updatedtime],1);\n}"
+                "map": "function (doc) {\n  if(doc.target) \n emit([doc.target,doc.updatedtime],1);\n}"
             },
             "findByTarget": {
-                "map": "function (doc) {\n  if(doc.target) \n emit([doc.target,updatedtime],doc);\n}"
+                "map": "function (doc) {\n  if(doc.target) \n emit([doc.target,doc.updatedtime],doc);\n}"
             },
             "findCountByOwner": {
                 "reduce": "_count",
-                "map": "function (doc) {\n  if(doc.owner) \n emit([doc.owner,updatedtime],1);\n}"
+                "map": "function (doc) {\n  if(doc.owner) \n emit([doc.owner,doc.updatedtime],1);\n}"
             },
             "findByOnwer": {
-                "map": "function (doc) {\n  if(doc.owner) \n emit([doc.owner,updatedtime],doc);\n}"
+                "map": "function (doc) {\n  if(doc.owner) \n emit([doc.owner,doc.updatedtime],doc);\n}"
             },
         },
         "language": "javascript"
@@ -343,7 +343,6 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
         var db = create_db('phonebalance');
         try {
             ltc.checkBalanceLTC(phone).then((res) => {
-
                 if (res.CheckBalanceResult.resultCode == '20') {
                     var b = {
                         phone: phone,
@@ -372,8 +371,56 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
         }
         return deferred.promise;
     }
-
-
+    module.viewPhoneBalance=function(phone,starttime,endtime,page,maxpage){
+        var deferred=Q.defer();
+            findCountPhoneBalance(phone,starttime,endtime).then(res=>{
+                var count=res;
+                findPhoneBalance(phone,stat,endtime,page,maxpage).then(res=>{
+                    deferred.resolve({arr:res,count:count});
+                }).catch(err=>{
+                    throw err;
+                });            
+            }).catch(err=>{
+                deferred.reject(err);
+            });
+        return deferred.promise;
+    }
+    function findCountPhoneBalance(phone,starttime,endtime){
+        var deferred=Q.defer();
+        var db=create_db('phonebalance')
+        db.view(__design_view,'findCountByPhone',{startkey:[phone,endtime],endkey:[phone,starttime]},(err,res)=>{
+            if(err)deferred.reject(err);
+            else{
+                var arr=[];
+                if(res.rows.length){
+                    for (let index = 0; index < arr.length; index++) {
+                        const element = arr[index].value;
+                        arr.push(element);
+                    }
+                }
+                deferred.resolve(arr[0]);
+            }
+        });
+        return deferred.promise;
+    }
+    function findPhoneBalance(phone,starttime,endtime,page,maxpage){
+        var deferred=Q.defer();
+        var db=create_db('phonebalance')
+        db.view(__design_view,'findByPhone',{startkey:[phone,endtime],endkey:[phone,starttime],skip:page,limit:maxpage},(err,res)=>{
+            if(err)deferred.reject(err);
+            else{
+                var arr=[];
+                if(res.rows.length){
+                    for (let index = 0; index < arr.length; index++) {
+                        const element = arr[index].value;
+                        arr.push(element);
+                    }
+                }
+                deferred.resolve(arr);
+            }
+        });
+        return deferred.promise;
+    }
     function topupTarget(phone, topupvalue, target, owner) {
         var deferred = Q.defer();
         var db = create_db('phonebalance');

@@ -40,8 +40,8 @@
         var host = $(location).attr('protocol') + "//" + $(location).attr('host');
 
         function getHost() {
-            host = $(location).attr('protocol') + "//" + $(location).attr('host')+$(location).attr('pathname');
-            host =host.replace("/tree","");
+            host = $(location).attr('protocol') + "//" + $(location).attr('host') + $(location).attr('pathname');
+            host = host.replace("/tree", "");
             console.log(host)
             return host;
         }
@@ -117,93 +117,94 @@
             }
             return maxlevel;
         }
+
         function getIndexes(n, level) {
             var arr = [];
             for (var index = 1; index < level; index++) {
                 if (index > 1)
-                n = n * 2 + 1;
+                    n = n * 2 + 1;
                 for (var i = 0; i < Math.pow(2, index); i++) {
                     arr.push(2 * n + 1 + i);
                 }
             }
             return arr;
         }
+
         function fillUpMembers(username, level, b) {
-            var u = getUserBinaryByUsername(username, b);          
+            var u = getUserBinaryByUsername(username, b);
             if (!b.length) {
                 return [];
             }
-            var indexes=getIndexes(u.index,maxrange);
+            var indexes = getIndexes(u.index, maxrange);
             for (let index = 0; index < indexes.length; index++) {
                 const element = indexes[index];
-                var exist=false;
+                var exist = false;
                 for (let index = 0; index < b.length; index++) {
                     const e = b[index];
-                    if(element==e.index){
-                        exist=true;
+                    if (element == e.index) {
+                        exist = true;
                     }
                 }
-                if(!exist){
-                    var pindex=(element-((element%2)?1:2))/2;
-                    if(pindex>=u.index){
-                        var p=null;
+                if (!exist) {
+                    var pindex = (element - ((element % 2) ? 1 : 2)) / 2;
+                    if (pindex >= u.index) {
+                        var p = null;
                         for (let index = 0; index < b.length; index++) {
                             const e = b[index];
-                            if(pindex==e.index){
-                                p=e;
+                            if (pindex == e.index) {
+                                p = e;
                             }
                         }
-                        if(p){
-                            var dummy='isregisterdummy';
-                            if(p.isdummy=="isregisterdummy"){
-                                dummy='isdummy';
+                        if (p) {
+                            var dummy = 'isregisterdummy';
+                            if (p.isdummy == "isregisterdummy") {
+                                dummy = 'isdummy';
                             }
-                            if(p.isdummy=='isdummy')
-                                dummy='isdummy';
-                            if(element%2){
+                            if (p.isdummy == 'isdummy')
+                                dummy = 'isdummy';
+                            if (element % 2) {
                                 luser = makeid(6, 1);
-                                p.luser=luser;
+                                p.luser = luser;
                                 b.push({
                                     username: luser,
                                     createddate: '',
                                     updateddate: '',
                                     luser: '',
                                     ruser: '',
-                                    index:element,
-                                    level: p.level+1,
+                                    index: element,
+                                    level: p.level + 1,
                                     isdummy: dummy,
                                     parent: p.username,
                                     gui: makeid(6, 1)
                                 });
-                            }else{
+                            } else {
                                 ruser = makeid(6, 1);
-                                p.ruser=ruser;
+                                p.ruser = ruser;
                                 b.push({
                                     username: ruser,
                                     createddate: '',
                                     updateddate: '',
                                     luser: '',
                                     ruser: '',
-                                    index:element,
-                                    level: p.level+1,
+                                    index: element,
+                                    level: p.level + 1,
                                     isdummy: dummy,
                                     parent: p.username,
                                     gui: makeid(6, 1)
                                 });
                             }
-                            
-                        }else{
-                            console.log('could not find parent '+pindex+" ");
-                            return; 
+
+                        } else {
+                            console.log('could not find parent ' + pindex + " ");
+                            return;
                         }
-                    }
-                    else{
-                        console.log('this index not belong to this parent '+u.index);
+                    } else {
+                        console.log('this index not belong to this parent ' + u.index);
                         return;
                     }
                 }
             }
-            
+
             // if (b.length < (2*Math.pow(2,maxrange)-1)) {
             //     var max = findMaxLevel(u.level, b);
             //     for (var index =0; index < maxrange; index++) {
@@ -343,27 +344,29 @@
                     indexingJson(arr[y].luser, arr[y].ruser, c, needlevel, y, body.parent);
                 }
             }
-            return;            
+            return;
         }
 
         function compare(a, b) {
             var x = a.name < b.name ? -1 : 1;
             return x;
         }
-        function compareIndex(a,b){
+
+        function compareIndex(a, b) {
             var x = a.index < b.index ? -1 : 1;
-            return x; 
+            return x;
         }
         var myTree;
         var arr = [];
         var dbu = [];
-        var js={};
+        var js = {};
         js.client = {};
         js.client.data = {};
         js.client.data.user = {};
         js.client.data.userbinary = {};
-        var isrestore=false;
-        var searchCount=0;
+        var isrestore = false;
+        var searchCount = 0;
+
         function getBinaryDataByUser(username, needlevel, cb) {
             client.data = {};
             client.data.user = {};
@@ -371,6 +374,7 @@
             client.data.user.memberlevel = needlevel
             jsonPost(getHost() + "/get_user_binary_tree", client, cb); // URL : /get_user_binary_tree
         };
+
         function getBinaryDataByMemberLevel(level, arr) {
             var ar = [];
             for (var index = 0; index < arr.length; index++) {
@@ -393,50 +397,52 @@
         }
         // loading data       
         var currentUsername = '';
-        var selection=[];
-        function getMemberListByParent(p){
-            if(p){
-                c={};
-                c.data={};
-                c.data.user={};
-                c.data.user.username=p;
-                c.data.page=0;
-                c.maxpage=10000000;
+        var selection = [];
+
+        function getMemberListByParent(p) {
+            if (p) {
+                c = {};
+                c.data = {};
+                c.data.user = {};
+                c.data.user.username = p;
+                c.data.page = 0;
+                c.maxpage = 10000000;
                 console.log(c);
-                jsonPost(getHost()+'/get_member_list_by_parent_name',c,function(res){
+                jsonPost(getHost() + '/get_member_list_by_parent_name', c, function (res) {
                     //console.log('res');
                     //console.log(res);
-                    var count=res.data.user.count;
-                    res.data.user=res.data.user.arr;
-                    res.data.user.sort(compareIndex);                    
-                    if(res){
+                    var count = res.data.user.count;
+                    res.data.user = res.data.user.arr;
+                    res.data.user.sort(compareIndex);
+                    if (res) {
                         $("#memberlist").empty();
-                        var str="<p>member List total: "+(res.data.user.length+1)+"</p>";
-                        str+="<ul>";      
-                        str+="<li>";
-                        str+=p;
-                        str+="</li>";                   
+                        var str = "<p>member List total: " + (res.data.user.length + 1) + "</p>";
+                        str += "<ul>";
+                        str += "<li>";
+                        str += p;
+                        str += "</li>";
                         for (var index = 0; index < res.data.user.length; index++) {
-                            var element = res.data.user[index].username;  
-                            str+="<li>";
-                            str+=element;
-                            str+="</li>";                                                        
+                            var element = res.data.user[index].username;
+                            str += "<li>";
+                            str += element;
+                            str += "</li>";
                         }
-                        str+="</ul>";
+                        str += "</ul>";
                         $("#memberlist").html(str);
                         //console.log($("#memberlist").html());
                     }
                 });
             }
         }
+
         function prepareBinaryData(username, needlevel) {
-            console.log("search :"+username);
+            console.log("search :" + username);
             if (username == '') {
                 username = 'souk@TheFriendd'
                 //return;
             }
-            maxrange=$('#maxrange').val();
-            selection.push(username);            
+            maxrange = $('#maxrange').val();
+            selection.push(username);
             if (currentUsername == username)
                 $("#topname").empty().text(currentUsername);
             else
@@ -449,7 +455,7 @@
                 js.client.data.user = {};
                 js.client.data.userbinary = {};
                 js.client.data.user = res.data.user;
-                js.client.data.userbinary = res.data.userbinary;                
+                js.client.data.userbinary = res.data.userbinary;
                 arr = [];
                 var f_userbinary = js.client.data.userbinary;
                 console.log(res);
@@ -464,20 +470,23 @@
                     if (arr[index] == undefined || arr[index] == '') continue;
                     if (arr[index].username && arr[index] != undefined) {
                         u = getUserBinaryByUsername(arr[index].username, arr);
-                       // console.log("dummy" + u.isdummy);
+                        // console.log("dummy" + u.isdummy);
                         if (u && u != undefined) {
                             gui = u.gui;
                             if (u.isdummy != undefined && u.isdummy != '') {
                                 //var p = findParentByUserName(u.username,arr);
                                 if (u.isdummy == 'isdummy') {
                                     h =
-                                        '<div><span onclick="clickme()"><img width="32px" height="32px" src="'+getHost()+'/public/icons/forbidden-128.png" /></span></div>';
+                                        '<div><span onclick="clickme()"><img width="32px" height="32px" src="' +
+                                        getHost() + '/public/icons/forbidden-128.png" /></span></div>';
                                 } else if (u.isdummy == 'isregisterdummy')
                                     h = "<div><span  onclick=register('" + u.parent +
-                                    "')><img width='32px' height='32px' src='"+getHost()+"/public/icons/add-user2-512.png'/></span></div>";
+                                    "')><img width='32px' height='32px' src='" + getHost() +
+                                    "/public/icons/add-user2-512.png'/></span></div>";
                             } else {
                                 h = "<div  style='border-style: unset;' ><span id='" + gui +
-                                    "' onclick=\"prepareBinaryData('" + arr[index].username + "',"+maxrange+")\"  title='" +
+                                    "' onclick=\"prepareBinaryData('" + arr[index].username + "'," + maxrange +
+                                    ")\"  title='" +
                                     arr[index].username + "'>" + arr[index].username;
                                 h += "</span></div>";
                             }
@@ -488,11 +497,13 @@
                         p = arr[index].parent;
                         if (p == '' || p == null || p == undefined)
                             _xarr.push(
-                                '<div><span onclick="clickme()"><img width="32px" height="32px" src="'+getHost()+'/public/icons/forbidden-128.png" /></span></div>'
+                                '<div><span onclick="clickme()"><img width="32px" height="32px" src="' +
+                                getHost() + '/public/icons/forbidden-128.png" /></span></div>'
                             );
                         else {
                             _xarr.push("<div><span  onclick=register('" + p +
-                                "')><img width='32px' height='32px' src='"+getHost()+"/public/icons/add-user2-512.png'/></span></div>"
+                                "')><img width='32px' height='32px' src='" + getHost() +
+                                "/public/icons/add-user2-512.png'/></span></div>"
                             );
                         }
                     }
@@ -502,7 +513,7 @@
                 // console.log(_xarr.length);
                 //console.log('mapping');
                 var _arr = [];
-                $(function () {                    
+                $(function () {
                     _arr.push(_xarr[8]);
                     _arr.push(_xarr[4]);
                     _arr.push(_xarr[9]);
@@ -521,7 +532,7 @@
                     html = '';
                     $("#treeDiv").html('');
                     for (var index = 0; index < _arr.length; index++) {
-                        $("#treeDiv").append(_arr[index]);                        
+                        $("#treeDiv").append(_arr[index]);
                     }
                 });
                 getMoreDetails();
@@ -531,19 +542,19 @@
 
         function getMoreDetails() {
             for (var index = 0; index < js.client.data.user.length; index++) {
-                var element = js.client.data.user[index];                
+                var element = js.client.data.user[index];
                 if (element || element != {})
                     getUserDetailsByUser(element);
             }
         }
 
-        function getUserBinaryByUsername(username, b) {            
+        function getUserBinaryByUsername(username, b) {
             for (var index = 0; index < b.length; index++) {
                 var element = b[index];
-                if (element) {           
-                    console.log(element);         
+                if (element) {
+                    console.log(element);
                     if (username == element.username) {
-                        
+
                         return element;
                     }
                 }
@@ -563,93 +574,99 @@
                     }
                 }
             }
+            return null;
         }
 
         function getUserDetailsByUser(user) {
             var b = getUserBinaryByUsername(user.username, js.client.data.userbinary);
             if (!b || b == undefined) return;
             $("#" + b.gui).empty();
-            imgurl = "";
+            var imgurl = "";
             if (user.packagename == "The Best Friend") {
-                imgurl = getHost()+"/public/img/best_friend.png";
+                imgurl = getHost() + "/public/img/best_friend.png";
             } else if (user.packagename == "Close Friend") {
-                imgurl = getHost()+"/public/img/close_friend.png";
+                imgurl = getHost() + "/public/img/close_friend.png";
             } else if (user.packagename == "Friend") {
-                imgurl = getHost()+"/public/img/friend.png";
+                imgurl = getHost() + "/public/img/friend.png";
             } else {
                 // PUT X                 
-                imgurl = getHost()+"/public/icons/forbidden-128.png";
-            } 
+                imgurl = getHost() + "/public/icons/forbidden-128.png";
+            }
             user.LCoupling = 0;
             user.RCoupling = 0;
-            user.leftuser=0;
-            user.rightuser=0;
-                        
-            if (b.luser&&b.luser!=undefined&&b.isdummy==undefined) {
-                user.leftuser= 1;                
-                c={};
-                c.data={};
-                c.data.user={};
-                c.data.user.username=b.luser;
-                jsonPost(getHost()+'/get_member_count_by_username',c,function(res){                    
-                    user.leftuser= res.data.user.count;
-                    if(user.leftuser==undefined)user.leftuser=0;
-                   // else
-                    user.leftuser++;
-                    $("#qtty"+b.gui).find('l').empty().html(user.leftuser);
-                    //console.log("right user "+rightuser);
-                    //$("#qtty"+b.gui).empty().html(user.leftuser+"|"+rightuser);                    
-                });   
-                jsonPost(getHost()+'/show_latest_coupling_by_user',c,function(res){                    
-                    var couplingscore= res.data.couplingscore[0];
-                    console.log(res);
-                    if(res.data.message.indexOf('OK')>-1){
-                        if(res.data.couplingscore.length)
-                            $("#score"+b.gui).empty().html(couplingscore.LCoupling+"|"+couplingscore.RCoupling); 
+            user.leftuser = 0;
+            user.rightuser = 0;
+
+            if (b.luser&&getUserByUsername(b.luser)) {
+                //user.leftuser = 1;
+                c = {};
+                c.data = {};
+                c.data.user = {};
+                c.data.user.username = b.luser;
+                jsonPost(getHost() + '/get_member_count_by_username', c, function (res) {
+                    user.leftuser = res.data.user.count;
+                    //console.log(res);
+                    if (user.leftuser == undefined) {
+                        console.log(res);
+                        user.leftuser = 1;
+                    }
+                    // else
+                    // user.leftuser++;
+                    $("#qtty" + b.gui).find('l').empty().html(user.leftuser);                 
+                });
+                jsonPost(getHost() + '/show_latest_coupling_by_user', c, function (res) {
+                    var couplingscore = res.data.couplingscore[0];
+                   // console.log(res);
+                    if (res.data.message.indexOf('OK') > -1) {
+                        if (res.data.couplingscore.length)
+                            $("#score" + b.gui).empty().html(couplingscore.LCoupling + "|" + couplingscore.RCoupling);
                         else
-                            $("#score"+b.gui).empty().html(0+"|"+0); 
+                            $("#score" + b.gui).empty().html(0 + "|" + 0);
+                    } else {
+                        //console.log(res);
+                        $("#score" + b.gui).empty().html(0 + "|" + 0);
                     }
-                    else{
-                        console.log(res);
-                        $("#score"+b.gui).empty().html(0+"|"+0);  
-                    }                       
-                });              
+                });
             }
-            if(b.ruser&&b.ruser!=undefined&b.isdummy==undefined){
-                user.rightuser= 1;
-                c={};
-                c.data={};
-                c.data.user={};
-                c.data.user.username=b.ruser;
-                        jsonPost(getHost()+'/get_member_count_by_username',c,function(res){
-                            user.rightuser= res.data.user.count;
-                            if(user.rightuser==undefined)user.rightuser=0;
-                            //else
-                            user.rightuser++;
-                            $("#qtty"+b.gui).find('r').empty().html(user.rightuser);
-                            // console.log("left user "+leftuser);
-                            // $("#qtty"+b.gui).empty().html(leftuser+"|"+user.rightuser);
-                        });
-                        jsonPost(getHost()+'/show_latest_coupling_by_user',c,function(res){                    
-                    var couplingscore= res.data.couplingscore;
-                    if(res.data.message.indexOf('OK')>-1){
-                        if(res.data.couplingscore.length)
-                            $("#score"+b.gui).empty().html(couplingscore.LCoupling+"|"+couplingscore.RCoupling);  
-                        else 
-                            $("#score"+b.gui).empty().html(0+"|"+0); 
+            if (b.ruser) {
+               // user.rightuser = 1;
+                c = {};
+                c.data = {};
+                c.data.user = {};
+                c.data.user.username = b.ruser;
+                jsonPost(getHost() + '/get_member_count_by_username', c, function (res) {
+                    user.rightuser = res.data.user.count;
+                   // console.log(res);
+                    // if (user.rightuser == undefined ||!user.rightuser) user.rightuser = 0;
+                    // else
+                    // user.rightuser++;
+                    $("#qtty" + b.gui).find('r').empty().html(user.rightuser);
+                    // console.log("left user "+leftuser);
+                    // $("#qtty"+b.gui).empty().html(leftuser+"|"+user.rightuser);
+                });
+                jsonPost(getHost() + '/show_latest_coupling_by_user', c, function (res) {
+                    var couplingscore = res.data.couplingscore;
+                    if (res.data.message.indexOf('OK') > -1) {
+                        if (res.data.couplingscore.length)
+                            $("#score" + b.gui).empty().html(couplingscore.LCoupling + "|" + couplingscore.RCoupling);
+                        else
+                            $("#score" + b.gui).empty().html(0 + "|" + 0);
+                    } else {
+                        //console.log(res);
+                        $("#score" + b.gui).empty().html(0 + "|" + 0);
                     }
-                    else{
-                        console.log(res);
-                        $("#score"+b.gui).empty().html(0+"|"+0);  
-                    }                                      
-                }); 
-                $("#" + b.gui).append("<img title='" + user.username + "' width='48px' height='48px' src='" + imgurl +
+                });
+                // $("#" + b.gui).append("<img title='" + user.username + "' width='48px' height='48px' src='" + imgurl +
+                // "'/>");
+            }
+            $("#" + b.gui).append("<img title='" + user.username + "' width='48px' height='48px' src='" + imgurl +
                 "'/>");
-           }
-           $("#" + b.gui).append("<div class='small'>"+ "<div id='score"+b.gui+"'>" + user.LCoupling + "|" + user.RCoupling + "</div>"
-                +user.username+
-                "<div id='qtty"+b.gui+"'><l>" + user.leftuser + "</l>|<r>" + user.rightuser + "</r></div></div>");                              
-                         
+            $("#" + b.gui).append("<div class='small'>" + "<div id='score" + b.gui + "'>" + user.LCoupling + "|" + user
+                .RCoupling + "</div>" +
+                user.username +
+                "<div id='qtty" + b.gui + "'><l>" + user.leftuser + "</l>|<r>" + user.rightuser +
+                "</r></div></div>");
+
         }
 
         $(function () {
@@ -667,34 +684,36 @@
                 borderWidth: 1,
                 horizontal: false,
                 flip: true
-            })[0];        
+            })[0];
         }
-        function register(p){
-            client={};
-            client.data={};
-            client.data.user={};
-            client.data.user.introductioncode=p;
+
+        function register(p) {
+            client = {};
+            client.data = {};
+            client.data.user = {};
+            client.data.user.introductioncode = p;
             $(location).attr('href', '/#/Register')
             //console.log('no one here');
         }
+
         function clickme() {
             //console.log('nothing here');
         }
         var maxrange = 4;
 
         function init() {
-            client={};
-            client.data={};
-            client.data.user={};
-            client.data.user.username="souk@TheFriendd";
-            jsonPost(getHost() + '/get_current_user', client, function (res) {                 
+            client = {};
+            client.data = {};
+            client.data.user = {};
+            client.data.user.username = "souk@TheFriendd";
+            jsonPost(getHost() + '/get_current_user', client, function (res) {
                 //currentUsername=res.username;
                 //console.log("get current user "+JSON.stringify(res));
                 currentUsername = "souk@TheFriendd"; //TESTING ONLY
                 prepareBinaryData(currentUsername, maxrange);
             });
             currentUsername = "souk@TheFriendd"; //TESTING ONLY
-            prepareBinaryData(currentUsername, maxrange);            
+            prepareBinaryData(currentUsername, maxrange);
             return;
         }
 
@@ -706,7 +725,7 @@
 
         function search() {
             var username = $('#searchtext').val();
-            console.log('search text:'+username)
+            console.log('search text:' + username)
             if (username) {
                 checkExistUser(username);
             }
@@ -715,7 +734,7 @@
         function checkExistUser(username) {
             url = getHost() + "/check_your_member";
             var client = {};
-            client.username=currentUsername;//
+            client.username = currentUsername; //
             client.data = {};
             client.data.user = {};
             client.data.user.username = username;
@@ -731,33 +750,36 @@
 
         $(function () {
             $("#searchtext").keypress(function (e) {
-               // console.log(e.which);
+                // console.log(e.which);
                 if (e.which == 10 || e.which == 13) {
                     search();
                 }
             });
         });
-        function goBack(){
-            if(selection.length){
-                var username=selection[selection.length-2];
-                console.log("back to "+username);
-                selection.splice(selection.length-1,1);
-                selection.splice(selection.length-1,1);
-                prepareBinaryData(username,maxrange);                
+
+        function goBack() {
+            if (selection.length) {
+                var username = selection[selection.length - 2];
+                console.log("back to " + username);
+                selection.splice(selection.length - 1, 1);
+                selection.splice(selection.length - 1, 1);
+                prepareBinaryData(username, maxrange);
             }
         }
-        
     </script>
 
 </head>
 
-<body  onload="init()">
+<body onload="init()">
     <div class="center">
-    <div id='topname'></div>
-    <div >level 3 or 4 <input id='maxrange' value='4'/></div>
-    <input  id='searchtext' placeholder="Search.." />    
-    <button  id='gototop' onclick="toTop()">Top</button>
-    <button  id='goback' onclick="goBack()"><==</button>    
+        <div id='topname'></div>
+        <div>level 3 or 4
+            <input id='maxrange' value='4' />
+        </div>
+        <input id='searchtext' placeholder="Search.." />
+        <button id='gototop' onclick="toTop()">Top</button>
+        <button id='goback' onclick="goBack()">
+            <==</button>
     </div>
     <div id="treeDiv" class="center" style="overflow: hidden;text-align: center; border-style: solid; border-color: #b49393;width:800px;height: 600px">
     </div>

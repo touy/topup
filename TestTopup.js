@@ -1546,9 +1546,9 @@ function login(js) {
     // console.log("client.data:"+JSON.stringify(client.data));
     // console.log(body);
     // encrypt password and compare here 
-    if (body.username == js.client.data.user.username && body.password == js.client.data.user.password) {
+    if (body.username.trim().toLowerCase() == js.client.data.user.username && body.password.trim() == js.client.data.user.password) {
       console.log('here');
-      js.client.username = body.username;
+      js.client.username = body.username.trim().toLowerCase();
       js.client.logintime = convertTZ(new Date());
       js.client.logintoken = uuidV4();
       js.client.isexist = true;
@@ -5405,6 +5405,7 @@ app.get('/default_master', function (req, res) {
   var js = {};
   js.client = req.body;
   js.resp = res;
+  js.client.data={};
   init_default_master_user(js);
 });
 ///*********************** */
@@ -5920,7 +5921,7 @@ var __design_authorize = {
   "_id": "_design/objectList",
   "views": {
     "findByUsername": {
-      "map": "function (doc) {\n  emit(doc.username,doc);\n}"
+      "map": "function (doc) {\n  emit(doc.username.toLowerCase(),doc);\n}"
     },
     "findCount": {
       "map": "function (doc) {\n  emit(null, 1);\n}"
@@ -5940,30 +5941,30 @@ var __design_balance = {
     },
     "findCount": {
       "reduce": "_count",
-      "map": "function (doc) {\n  if(doc.username)\n    emit(doc.username,null);\n}"
+      "map": "function (doc) {\n  if(doc.username.toLowerCase())\n    emit(doc.username.toLowerCase(),null);\n}"
     },
     "findCountAndMonth": {
       "reduce": "_count",
-      "map": "function (doc) {\n   var d = new Date(doc.updated); \n if (d != null) {\n var key = [doc.username,d.getMonth()];\n emit(key, null);\n }\n}"
+      "map": "function (doc) {\n   var d = new Date(doc.updated); \n if (d != null) {\n var key = [doc.username.toLowerCase(),d.getMonth()];\n emit(key, null);\n }\n}"
     },
     "findExist": {
       "reduce": "_count",
-      "map": "function (doc) {\n  if(doc.username)\n emit(doc.username,1);\n}"
+      "map": "function (doc) {\n  if(doc.username.toLowerCase())\n emit(doc.username.toLowerCase(),1);\n}"
     },
     "findByUsername": {
-      "map": "function (doc) {\n if(doc.username)\n emit(doc.username, doc);\n}"
+      "map": "function (doc) {\n if(doc.username.toLowerCase())\n emit(doc.username.toLowerCase(), doc);\n}"
     },
     "findByUsernameAndMonth": {
-      "map": "function (doc) {\n   var d = new Date(doc.updated);\n if (d != null) {\n var key = [doc.username,d.getMonth()];\n emit(key, doc);\n }\n}"
+      "map": "function (doc) {\n   var d = new Date(doc.updated);\n if (d != null) {\n var key = [doc.username.toLowerCase(),d.getMonth()];\n emit(key, doc);\n }\n}"
     },
     "findByUsernameAndYearMonth": {
-      "map": "function (doc) {\n   var d = new Date(doc.updated);\n if (d != null) {\n var key = [doc.username,d.getFullYear(),d.getMonth()];\n emit(key, doc);\n }\n}"
+      "map": "function (doc) {\n   var d = new Date(doc.updated);\n if (d != null) {\n var key = [doc.username.toLowerCase(),d.getFullYear(),d.getMonth()];\n emit(key, doc);\n }\n}"
     },
     "findByYearMonth": {
       "map": "function (doc) {\n   var d = new Date(doc.updated);\n if (d != null) {\n var key = [d.getFullYear(),d.getMonth()];\n emit(key, doc);\n }\n}"
     },
     "findBalanceByUserAndDate": {
-      "map": "function (doc) {\n   var d = new Date(doc.updated);\n if (d != null) {\n var key = [d.getFullYear(),\n d.getMonth(),\n d.getDate(),\n doc.username];\n emit(key, doc);\n }\n}"
+      "map": "function (doc) {\n   var d = new Date(doc.updated);\n if (d != null) {\n var key = [d.getFullYear(),\n d.getMonth(),\n d.getDate(),\n doc.username.toLowerCase()];\n emit(key, doc);\n }\n}"
     },
     "findBy_Id": {
       "map": "function (doc) {\n if(doc._id) \n emit([doc._id], doc);\n}"
@@ -5979,7 +5980,7 @@ var __design_bonustopupbalance = {
     },
     "findCount": {
       "reduce": "_count",
-      "map": "function (doc) {\n  if(doc.username)\n    emit(doc.username,null);\n}"
+      "map": "function (doc) {\n  if(doc.username.toLowerCase())\n    emit(doc.username.toLowerCase(),null);\n}"
     },
     "findCountYear": {
       "reduce": "_count",
@@ -5997,10 +5998,10 @@ var __design_bonustopupbalance = {
     },
     "findExist": {
       "reduce": "_count",
-      "map": "function (doc) {\n  if(doc.username)\n emit(doc.username,1);\n}"
+      "map": "function (doc) {\n  if(doc.username.toLowerCase())\n emit(doc.username.toLowerCase(),1);\n}"
     },
     "findByUsername": {
-      "map": "function (doc) {\n if(doc.username)\n emit(doc.username, doc);\n}"
+      "map": "function (doc) {\n if(doc.username.toLowerCase())\n emit(doc.username.toLowerCase(), doc);\n}"
     },
     "findBy_Id": {
       "map": "function (doc) {\n if(doc._id) \n emit([doc._id], doc);\n}"
@@ -6012,7 +6013,7 @@ var __design_user = {
   "_id": "_design/objectList",
   "views": {
     // "containText": {
-    //   "map": "function(doc) {\r\n    var i;\r\n    if (doc.username) {\r\n        for (i = 0; i < doc.username.length; i += 1) {\r\n            emit(doc.username.slice(i), doc);\r\n        }\r\n    }\r\n}"
+    //   "map": "function(doc) {\r\n    var i;\r\n    if (doc.username.toLowerCase()) {\r\n        for (i = 0; i < doc.username.toLowerCase().length; i += 1) {\r\n            emit(doc.username.toLowerCase().slice(i), doc);\r\n        }\r\n    }\r\n}"
     // },
     "countMembers": {
       "map": "function(doc) {\r\n    for(var word in doc.aboveparents) {\r\n        emit(doc.aboveparents[word],1);\r\n    }\r\n}",
@@ -6033,7 +6034,7 @@ var __design_user = {
       "map": "function(doc) {\r\n    if(doc.phone1) {\r\n        emit(doc.phone1,doc);\r\n    }\r\n}"
     },
     "findUserByUsernameAndPhone1": {
-      "map": "function(doc) {\r\n    if(doc.username) {\r\n        emit([doc.username,doc.phone1],doc);\r\n    }\r\n}"
+      "map": "function(doc) {\r\n    if(doc.username.toLowerCase()) {\r\n        emit([doc.username.toLowerCase(),doc.phone1],doc);\r\n    }\r\n}"
     },
     "findMembersByUsername": {
       "map": "function(doc) {\n if( doc.aboveparents ) {\n for( var i=0, l=doc.aboveparents.length; i<l; i++) {\n            emit( doc.aboveparents[i], doc );     }\n}\n    }"
@@ -6048,19 +6049,19 @@ var __design_user = {
       "map": "function (doc) {\n\r emit(doc.index, doc);\n}"
     },
     "authentication": {
-      "map": "function(doc) {\r\n    if(doc.username&&doc.password) {\r\n        emit([doc.username,doc.password],doc);\r\n    }\r\n}"
+      "map": "function(doc) {\r\n    if(doc.username.toLowerCase()&&doc.password) {\r\n        emit([doc.username.toLowerCase(),doc.password],doc);\r\n    }\r\n}"
     },
     "findByUserAndPhone": {
-      "map": "function(doc) {\r\n    if(doc.username) {\r\n        emit([doc.username,doc.phone1],doc);\r\n    }\r\n}"
+      "map": "function(doc) {\r\n    if(doc.username.toLowerCase()) {\r\n        emit([doc.username.toLowerCase(),doc.phone1],doc);\r\n    }\r\n}"
     },
     "findByUserName": {
-      "map": "function(doc) {\r\n    if(doc.username) {\r\n        emit(doc.username,doc);\r\n    }\r\n}"
+      "map": "function(doc) {\r\n    if(doc.username.toLowerCase()) {\r\n        emit(doc.username.toLowerCase(),doc);\r\n    }\r\n}"
     },
     "findByUserGui": {
       "map": "function(doc) {\r\n    if(doc.gui) {\r\n        emit(doc.gui,doc);\r\n    }\r\n}"
     },
     "findExist": {
-      "map": "function (doc) {\n if(doc.username) \n emit(doc.username, doc);\n}"
+      "map": "function (doc) {\n if(doc.username.toLowerCase()) \n emit(doc.username.toLowerCase(), doc);\n}"
     },
     "getCouchDBTime": {
       "map": "function (doc) {\n  emit(null, new Date());\n}"
@@ -6072,13 +6073,13 @@ var __design_user = {
       "map": "function (doc) {\r\n  emit(null,doc);\n}"
     },
     "findQualifiedParents": {
-      "map": "function(doc) {\r\n  // permutation func by Jonas Raoni Soares Silva\r\n  var permute = function( v, m ){\r\n    for( var j, l = v.length, i = ( 1 << l ) - 1, r = new Array( i ); i; )\r\n      for( r[--i] = [], j = l; j; i + 1 & 1 << --j && ( r[i].push( m ? j : v[j] ) ) );\r\n    return r;\r\n  };\r\n  var txt = doc.username;\r\n  txt.replace(/[!.,;]+/g, \"\");\r\n  var raw_words = txt.split(\" \");\r\n  var words = {};\r\n  for (var i in raw_words) {\r\n    var word = raw_words[i];\r\n    if (word == \"\") continue;\r\n    if (!words[word]) { words[word] = 1; }\r\n    else { words[word]++; }\r\n  }\r\n  var word_set = [];\r\n  for (var word in words) {\r\n    word_set.push(word);\r\n  }\r\n  var permutations = permute(word_set,0);\r\n  for (var i in permutations) {\r\n    if(doc.couplingbalance>0)\r\n    emit(permutations[i],doc);\r\n  }\r\n}"
+      "map": "function(doc) {\r\n  // permutation func by Jonas Raoni Soares Silva\r\n  var permute = function( v, m ){\r\n    for( var j, l = v.length, i = ( 1 << l ) - 1, r = new Array( i ); i; )\r\n      for( r[--i] = [], j = l; j; i + 1 & 1 << --j && ( r[i].push( m ? j : v[j] ) ) );\r\n    return r;\r\n  };\r\n  var txt = doc.username.toLowerCase();\r\n  txt.replace(/[!.,;]+/g, \"\");\r\n  var raw_words = txt.split(\" \");\r\n  var words = {};\r\n  for (var i in raw_words) {\r\n    var word = raw_words[i];\r\n    if (word == \"\") continue;\r\n    if (!words[word]) { words[word] = 1; }\r\n    else { words[word]++; }\r\n  }\r\n  var word_set = [];\r\n  for (var word in words) {\r\n    word_set.push(word);\r\n  }\r\n  var permutations = permute(word_set,0);\r\n  for (var i in permutations) {\r\n    if(doc.couplingbalance>0)\r\n    emit(permutations[i],doc);\r\n  }\r\n}"
     },
     "searchForQualifiedParents": {
-      "map": "function (doc) {\n  if(doc.username&&doc.couplingbalance>0)\n  emit(doc.username, doc);\n}"
+      "map": "function (doc) {\n  if(doc.username.toLowerCase()&&doc.couplingbalance>0)\n  emit(doc.username.toLowerCase(), doc);\n}"
     },
     "changePassword": {
-      "map": "function (doc) {\n    emit([doc.username,doc.password,doc.phone1], doc);\n}"
+      "map": "function (doc) {\n    emit([doc.username.toLowerCase(),doc.password,doc.phone1], doc);\n}"
     },
     "findBy_Id": {
       "map": "function (doc) {\n if(doc._id) \n emit([doc._id], doc);\n}"
@@ -6098,13 +6099,13 @@ var __design_binary = {
     },
     "findExist": {
       "reduce": "_count",
-      "map": "function (doc) {\n  emit(doc.username,1);\n}"
+      "map": "function (doc) {\n  emit(doc.username.toLowerCase(),1);\n}"
     },
     "findByUsername": {
-      "map": "function (doc) {\n  emit(doc.username, doc);\n}"
+      "map": "function (doc) {\n  emit(doc.username.toLowerCase(), doc);\n}"
     },
     "findMembersByUsername": {
-      "map": "function (doc) {\n  if(doc.username) \n\r emit(doc.username, doc);\n}"
+      "map": "function (doc) {\n  if(doc.username.toLowerCase()) \n\r emit(doc.username.toLowerCase(), doc);\n}"
     },
     "findMembersByIndexes": {
       "map": "function (doc) {\n\r emit(doc.index, doc);\n}"
@@ -6173,14 +6174,14 @@ var __design_coupling_score = {
     },
     "findCount": {
       "reduce": "_count",
-      "map": "function (doc) {\n if(doc.username)\n emit(doc.username,null);\n}"
+      "map": "function (doc) {\n if(doc.username.toLowerCase())\n emit(doc.username.toLowerCase(),null);\n}"
     },
     "findExist": {
       "reduce": "_count",
-      "map": "function (doc) {\n  emit(doc.username,1);\n}"
+      "map": "function (doc) {\n  emit(doc.username.toLowerCase(),1);\n}"
     },
     "findByUsername": {
-      "map": "function (doc) {\n  if(doc.username)\n emit(doc.username, doc);\n}"
+      "map": "function (doc) {\n  if(doc.username.toLowerCase())\n emit(doc.username.toLowerCase(), doc);\n}"
     },
     "findByUserGui": {
       "map": "function (doc) {\n  emit(doc.usergui, doc);\n}"
@@ -6215,10 +6216,10 @@ var __design_packagedetails = {
       "map": "function (doc) {\n  if(doc.isactivated) \n emit(doc.usergui, doc);\n}"
     },
     "findActiveByUserName": {
-      "map": "function (doc) {\n  if(doc.isactivated) \n emit(doc.username, doc);\n}"
+      "map": "function (doc) {\n  if(doc.isactivated) \n emit(doc.username.toLowerCase(), doc);\n}"
     },
     "findByUsername": {
-      "map": "function (doc) {\n  emit(doc.username, doc);\n}"
+      "map": "function (doc) {\n  emit(doc.username.toLowerCase(), doc);\n}"
     },
     "findBy_Id": {
       "map": "function (doc) {\n if(doc._id) \n emit([doc._id], doc);\n}"
@@ -6242,25 +6243,25 @@ var __design_payment = {
       "map": "function (doc) {\n  emit(doc.gui,1);\n}"
     },
     "findByUsername": {
-      "map": "function (doc) {\n  emit(doc.username, doc);\n}"
+      "map": "function (doc) {\n  emit(doc.username.toLowerCase(), doc);\n}"
     },
     "findCountByUsername": {
       "reduce": "_count",
-      "map": "function (doc) {\n  emit(doc.username, 1);\n}"
+      "map": "function (doc) {\n  emit(doc.username.toLowerCase(), 1);\n}"
     },
     "findCountPaymentRequestByUsername": {
       "reduce": "_count",
-      "map": "function (doc) {\n  if(doc.paymentreason=='payment request') \n emit(doc.username, 1);\n}"
+      "map": "function (doc) {\n  if(doc.paymentreason=='payment request') \n emit(doc.username.toLowerCase(), 1);\n}"
     },
     "findCountCashingRequestByUsername": {
       "reduce": "_count",
-      "map": "function (doc) {\n  if(doc.paymentreason=='cashing request') \n emit(doc.username, 1);\n}"
+      "map": "function (doc) {\n  if(doc.paymentreason=='cashing request') \n emit(doc.username.toLowerCase(), 1);\n}"
     },
     "findPaymentRequestByUsername": {
-      "map": "function (doc) {\n if(doc.paymentreason=='payment request') \n  emit(doc.username, doc);\n}"
+      "map": "function (doc) {\n if(doc.paymentreason=='payment request') \n  emit(doc.username.toLowerCase(), doc);\n}"
     },
     "findCashingRequestByUsername": {
-      "map": "function (doc) {\n if(doc.paymentreason=='cashing request') \n  emit(doc.username, doc);\n}"
+      "map": "function (doc) {\n if(doc.paymentreason=='cashing request') \n  emit(doc.username.toLowerCase(), doc);\n}"
     },
     "findCountPaymentRequest": {
       "reduce": "_count",
@@ -6291,14 +6292,14 @@ var __design_topupfailure = {
     },
     "findCountByUsername": {
       "reduce": "_count",
-      "map": "function (doc) {\n  if(doc.username) \n emit(doc.username);\n}"
+      "map": "function (doc) {\n  if(doc.username.toLowerCase()) \n emit(doc.username.toLowerCase());\n}"
     },
     "findExist": {
       "reduce": "_count",
       "map": "function (doc) {\n  emit(doc.gui,1);\n}"
     },
     "findByUsername": {
-      "map": "function (doc) {\n  emit(doc.username, doc);\n}"
+      "map": "function (doc) {\n  emit(doc.username.toLowerCase(), doc);\n}"
     }
   },
   "language": "javascript"
@@ -6355,14 +6356,14 @@ var __design_operatorbalance = {
     },
     "findCountByUsername": {
       "reduce": "_count",
-      "map": "function (doc) {\n  if(doc.username) \n emit(doc.username,1);\n}"
+      "map": "function (doc) {\n  if(doc.username.toLowerCase()) \n emit(doc.username.toLowerCase(),1);\n}"
     },
     "findExist": {
       "reduce": "_count",
       "map": "function (doc) {\n  emit(doc.gui,1);\n}"
     },
     "findByUsername": {
-      "map": "function (doc) {\n  if(doc.username) \n emit(doc.username, doc);\n}"
+      "map": "function (doc) {\n  if(doc.username.toLowerCase()) \n emit(doc.username.toLowerCase(), doc);\n}"
     }
   },
   "language": "javascript"
@@ -6423,7 +6424,7 @@ var __design_introductions = {
       "map": "function (doc) {\n  emit([doc.month,doc.year,doc.count], doc);\n}"
     },
     "findByUsernameMonthYear": {
-      "map": "function (doc) {\n  emit([doc.username,doc.month,doc.year], doc);\n}"
+      "map": "function (doc) {\n  emit([doc.username.toLowerCase(),doc.month,doc.year], doc);\n}"
     }
   },
   "language": "javascript"
@@ -6440,10 +6441,10 @@ var __design_login = {
     },
     "countByUsername": {
       "reduce": "_count",
-      "map": "function (doc) {\n  emit(doc.username,doc);\n}"
+      "map": "function (doc) {\n  emit(doc.username.toLowerCase(),doc);\n}"
     },
     "findByUsername": {
-      "map": "function (doc) {\n  emit(doc.username,doc);\n}"
+      "map": "function (doc) {\n  emit(doc.username.toLowerCase(),doc);\n}"
     }
   }
 }
@@ -6478,10 +6479,10 @@ var __design_useracceslog = {
     },
     "findCountByUserNameAccessedDate": {
       "reduce": "_count",
-      "map": "function (doc) {\n  emit([doc.username,doc.accesseddate],1);\n}"
+      "map": "function (doc) {\n  emit([doc.username.toLowerCase(),doc.accesseddate],1);\n}"
     },
     "findByUserNameAccessedDate": {
-      "map": "function (doc) {\n  emit([doc.username,doc.accesseddate],1);\n}"
+      "map": "function (doc) {\n  emit([doc.username.toLowerCase(),doc.accesseddate],1);\n}"
     }
 
   },

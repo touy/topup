@@ -4915,7 +4915,7 @@ function getMemberCount(user) {
   var deferred = Q.defer();
   var db = create_db("user");
   viewUser(user).then(function (res) {
-    if (res.length) {
+    if (res.rows.length) {
       db.view(__design_view, "countMembers", {
         key: user.username
       }, function (err, res) {
@@ -6001,7 +6001,7 @@ var __design_user = {
     //   "map": "function(doc) {\r\n    var i;\r\n    if (doc.username) {\r\n        for (i = 0; i < doc.username.length; i += 1) {\r\n            emit(doc.username.slice(i), doc);\r\n        }\r\n    }\r\n}"
     // },
     "countMembers": {
-      "map": "function(doc) {\r\n    for(var word in doc.aboveparents) {\r\n        emit(doc.aboveparents[word],1);\r\n    }\r\n}",
+      "map": "function(doc) {\r\n    if( doc.aboveparents ) {\n\r for( var i=0, l=doc.aboveparents.length; i<l; i++) {\n\remit( doc.aboveparents[i], doc );     }}}",
       "reduce": "_count"
     },
     "countMembersByPackageValue": {

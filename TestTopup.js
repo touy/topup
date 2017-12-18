@@ -743,7 +743,6 @@ app.post('/change_default_user_info', function (req, res) {
 });
 
 function changeUserNameAndPhoneNumber(js) {
-  js.client.data.user.username=js.client.data.user.username.trim().toLowerCase();
   try {
     if (js.client.data.user.oldusername /*&& js.client.data.user.oldphone1*/ && js.client.data.user.username && js.client.data.user.phone1) {
       changeDefaultInfo(js).then(function (body) {
@@ -824,7 +823,6 @@ function findRuserIndex(i) {
 }
 //MUST DO , update use _id , use cloneJSON
 function updateUserBinary(user, newuser) {
-  newuser.username=newuser.username.trim().toLowerCase();
   var deferred = Q.defer();
   var db = create_db('userbinary');
   try {
@@ -4916,11 +4914,15 @@ function showMemberCountByUsername(js) {
 function getMemberCount(user) {
   var deferred = Q.defer();
   var db = create_db("user");
+  //console.log('count member');
   viewUser(user).then(function (res) {
-    if (res.rows.length) {
+   // console.log('count member '+JSON.stringify(res));
+    if (res.length) {
+      //console.log('here');
       db.view(__design_view, "countMembers", {
         key: user.username
       }, function (err, res) {
+        //console.log('count member '+user.username+" err:"+JSON.stringify(err)+"\n res");
         if (err)
           deferred.reject(err);
         else {
@@ -6003,7 +6005,9 @@ var __design_user = {
     //   "map": "function(doc) {\r\n    var i;\r\n    if (doc.username) {\r\n        for (i = 0; i < doc.username.length; i += 1) {\r\n            emit(doc.username.slice(i), doc);\r\n        }\r\n    }\r\n}"
     // },
     "countMembers": {
-      "map": "function(doc) {\r\n    if( doc.aboveparents ) {\n\r for( var i=0, l=doc.aboveparents.length; i<l; i++) {\n\remit( doc.aboveparents[i], doc );     }}}",
+      "map": "function(doc) {for(var word in doc.aboveparents) {"+
+        "emit(doc.aboveparents[word],1);"+
+      "}}",
       "reduce": "_count"
     },
     "countMembersByPackageValue": {

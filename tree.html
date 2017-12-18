@@ -314,43 +314,43 @@
             }
         }
 
-        function indexingJson(lusername, rusername, c, needlevel, i, parent) {
-            //console.log("1 arr length:"+arr.lenghth);
-            if (lusername) {
-                if (res = findTreeByUsername(c, lusername)) {
-                    // if(needlevel<res.level)
-                    //     return;                 
-                    //var x=0;                                        
-                    var x = (2 * i) + 1;
-                    if (i == -1) x = 0; // root
-                    //res.index = x;
-                    res.request = "lusrname:" + lusername;
-                    p = findParentByUserName(lusername, c);
-                    if (p && p != undefined)
-                        res.parent = p.username;
-                    else res.parent = '';
-                    arr[x] = res;
-                    indexingJson(arr[x].luser, arr[x].ruser, c, needlevel, x, res.parent);
-                }
-            }
-            if (rusername) {
-                if (body = findTreeByUsername(c, rusername)) {
-                    // if(needlevel<body.level)
-                    //     return;
-                    var y = (2 * i) + 2;
-                    //body.index = y;
-                    body.request = "rusrname:" + rusername;
-                    p = findParentByUserName(rusername, c);
-                    if (p && p != undefined)
-                        body.parent = p.username;
-                    else body.parent = '';
-                    arr[y] = body;
-                    //console.log(arr);
-                    indexingJson(arr[y].luser, arr[y].ruser, c, needlevel, y, body.parent);
-                }
-            }
-            return;
-        }
+        // function indexingJson(lusername, rusername, c, needlevel, i, parent) {
+        //     //console.log("1 arr length:"+arr.lenghth);
+        //     if (lusername) {
+        //         if (res = findTreeByUsername(c, lusername)) {
+        //             // if(needlevel<res.level)
+        //             //     return;                 
+        //             //var x=0;                                        
+        //             var x = (2 * i) + 1;
+        //             if (i == -1) x = 0; // root
+        //             //res.index = x;
+        //             res.request = "lusrname:" + lusername;
+        //             p = findParentByUserName(lusername, c);
+        //             if (p && p != undefined)
+        //                 res.parent = p.username;
+        //             else res.parent = '';
+        //             arr[x] = res;
+        //             indexingJson(arr[x].luser, arr[x].ruser, c, needlevel, x, res.parent);
+        //         }
+        //     }
+        //     if (rusername) {
+        //         if (body = findTreeByUsername(c, rusername)) {
+        //             // if(needlevel<body.level)
+        //             //     return;
+        //             var y = (2 * i) + 2;
+        //             //body.index = y;
+        //             body.request = "rusrname:" + rusername;
+        //             p = findParentByUserName(rusername, c);
+        //             if (p && p != undefined)
+        //                 body.parent = p.username;
+        //             else body.parent = '';
+        //             arr[y] = body;
+        //             //console.log(arr);
+        //             indexingJson(arr[y].luser, arr[y].ruser, c, needlevel, y, body.parent);
+        //         }
+        //     }
+        //     return;
+        // }
 
         function compare(a, b) {
             var x = a.name < b.name ? -1 : 1;

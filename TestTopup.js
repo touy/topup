@@ -6034,7 +6034,7 @@ var __design_user = {
       "map": "function (doc) {\n\r emit(doc.index, doc);\n}"
     },
     "authentication": {
-      "map": "function(doc) {\r\n    if(doc.username.trim().toLowerCase()&&doc.password.trim()) {\r\n        emit([doc.username,doc.password],doc);\r\n    }\r\n}"
+      "map": "function(doc) {\r\n    if(doc.username.trim().toLowerCase()&&doc.password.trim()) {\r\n        emit([doc.username.trim().toLowerCase(),doc.password.trim()],doc);\r\n    }\r\n}"
     },
     "findByUserAndPhone": {
       "map": "function(doc) {\r\n    if(doc.username) {\r\n        emit([doc.username,doc.phone1],doc);\r\n    }\r\n}"

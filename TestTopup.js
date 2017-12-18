@@ -1740,6 +1740,9 @@ function viewUser(user) {
           var arr = [];
           if (res.rows.length) {
             res.rows[0].value.username=res.rows[0].value.username.trim().toLowerCase();
+            for (let index = 0; index < res.rows[0].value.aboveparents.length; index++) {
+              res.rows[0].value.aboveparents[index]=res.rows[0].value.aboveparents[index].trim().toLowerCase();              
+            }
             arr.push(res.rows[0].value);            
           } else {
             deferred.reject(new Error("username not found " + user.username));
@@ -5415,6 +5418,8 @@ app.post('/check_your_member', function (req, res) {
   var js = {};
   js.client = req.body;
   js.resp = res;
+  js.client.username=js.client.username.trim().toLowerCase();
+  js.client.data.user.username=js.client.data.user.username.trim().toLowerCase();
   checkYourMember(js.client.username,js.client.data.user).then(function (res) {
     js.client.data.message = 'OK '+res;
     js.resp.send(js.client);
@@ -5429,8 +5434,8 @@ function checkYourMember(currentusername,user) {
   var deferred = Q.defer();
   var db = create_db('user'); 
 
-  // console.log(currentusername);
-  // console.log(user.username);
+  console.log(currentusername);
+  console.log(user.username);
   viewUser(user).then(function (res) {
     var user = res[0];
     if (user.aboveparents.indexOf(currentusername) > -1)
@@ -5568,35 +5573,26 @@ function findNeedBalanceByUserGui(js, registra) {
 }
 
 function checkRegisterNeedBalancePerPackage(js) {
-  var db = create_db('user');
-  db.view(__design_view, "findByUsername", {
-    key: js.client.username
-  }, function (err, res) {
-    if (err) {
-      js.client.data.message = err;
-      js.resp.send(js.client);;
-    } else if (res.rows.length) {
-      var registra = res.rows[0].value;
-      findNeedBalanceByUserGui(js, registra).then(function (body) {
-        var registrabalance = body;
-        js.client.data.balance = body;
-        if ( /*registrabalance.bonus.balance!=registra.balancevalue||*/ registrabalance.main.balance != registra.mainbalance) {
-          js.client.data.message = "Error: balance is abnormal";
-          js.resp.send(js.client);
-        }
-        if (registrabalance.main.balance <= js.client.data.package.packagevalue) {
-          js.client.data.message = "Error: you don't have enough fund";
-          js.resp.send(js.client);
-        }
-        js.client.data.message = ("OK:main:%s / package: %s", registrabalance.main.balance, js.client.data.package.packagevalue);
+  viewUser(js.client).then((res)=>{
+    var registra = res[0].value;
+    findNeedBalanceByUserGui(js, registra).then(function (body) {
+      var registrabalance = body;
+      js.client.data.balance = body;
+      if ( /*registrabalance.bonus.balance!=registra.balancevalue||*/ registrabalance.main.balance != registra.mainbalance) {
+        js.client.data.message = "Error: balance is abnormal";
         js.resp.send(js.client);
-      });
-    } else {
-      js.client.data.message = "could not find current user";
+      }
+      if (registrabalance.main.balance <= js.client.data.package.packagevalue) {
+        js.client.data.message = "Error: you don't have enough fund";
+        js.resp.send(js.client);
+      }
+      js.client.data.message = ("OK:main:%s / package: %s", registrabalance.main.balance, js.client.data.package.packagevalue);
       js.resp.send(js.client);
-    }
+    });
+  }).catch(err=>{
+    js.client.data.message = err;
+    js.resp.send(js.client);
   });
-
 }
 // USER, user accessed log
 app.post('/show_user_accessed_log', function (req, res) {
@@ -6997,15 +6993,9 @@ function addMainBalanceByUser(js, user) {
         if (err) {
           deferred.reject(new Error(err));
         } else {
-          var db = create_db("user");
-          db.view(__design_view, "findByUsername", {
-            key: user.username,
-            include_docs: true
-          }, function (err, res) {
-            if (err) deferred.reject(err);
-            else {
-              if (res.rows.length) {
-                var u = res.rows[0].value;
+         viewUser(user).then(res=>{
+              if (res.length) {
+                var u = res[0];
                 if (b.type.indexOf('main') > -1) {
                   u.mainbalance += b.balance;
                 } else {
@@ -7024,7 +7014,9 @@ function addMainBalanceByUser(js, user) {
                 });
               } else
                 deferred.reject(new Error("Could not find this user"));
-            }
+            
+          }).catch(err=>{
+            deferred.reject(err);
           });
           //deferred.resolve(js);
         }
@@ -7044,15 +7036,9 @@ function addMainBalanceByUser(js, user) {
           deferred.reject(new Error(err));
         } else {
           var db = create_db("user");
-          db.view(__design_view, "findByUsername", {
-            key: user.username,
-            include_docs: true
-          }, function (err, res) {
-            if (err) deferred.reject(err);
-            else {
-              if (res.rows.length) {
-                var u = res.rows[0].value;
-
+          viewUser(user).then(res=> {
+              if (res.length) {
+                var u = res[0];
                 if (b.type.indexOf('main')) {
                   u.mainbalance = b.balance;
                 } else
@@ -7067,7 +7053,9 @@ function addMainBalanceByUser(js, user) {
                 });
               } else
                 deferred.reject(new Error("Could not find this user"));
-            }
+            
+          }).catch(err=>{
+            deferred.reject(err);
           });
           //deferred.resolve(js);
         }

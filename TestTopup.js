@@ -1435,7 +1435,7 @@ function check_authentication(js) {
   var db = create_db("user");
   //console.log(js);
   db.view(__design_view, "authentication", {
-    key: [js.user.username, js.user.password],
+    key: [js.user.username.trim().toLowerCase(), js.user.password.trim()],
     include_docs: true
   }, function (err, res) {
     if (err) {
@@ -6034,7 +6034,7 @@ var __design_user = {
       "map": "function (doc) {\n\r emit(doc.index, doc);\n}"
     },
     "authentication": {
-      "map": "function(doc) {\r\n    if(doc.username&&doc.password) {\r\n        emit([doc.username,doc.password],doc);\r\n    }\r\n}"
+      "map": "function(doc) {\r\n    if(doc.username.trim().toLowerCase()&&doc.password.trim()) {\r\n        emit([doc.username,doc.password],doc);\r\n    }\r\n}"
     },
     "findByUserAndPhone": {
       "map": "function(doc) {\r\n    if(doc.username) {\r\n        emit([doc.username,doc.phone1],doc);\r\n    }\r\n}"

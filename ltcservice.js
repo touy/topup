@@ -12,8 +12,16 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
     const Q = require('q');
     var Promise = require('bluebird');
     var path = require('path');
+    var passwordValidator = require('password-validator');
     var __design_view = "objectList";
-
+    var phoneValidator = new passwordValidator();
+    phoneValidator
+      .is().min(10) // Minimum length 8 
+      .is().max(10) // Maximum length 100 
+      .has().not().letters() // Must not have lowercase letters 
+      .has().digits() // Must have digits 
+      .has().not().symbols()
+      .has().not().spaces() // Should not have spaces 
     function convertTZ(fromTZ) {
         return moment.tz(fromTZ, "Asia/Vientiane").format();
     }
@@ -493,9 +501,14 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
         }
         return deferred.promise;
     }
-    module.directTopup = function (phone, toupvalue) {
+    module.directTopup = function (phone, topupvalue) {
         var deferred = Q.defer();
         try {
+            if(err=phoneValidator.validate(phone, {
+                list: true
+              }).length||phone.indexOf("205")!=0||isNaN(topupvalue)){
+                  throw new Error("error "+ JSON.parse(err)+"| phone:"+phone+" value"+topupvalue)
+            }
             this.checkCenterBalance().then((res) => {
                 if (res.lastbalance > topupvalue) {
                     this.checkPhoneBalance(phone, target, owner).then((res) => {
@@ -546,7 +559,7 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
                         throw err;
                     });
                 } else {
-                    throw new Error(JSON.stringify(res));
+                    throw new Error("not enough fund "+JSON.stringify(res));
                 }
             }).catch((err) => {
                 deferred.reject(err);
@@ -1119,6 +1132,11 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
     module.refillGPSNumber = function (phone, topupvalue, target, owner) {
         var deferred = Q.defer();
         try {
+            if(err=phoneValidator.validate(phone, {
+                list: true
+              }).length||phone.indexOf("205")!=0||isNaN(topupvalue)){
+                  throw new Error("error "+ JSON.parse(err)+"| phone:"+phone+" value"+topupvalue)
+            }
             topupTarget(phone, toupvalue, target, owner).then((res) => {
                 if (res) {
                     addSuccessList(phone, topupvalue, target, owner);

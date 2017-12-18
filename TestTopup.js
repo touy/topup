@@ -1739,11 +1739,12 @@ function viewUser(user) {
         } else {
           var arr = [];
           if (res.rows.length) {
-            arr.push(res.rows[0].value);
-            deferred.resolve(arr);
+            res.rows[0].value.username=res.rows[0].value.username.trim().toLowerCase();
+            arr.push(res.rows[0].value);            
           } else {
             deferred.reject(new Error("username not found " + user.username));
           }
+          deferred.resolve(arr);
         }
       });
   else

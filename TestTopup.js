@@ -2146,7 +2146,7 @@ function showUserBinaryTree(js) {
   db.view(__design_view, 'findByUsername', {
     key: js.client.data.user.username
   }, function (err, res) {
-    console.log(res.rows[0].value);
+    //console.log(res.rows[0].value);
     if (err) {
       js.client.data.message = err;
       js.resp.send(js.client);
@@ -2208,7 +2208,7 @@ function getUserInfoListByUser(indexes) {
             var element = res.rows[index].value;
             e = {
               usergui: element.gui,
-              username: element.username,
+              username: element.username.toLowerCase(),
               introductorcode: element.introductorcode,
               packagename: element.packagename,
               packagevalue: element.packagevalue,
@@ -2248,7 +2248,7 @@ function getUserBinaryMembersByIndex(indexes, isedit) {
             var element = res.rows[index].value;
             var e = { // for current user
               usergui: element.usergui,
-              username: element.username,
+              username: element.username.toLowerCase(),
               createddate: element.createddate,
               updateddate: element.updateddate,
               luser: element.luser,

@@ -438,7 +438,7 @@
         function prepareBinaryData(username, needlevel) {
             console.log("search :" + username);
             if (username == '') {
-                username = 'souk@TheFriendd'
+                username = 'souk@TheFriendd'.trim().toLowerCase();
                 //return;
             }
             maxrange = $('#maxrange').val();
@@ -552,7 +552,7 @@
             for (var index = 0; index < b.length; index++) {
                 var element = b[index];
                 if (element&&element!={}) {
-                   // console.log(element);
+                    console.log(element);
                     if (username == element.username) {
 
                         return element;
@@ -603,6 +603,7 @@
                 user.username +
                 "<div id='qtty" + b.gui + "'><l>" + user.leftuser + "</l>|<r>" + user.rightuser +
                 "</r></div></div>");
+
             if (b.luser) {
                 //user.leftuser = 1;                
                 c = {}; 
@@ -710,14 +711,14 @@
             client = {};
             client.data = {};
             client.data.user = {};
-            client.data.user.username = "souk@TheFriendd";
+            client.data.user.username = "souk@TheFriendd".trim().toLowerCase();;
             jsonPost(getHost() + '/get_current_user', client, function (res) {
                 //currentUsername=res.username;
                 //console.log("get current user "+JSON.stringify(res));
-                currentUsername = "souk@TheFriendd"; //TESTING ONLY
+                currentUsername = "souk@TheFriendd".trim().toLowerCase();; //TESTING ONLY
                 prepareBinaryData(currentUsername, maxrange);
             });
-            currentUsername = "souk@TheFriendd"; //TESTING ONLY
+            currentUsername = "souk@TheFriendd".trim().toLowerCase(); //TESTING ONLY
             prepareBinaryData(currentUsername, maxrange);
             return;
         }

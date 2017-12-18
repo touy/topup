@@ -2248,7 +2248,7 @@ function getUserBinaryMembersByIndex(indexes, isedit) {
         var arr = [];
         if (res.rows.length) {
           for (var index = 0; index < res.rows.length; index++) {
-            var element = res.rows[index].value;
+            var element = res.rows[index].value;            
             var e = { // for current user
               usergui: element.usergui,
               username: element.username.toLowerCase(),
@@ -2258,7 +2258,8 @@ function getUserBinaryMembersByIndex(indexes, isedit) {
               ruser: element.ruser,
               level: element.level,
               index: element.index,
-              gui: element.gui
+              gui: element.gui,
+              parent:element.parent
             };
             if (isedit)
               arr.push(element);

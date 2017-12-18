@@ -125,7 +125,7 @@
                     n = n * 2 + 1;
                 for (var i = 0; i < Math.pow(2, index); i++) {
                     arr.push(2 * n + 1 + i);
-                }
+             }
             }
             return arr;
         }
@@ -547,7 +547,7 @@
                     getUserDetailsByUser(element);
             }
         }
-
+        
         function getUserBinaryByUsername(username, b) {
             for (var index = 0; index < b.length; index++) {
                 var element = b[index];
@@ -596,6 +596,13 @@
             user.RCoupling = 0;
             user.leftuser = 0;
             user.rightuser = 0;
+            $("#" + b.gui).append("<img title='" + user.username + "' width='48px' height='48px' src='" + imgurl +
+                "'/>");
+            $("#" + b.gui).append("<div class='small'>" + "<div id='score" + b.gui + "'>" + user.LCoupling + "|" + user
+                .RCoupling + "</div>" +
+                user.username +
+                "<div id='qtty" + b.gui + "'><l>" + user.leftuser + "</l>|<r>" + user.rightuser +
+                "</r></div></div>");
 
             if (b.luser) {
                 //user.leftuser = 1;                
@@ -609,7 +616,7 @@
                 if(x.isdummy!=undefined)
                     user.leftuser=0;
                 else
-                jsonPost(getHost() + '/get_member_count_by_username', c, function (res) {
+                setTimeout(jsonPost(getHost() + '/get_member_count_by_username', c, function (res) {
                     user.leftuser = res.data.user.count;
                     //console.log(res);
                     if (user.leftuser == undefined)                    
@@ -617,8 +624,8 @@
                     else
                         user.leftuser++;
                     $("#qtty" + b.gui).find('l').empty().html(user.leftuser);                 
-                });
-                jsonPost(getHost() + '/show_latest_coupling_by_user', c, function (res) {
+                }),100);
+                setTimeout(jsonPost(getHost() + '/show_latest_coupling_by_user', c, function (res) {
                     var couplingscore = res.data.couplingscore[0];
                    // console.log(res);
                     if (res.data.message.indexOf('OK') > -1) {
@@ -630,7 +637,7 @@
                         //console.log(res);
                         $("#score" + b.gui).empty().html(0 + "|" + 0);
                     }
-                });
+                }),100);
             }
             if (b.ruser) {
                // user.rightuser = 1;
@@ -644,15 +651,15 @@
                 if(x.isdummy!=undefined)
                     user.rightuser=0;
                 else
-                jsonPost(getHost() + '/get_member_count_by_username', c, function (res) {
+                setTimeout(jsonPost(getHost() + '/get_member_count_by_username', c, function (res) {
                     user.rightuser = res.data.user.count;
                     if(user.rightuser==undefined)
                         user.rightuser=1;
                     else
                         user.rightuser++;
                     $("#qtty" + b.gui).find('r').empty().html(user.rightuser);
-                });
-                jsonPost(getHost() + '/show_latest_coupling_by_user', c, function (res) {
+                }),100);
+                setTimeout(jsonPost(getHost() + '/show_latest_coupling_by_user', c, function (res) {
                     var couplingscore = res.data.couplingscore;
                     if (res.data.message.indexOf('OK') > -1) {
                         if (res.data.couplingscore.length)
@@ -663,16 +670,9 @@
                         //console.log(res);
                         $("#score" + b.gui).empty().html(0 + "|" + 0);
                     }
-                });
+                    
+                }),100);
             }
-            $("#" + b.gui).append("<img title='" + user.username + "' width='48px' height='48px' src='" + imgurl +
-                "'/>");
-            $("#" + b.gui).append("<div class='small'>" + "<div id='score" + b.gui + "'>" + user.LCoupling + "|" + user
-                .RCoupling + "</div>" +
-                user.username +
-                "<div id='qtty" + b.gui + "'><l>" + user.leftuser + "</l>|<r>" + user.rightuser +
-                "</r></div></div>");
-
         }
 
         $(function () {

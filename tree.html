@@ -711,11 +711,11 @@
             client = {};
             client.data = {};
             client.data.user = {};
-            client.data.user.username = "souk@TheFriendd".trim().toLowerCase();;
+            client.data.user.username = "souk@TheFriendd".trim().toLowerCase();
             jsonPost(getHost() + '/get_current_user', client, function (res) {
                 //currentUsername=res.username;
                 //console.log("get current user "+JSON.stringify(res));
-                currentUsername = "souk@TheFriendd".trim().toLowerCase();; //TESTING ONLY
+                currentUsername = "souk@TheFriendd".trim().toLowerCase(); //TESTING ONLY
                 prepareBinaryData(currentUsername, maxrange);
             });
             currentUsername = "souk@TheFriendd".trim().toLowerCase(); //TESTING ONLY

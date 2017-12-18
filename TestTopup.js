@@ -743,6 +743,7 @@ app.post('/change_default_user_info', function (req, res) {
 });
 
 function changeUserNameAndPhoneNumber(js) {
+  js.client.data.user.username=js.client.data.user.username.trim().toLowerCase();
   try {
     if (js.client.data.user.oldusername /*&& js.client.data.user.oldphone1*/ && js.client.data.user.username && js.client.data.user.phone1) {
       changeDefaultInfo(js).then(function (body) {
@@ -823,6 +824,7 @@ function findRuserIndex(i) {
 }
 //MUST DO , update use _id , use cloneJSON
 function updateUserBinary(user, newuser) {
+  newuser.username=newuser.username.trim().toLowerCase();
   var deferred = Q.defer();
   var db = create_db('userbinary');
   try {

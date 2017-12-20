@@ -42,7 +42,7 @@
         function getHost() {
             host = $(location).attr('protocol') + "//" + $(location).attr('host') + $(location).attr('pathname');
             host = host.replace("/tree", "");
-            console.log(host)
+            //console.log(host)
             return host;
         }
 
@@ -514,7 +514,6 @@
                 // console.log(_xarr.length);
                 //console.log('mapping');
                 var _arr = [];
-                $(function () {
                     _arr.push(_xarr[8]);
                     _arr.push(_xarr[4]);
                     _arr.push(_xarr[9]);
@@ -530,12 +529,13 @@
                     _arr.push(_xarr[14]);
                     _arr.push(_xarr[7]);
                     _arr.push(_xarr[15]);
-                    html = '';
+                    var html = '';
+                    console.log(_arr);
                     $("#treeDiv").html('');
                     for (var index = 0; index < _arr.length; index++) {
                         $("#treeDiv").append(_arr[index]);
                     }
-                });
+                    
                 getMoreDetails();
                 redraw();
             });
@@ -553,7 +553,7 @@
             for (var index = 0; index < b.length; index++) {
                 var element = b[index];
                 if (element&&element!={}) {
-                    console.log(element);
+                    ///console.log(element);
                     if (username == element.username) {
 
                         return element;

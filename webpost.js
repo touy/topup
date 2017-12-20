@@ -350,7 +350,7 @@ init_db('searchkw', __design_searchkw);
 init_db('doc', __design_doc);
 init_db('errorlogs', __design_log);
 var ads = {
-  photo: '',
+  photo: [],
   title: '',
   url: '',
   gui: '',
@@ -362,7 +362,7 @@ var ads = {
 
 var shop = {
   name: '',
-  photo: '',
+  photo: [],
   owner: '',
   contact: '',
   address: '',
@@ -395,7 +395,8 @@ var item = {
   lastapproved: '',
   isactive: true,
   lastactive: '',
-  lastdeactive: ''
+  lastdeactive: '',
+  photo:[]
 }
 var approvallist = {
   itemgui: '',
@@ -479,22 +480,6 @@ app.post('/upload_img', upload, function (req, res) {
   js.resp.send(js.client);
 });
 
-app.all('/git_pull',(req,res)=>{
-  var exec = require('child_process').exec;
-  var child = exec('git pull origin master',
-    function (error, stdout, stderr){
-      var newlines=/[\r\n]+/;
-      var lines=stdout.split(newlines)
-      //console.log(lines[2]);
-      if(error !== null){
-        console.log("Error -> "+error);
-          res.send(error);
-      }
-      else
-          res.send(lines);
-      //ltcDecrypt(lines[2]);
-  });
-});
 // GET sample data 
 app.get('/get_sample', function (req, res) {
   var arr = [];

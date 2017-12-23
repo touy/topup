@@ -219,7 +219,7 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
         var deferred=Q.defer();
         var db=create_db('centerbalance');
         if(endtime=='') endtime=convertTZ(new Date());
-        db.view(__design_view,'findby',{
+        db.view(__design_view,'findBy',{
             startkey:[1,endtime],endkey:[1,starttime],
             descending:true,
             reduce:iscount,

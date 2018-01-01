@@ -443,7 +443,7 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
                                         imei: target,
                                         owner: owner,
                                         lastbalance: tres.TopupResult.amount,
-                                        currentbalance: tres.lastbalance,
+                                        currentbalance: bres.lastbalance,
                                         updatedtime: convertTZ(new Date()),
                                         description:'topup OK',
                                         gui: uuidV4()

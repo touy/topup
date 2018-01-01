@@ -51,15 +51,15 @@ module.exports = function (__secret='',__user='') {
         m1=validateValue(value);
         if(m!="OK"||m1!="OK")
             throw new Error(m+m1);
-        var soap = require('soap');
-        var url = 'http://ltcservice.laotel.com:5678/Services.asmx?WSDL';
-        var type='3';
-        var trans_id=cryptoRandomNumber((Number.MAX_SAFE_INTEGER-281474976710655), Number.MAX_SAFE_INTEGER);
+        const soap = require('soap');
+        const url = 'http://ltcservice.laotel.com:6848/Services.asmx?WSDL';
+        const type='3';
+        const trans_id=cryptoRandomNumber((Number.MAX_SAFE_INTEGER-281474976710655), Number.MAX_SAFE_INTEGER);
         this.ltcEncrypt(phone+value+ltcUser+trans_id).then(function(body){
-            var args = {amount:value,msisdn:phone,user_id:ltcUser,trans_id:trans_id,key:body};
+            const args = {amount:value,msisdn:phone,user_id:ltcUser,trans_id:trans_id,key:body};
             soap.createClient(url, function(err, client) {
                 client.Topup(args, function(err, result) {
-                    console.log(result);
+                    //console.log(result);
                     //var res=[];res.push(result);
                     deferred.resolve(result);
                 });
@@ -76,10 +76,10 @@ module.exports = function (__secret='',__user='') {
         m1=validateValue(value);
         if(m!="OK"||m1!="OK")
             throw new Error(m+m1);
-        var soap = require('soap');
-        var url = 'http://ltcservice.laotel.com:5678/Services.asmx?WSDL';
-        var type='3';
-        var trans_id=cryptoRandomNumber((Number.MAX_SAFE_INTEGER-281474976710655), Number.MAX_SAFE_INTEGER);
+        const soap = require('soap');
+        const url = 'http://ltcservice.laotel.com:6848/Services.asmx?WSDL';
+        const type='3';
+        const trans_id=cryptoRandomNumber((Number.MAX_SAFE_INTEGER-281474976710655), Number.MAX_SAFE_INTEGER);
         this.ltcEncrypt(type+phone+value+ltcUser+trans_id).then(function(body){
             var args = {type:type,amount:value,msisdn:phone,user_id:ltcUser,trans_id:trans_id,key:body};
             soap.createClient(url, function(err, client) {
@@ -101,7 +101,7 @@ module.exports = function (__secret='',__user='') {
         if(m!="OK")
             throw new Error(m);
         var soap = require('soap');
-        var url = 'http://ltcservice.laotel.com:5678/Services.asmx?WSDL';
+        var url = 'http://ltcservice.laotel.com:6848/Services.asmx?WSDL';
         var type='3';
         var trans_id=cryptoRandomNumber((Number.MAX_SAFE_INTEGER-281474976710655), Number.MAX_SAFE_INTEGER);
         this.ltcEncrypt(phone+message+ltcUser+header).then(function(body){
@@ -124,7 +124,7 @@ module.exports = function (__secret='',__user='') {
         if(validateTime(startdate)!="OK"||validateTime(enddate)!=='OK')
             throw new Error('Invalid Time');
         var soap = require('soap');
-        var url = 'http://ltcservice.laotel.com:5678/Services.asmx?WSDL';
+        var url = 'http://ltcservice.laotel.com:6848/Services.asmx?WSDL';
         var type='3';
         
         this.ltcEncrypt(type+ltcUser).then(function(body){
@@ -146,7 +146,7 @@ module.exports = function (__secret='',__user='') {
       module.checkBalanceCenterLTC=function(){
         var deferred=Q.defer();
         var soap = require('soap');
-        var url = 'http://ltcservice.laotel.com:5678/Services.asmx?WSDL';
+        var url = 'http://ltcservice.laotel.com:6848/Services.asmx?WSDL';
         this.ltcEncrypt(ltcUser).then(function(body){
             var args = {user_id:ltcUser,key:body};
             soap.createClient(url, function(err, client) {
@@ -168,7 +168,7 @@ module.exports = function (__secret='',__user='') {
         if(m!="OK")
             throw new Error(m);
         var soap = require('soap');
-        var url = 'http://ltcservice.laotel.com:5678/Services.asmx?WSDL';
+        var url = 'http://ltcservice.laotel.com:6848/Services.asmx?WSDL';
         var type='3';
         this.ltcEncrypt(type+phone+ltcUser).then(function(body){
             var args = {type:type,msisdn:phone,user_id:ltcUser,key:body};

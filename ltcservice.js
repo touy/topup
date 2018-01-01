@@ -401,48 +401,61 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
         }
         return deferred.promise;
     }
+    module.testDirectTopup=function (phone, topupvalue) {
+        var deferred=Q.defer();
+        ltc.topupLTC(phone, topupvalue).then((res) => {
+            var tres = res;
+            if (res.TopupResult.resultCode == '20') {
+                deferred.resolve(res);                
+            } else {
+                throw new Error(JSON.stringify(res));
+            }
+        }).catch((err) => {
+           deferred.reject(err);
+        });
+        return deferred.promise;
+    }
     module.directTopup = function (phone, topupvalue) {
         var deferred = Q.defer();
+        var db=create_db('phonebalance');
         try {
+            var owner='';
+            var target='';
+            console.log('Here');
             if(err=phoneValidator.validate(phone, {
                 list: true
               }).length||phone.indexOf("205")!=0||isNaN(topupvalue)){
                   throw new Error("error "+ JSON.parse(err)+"| phone:"+phone+" value"+topupvalue)
             }
-            this.checkCenterBalance().then((res) => {
-                if (res.lastbalance > topupvalue) {
+            // this.checkCenterBalance().then((res) => {
+                //if (res.lastbalance > topupvalue) {
+                    //this.checkPhoneBalance()
                     this.checkPhoneBalance(phone, target, owner).then((res) => {
-                        var bres = res;
-                        if (res.lastbalance < __minvalue)
+                        const bres = res;
+                        if (bres.lastbalance < __minvalue+1 ||!__minvalue)
                             ltc.topupLTC(phone, topupvalue).then((res) => {
-                                var tres = res;
-                                if (res.TopupResult.resultCode == '20') {
-                                    var b = {
+                                const tres = res;
+                                console.log(res);
+                                if (tres.TopupResult.resultCode == '20') {
+                                    const b = {
                                         phone: phone,
                                         topupvalue: topupvalue,
                                         imei: target,
                                         owner: owner,
-                                        lastbalance: res.TopupResult.amount,
+                                        lastbalance: tres.TopupResult.amount,
+                                        currentbalance: tres.lastbalance,
                                         updatedtime: convertTZ(new Date()),
+                                        description:'topup OK',
                                         gui: uuidV4()
                                     }
                                     db.insert(b, b.gui, (err, res) => {
                                         if (err) deferred.reject(err);
                                         else {
-                                            this.checkPhoneBalance(phone, target, owner).then((res) => {
-                                                deferred.resolve({
-                                                    phone: phone,
-                                                    lastbalance: bres.lastbalance,
-                                                    currentbalance: res.lastbalance,
-                                                    amount: tres
-                                                });
-                                            }).catch((err) => {
-                                                throw err;
-                                            });
+                                            deferred.resolve(b);
                                         }
                                     });
                                 } else {
-                                    throw new Error(JSON.stringify(res));
+                                    throw new Error(tres);
                                 }
                             }).catch((err) => {
                                 throw err;
@@ -450,20 +463,25 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
                         else {
                             deferred.resolve({
                                 phone: phone,
-                                lastbalance: res.lastbalance,
-                                currentbalance: res.lastbalance,
-                                amount: topupvalue
+                                topupvalue: topupvalue,
+                                imei: target,
+                                owner: owner,
+                                lastbalance: bres.lastbalance,
+                                currentbalance: bres.lastbalance,
+                                updatedtime: convertTZ(new Date()),
+                                description:'ignore topup',
+                                gui: uuidV4()
                             });
                         }
                     }).catch((err) => {
                         throw err;
                     });
-                } else {
-                    throw new Error("not enough fund "+JSON.stringify(res));
-                }
-            }).catch((err) => {
-                deferred.reject(err);
-            });
+                // } else {
+                //     throw new Error("not enough fund "+JSON.stringify(res));
+                // }
+            // }).catch((err) => {
+            //     deferred.reject(err);
+            // });
         } catch (error) {
             deferred.reject(error);
         }

@@ -455,7 +455,23 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
                                         }
                                     });
                                 } else {
-                                    throw new Error(tres);
+                                    const b = {
+                                        phone: phone,
+                                        topupvalue: topupvalue,
+                                        imei: target,
+                                        owner: owner,
+                                        lastbalance: tres.TopupResult.amount,
+                                        currentbalance: bres.lastbalance,
+                                        updatedtime: convertTZ(new Date()),
+                                        description:tres.TopupResult.resultDesc,
+                                        gui: uuidV4()
+                                    } 
+                                    db.insert(b, b.gui, (err, res) => {
+                                        if (err) deferred.reject(err);
+                                        else {
+                                            deferred.resolve(b);
+                                        }
+                                    });
                                 }
                             }).catch((err) => {
                                 throw err;

@@ -463,7 +463,7 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
                                         lastbalance: tres.TopupResult.amount,
                                         currentbalance: bres.lastbalance,
                                         updatedtime: convertTZ(new Date()),
-                                        description:tres.TopupResult.resultDesc,
+                                        description:"error "+tres.TopupResult.resultDesc,
                                         gui: uuidV4()
                                     } 
                                     db.insert(b, b.gui, (err, res) => {

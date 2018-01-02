@@ -432,7 +432,7 @@ module.exports = function (__secret = '', __user = '', __minvalue = 5000) {
                     //this.checkPhoneBalance()
                     this.checkPhoneBalance(phone, target, owner).then((res) => {
                         const bres = res;
-                        if (bres.lastbalance < __minvalue+1 ||!__minvalue)
+                        if (bres.lastbalance < __minvalue ||!__minvalue)
                             ltc.topupLTC(phone, topupvalue).then((res) => {
                                 const tres = res;
                                 console.log(res);

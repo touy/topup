@@ -626,7 +626,7 @@ app.get('/get_routes', function (req, res) {
 });
 //GAME
 app.get('/game', function (req, res) {
-  res.sendFile(__dirname + 'random.html');
+  res.sendFile(__dirname + '/random.html');
 });
 
 //show tree

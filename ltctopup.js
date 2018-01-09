@@ -7,7 +7,7 @@ module.exports = function (__secret='',__user='') {
     module.ltcEncrypt=function (query){
         var deferred=Q.defer();
         var exec = require('child_process').exec;
-        var child = exec('java -jar ltc_encrypt.jar '+query+' '+ltcScretKeys,
+        var child = exec('java -jar '+__dirname+'/ltc_encrypt.jar '+query+' '+ltcScretKeys,
           function (error, stdout, stderr){
             var newlines=/[\r\n]+/;
             var lines=stdout.split(newlines)
@@ -29,7 +29,7 @@ module.exports = function (__secret='',__user='') {
       module.ltcDecrypt=function(query){
         var deferred=Q.defer();
         var exec = require('child_process').exec;
-        var child = exec('java -jar ltc_decrypt.jar '+query+' '+ltcScretKeys,
+        var child = exec('java -jar '+__dirname+'/ltc_decrypt.jar '+query+' '+ltcScretKeys,
           function (error, stdout, stderr){
             var newlines=/[\r\n]+/;
             var lines=stdout.split(newlines)

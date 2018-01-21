@@ -127,7 +127,7 @@ function convertTZ(fromTZ) {
 __master_user = {
   "_id": "d2dfb6ac-1abd-47c0-b1b5-ef0465b1592d",
   "gui": "d2dfb6ac-1abd-47c0-b1b5-ef0465b1592d",
-  "username": "souk@TheFriendd",
+  "username": "souk@thefriendd",
   "password": "123456",
   "ID": "",
   "fullname": "",
@@ -136,17 +136,17 @@ __master_user = {
   "address": "",
   "bankaccount": "",
   "bank": "",
-  "usercode": "souk@TheFriendd",
+  "usercode": "souk@thefriendd",
   "createddate": "2017-08-19T12:16:12.563Z",
   "gui": "d2dfb6ac-1abd-47c0-b1b5-ef0465b1592d",
-  "email": "souk@TheFriendd.com",
+  "email": "souk@thefrienddcom",
   "phone1": "02059918889",
   "phone2": "",
   "photo": "",
   "memberlevel": 0,
   "ispaired": false,
   "parentgui": "d2dfb6ac-1abd-47c0-b1b5-ef0465b1592d",
-  "parentname": "souk@TheFriendd",
+  "parentname": "souk@thefriendd",
   "isleft": null,
   "aboveparents": "",
   "leftside": 0,
@@ -172,7 +172,7 @@ __master_user = {
   "couplingtotalmoney": 0,
   "sponservalue": 0,
   "introductorgui": "d2dfb6ac-1abd-47c0-b1b5-ef0465b1592d",
-  "introductorcode": "souk@TheFriendd",
+  "introductorcode": "souk@thefriendd",
   "isfreeuser": false,
   "registeredby": "master",
   "maxproduct": 100000,
@@ -224,7 +224,7 @@ var __userbinary = {
   "luser": "fd0003",
   "ruser": "fd0004",
   "level": 1,
-  "parent": "souk@TheFriendd",
+  "parent": "souk@thefriendd",
   "index": 1,
   "gui": "4ce4bfed-0338-4ab0-9431-ae5f0e63f787"
 }
@@ -1772,7 +1772,7 @@ app.post('/update_userdata', function (req, res) {
   // "address": "",
   // "bankaccount": "",
   // "bank": "",  
-  // "email": "souk@TheFriendd.com",  
+  // "email": "souk@thefriendd.com",  
   // "phone2": "",
   // "photo": "", // UPLOAD TO SERVER FIRST THEN GET THE LINK AND INSERT HERE
   //return client
@@ -5816,7 +5816,7 @@ function init_admin() {
   var db = create_db('authorize');
   var a = {
     gui: "5f15a3119896d245f2562f65ef000801",
-    username: 'souk@TheFriendd',
+    username: 'souk@thefriendd',
   }
   db.insert(a, a.gui, function (err, res) {
     if (err) deferred.reject(err);

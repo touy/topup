@@ -1243,8 +1243,13 @@ app.get('/init_default_users', function (req, res) {
   js.client = req.body;
   js.resp = res;
   js.client.data = {};
-  restoreBackupFile('d20171115015037.js');
-  init_default_users(js);
+  try {
+    restoreBackupFile('d20171115015037.js');
+    init_default_users(js); 
+  } catch (error) {
+    console.log(error);
+    res.send(error);
+  }
 });
 var members = {};
 members.member = [];

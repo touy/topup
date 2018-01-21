@@ -1330,7 +1330,7 @@ function restoreBackupFile(bakfile) {
   var fs = require('fs');
   filename = bakfile;
   if (filename)
-    fs.readFile(__dirname+'backup/' + filename, 'utf8', function (err, data) {
+    fs.readFile(__dirname+'/backup/' + filename, 'utf8', function (err, data) {
       if (err) throw err; // we'll not consider error handling for now        
       members = JSON.parse(data);
     });

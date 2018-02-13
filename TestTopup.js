@@ -13,7 +13,7 @@ var redis = require("redis");
 var bluebird = require('bluebird');
 const __browser = require('detect-browser');
 const _current_picture_path = './_doc_item_/';
-r_client = redis.createClient();
+var r_client = redis.createClient();
 bluebird.promisifyAll(redis.RedisClient.prototype);
 bluebird.promisifyAll(redis.Multi.prototype);
 var moment = require('moment-timezone');

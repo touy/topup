@@ -482,6 +482,13 @@ app.post('/upload_img', upload, function (req, res) {
   js.client =req.body;//It is special  
   console.log(req.body);
   js.file = req.file  //It is special
+  console.log('files');
+  console.log(req.files);
+
+  console.log('file');
+  console.log(req.files);
+  
+
   console.log('Uploade Successful ', js.file);
   js.client.data = {};
   js.client.data.message = "OK file uploaded";

@@ -462,7 +462,7 @@ var upload = multer({
     }
     cb(null, true);
   }
-}).single('userFile');
+}).single('file_up');
 
 // UPLOAD image file
 
@@ -477,7 +477,6 @@ app.post('/upload_img', upload, function (req, res) {
   console.log('Uploade Successful ', js.file);
   js.client.data = {};
   js.client.data.message = "OK file uploaded";
-
   js.client.data.file = '/images/' + js.file.filename; // client remove /images/ then save 
   res.send(js.client);
 });

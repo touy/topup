@@ -6,7 +6,8 @@ const uuidV4 = require('uuid/v4');
 const nano = require('nano')('http://admin:admin@localhost:5984');
 const LTCSERVICE = require('./ltctopup')();
 const fs = require('fs');
-const _current_picture_path = './_doc_/';
+//const _current_picture_path = './_doc_/';
+const _current_picture_path = '_doc_/';
 const base64 = require('file-base64');
 var __client_ip = '';
 //const nano = require('nano')('http://localhost:5984');
@@ -446,15 +447,18 @@ var doc = {
 
 app.use('/public', express.static(path.join(__dirname, 'public')));
 app.use('/images', express.static(path.join(__dirname, '_doc_')));
+
+
+
 var upload = multer({
   storage: multer.diskStorage({
     destination: function (req, file, cb) {
-      console.log('current path:'+_current_picture_path);  
+      //console.log('current path:'+_current_picture_path);  
       cb(null, _current_picture_path);
     },
     filename: function (req, file, cb) {
       filepath=file.originalname.replace(path.extname(file.originalname), "") + '-' + makeid(6) + '-' + Date.now() + path.extname(file.originalname);
-      console.log('uploading filename:'+filepath);      
+      //console.log('uploading filename:'+filepath);      
       cb(null, filepath);
     }
   }),
@@ -475,9 +479,9 @@ app.post('/upload_img', upload, function (req, res) {
   // return client 
   // client.data.file
   var js = {};js.client={};
-  //  js.client =JSON.parse(req.body.client);//It is special  
+  js.client =req.body;//It is special  
   console.log(req.body);
-  js.file = req.body //It is special
+  js.file = req.file  //It is special
   console.log('Uploade Successful ', js.file);
   js.client.data = {};
   js.client.data.message = "OK file uploaded";
@@ -1761,7 +1765,7 @@ function updateDocByUser(doc, username) {
 
 function deleteFile(link) {
   var deferred = Q.defer();
-  var path = _current_picture_path + '/' + link;
+  var path = _current_picture_path  + link;
   fs.unlink(path, function (err) {
     if (err && err.code == 'ENOENT') {
       // file doens't exist
@@ -1778,16 +1782,16 @@ function deleteFile(link) {
 
 function makePhotoFromBase64(content, itemgui, name) {
   var deferred = Q.defer();
-  base64.decode(content, _current_picture_path + '/' + itemgui + '/' + name, function (err, res) {
+  base64.decode(content, _current_picture_path  + itemgui + '/' + name, function (err, res) {
     if (err) deferred.reject(err);
-    else deferred.resolve(_current_picture_path + '/' + itemgui + '/' + name); //put _current_icture_path for correct URL
+    else deferred.resolve(_current_picture_path  + itemgui + '/' + name); //put _current_icture_path for correct URL
   });
   return deferred.promise;
 }
 
 function makeBase64FromFile(itemgui, name) { // IF use only base64 string we can give short link which need request base64 string only
   var deferred = Q.defer();
-  base64.encode(_current_picture_path + '/' + itemgui + '/' + name, function (err, base64String) {
+  base64.encode(_current_picture_path  + itemgui + '/' + name, function (err, base64String) {
     if (err) deferred.reject(err);
     else deferred.resolve(base64String);
   });

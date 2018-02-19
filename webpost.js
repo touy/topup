@@ -490,6 +490,108 @@ app.post('/upload_img', upload, function (req, res) {
   res.send(js.client);
 });
 
+app.all('/register',function(req,res){
+  var js={};
+  js.client=req.body;
+  js.res=res;
+  register(js);
+});
+function register(js){
+  checkUsername(js.client.data.user.username).then(function(res){
+    checkPassword(js.client.data.user.password).then(function(res){
+      checkPhoneNumber(js.client.data.user.phonenumber).then(function(res){
+        js.res.send('OK registered');
+      });
+    });
+  }).catch(function(err){
+    js.res.send(err);
+  });
+}
+function checkUsername(username){
+  deferred=Q.deferred();
+  db=create_db('user');
+  db.view(__design_view,'checkUsername',{keys:[username],decending:true},function(err,res){
+    if(err) deferred.reject(err);
+    else{
+      if(res.rows.length){
+        deferred.resolve('Error exist '+res.rows[0].username);
+      }
+      else
+        deferred.reject('OK '+res.rows[0].username);
+    }
+  })
+  return deferred.promise;
+}
+function checkPassword(password){
+  //validate password
+}
+function checkPhoneNumber(phone){
+  deferred=Q.deferred();
+  db=create_db('user');
+  db.view(__design_view,'checkPhoneNumber',{keys:[phonenumber],decending:true},function(err,res){
+    if(err) deferred.reject(err);
+    else{
+      if(res.rows.length){
+        deferred.resolve('ERROR exist '+res.rows[0].phonenumber);
+      }
+      else
+        deferred.reject('OK '+res.rows[0].phonenumber);
+    }
+  })
+  return deferred.promise;
+}
+function checkConfirmCode(code){
+  //code via SMS
+
+}
+function addNewUser(userInfo){
+  deferred=Q.deferred();
+  db=create_db('user');
+  db.insert(userInfo,userInfo.gui,function(err,res){
+    if(err)deferred.reject(err);
+    else{
+      if(res)
+        deferred.resolve('OK');
+    }
+  });
+  return deferred.promise;
+}
+
+app.all('/login',function(req,res){
+  var js={};
+  js.client=req.body;
+  js.res=res;
+  login(js);
+});
+function login(js){
+  authentication(js.client.data.user.username,js.client.data.user.password).then(function(res){
+    res.send(res);
+  }).catch(function(err){
+    res.send('Error login failed username or password');
+  });
+}
+function authentication(username,password){
+  deferred=Q.deferred();
+  db=create_db('user');
+  db.view(__design_view,'authentication',{key:[username,password]},function(err,res){
+    if(err) deferred.reject(err);
+    else{
+      if(res.rows.length){
+        deferred.resolve('OK '+res.rows[0].username);
+      }
+      else
+        deferred.reject(0);
+    }
+  })
+  return deferred.promise;
+}
+app.all('/change-password',function(req,res){
+
+});
+app.all('forgot-password',function(req,res){
+
+});
+
 // GET sample data 
 app.get('/get_sample', function (req, res) {
   var arr = [];

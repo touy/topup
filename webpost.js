@@ -457,9 +457,9 @@ var upload = multer({
       cb(null, _current_picture_path);
     },
     filename: function (req, file, cb) {
-      console.log('uploading filename:'+filepath);     
+      //console.log('uploading filename:'+filepath);     
       filepath=file.originalname.replace(path.extname(file.originalname), "") + '-' + makeid(6) + '-' + Date.now() + path.extname(file.originalname);
-      //console.log('uploading filename:'+filepath);      
+      console.log('uploading filename:'+filepath);      
       cb(null, filepath);
     }
   }),

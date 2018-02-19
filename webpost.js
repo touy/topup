@@ -449,15 +449,17 @@ app.use('/images', express.static(path.join(__dirname, '_doc_')));
 var upload = multer({
   storage: multer.diskStorage({
     destination: function (req, file, cb) {
+      console.log('current path:'+_current_picture_path);  
       cb(null, _current_picture_path);
     },
     filename: function (req, file, cb) {
       filepath=file.originalname.replace(path.extname(file.originalname), "") + '-' + makeid(6) + '-' + Date.now() + path.extname(file.originalname);
-      console.log(filepath);
+      console.log('uploading filename:'+filepath);      
       cb(null, filepath);
     }
   }),
   fileFilter: function (req, file, cb) {
+    console.log('original filename:'+file.originalname);
     var ext = path.extname(file.originalname).toLowerCase();
     if (ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg') {
       return cb(new Error('Only images are allowed'), null);

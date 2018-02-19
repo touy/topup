@@ -69,7 +69,7 @@ client={
             c=response;
             console.log(c.data.file);
             alert(c.data.file);
-          }, 
+          },
           error:function(err){
             console.log(err);
             alert(err);

@@ -7,7 +7,7 @@ const nano = require('nano')('http://admin:admin@localhost:5984');
 const LTCSERVICE = require('./ltctopup')();
 const fs = require('fs');
 //const _current_picture_path = './_doc_/';
-const _current_picture_path = '_doc_/';
+const _current_picture_path = './_doc_/';
 const base64 = require('file-base64');
 var __client_ip = '';
 //const nano = require('nano')('http://localhost:5984');
@@ -482,13 +482,6 @@ app.post('/upload_img', upload, function (req, res) {
   js.client =req.body;//It is special  
   console.log(req.body);
   js.file = req.file  //It is special
-  console.log('files');
-  console.log(req.files);
-
-  console.log('file');
-  console.log(req.files);
-  
-
   console.log('Uploade Successful ', js.file);
   js.client.data = {};
   js.client.data.message = "OK file uploaded";

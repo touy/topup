@@ -56,6 +56,28 @@ client={
   client.data.user.username='MrA';
   client.data.user.password='123456';
 
+      $('#uploadImage').submit(function(e){
+        e.preventDefault();
+        
+        var title = $('#title').val(); 
+        
+        $(this).ajaxSubmit({
+          data: {title: title},
+          contentType: 'application/json',
+          success: function(response){
+            console.log('image uploaded and form submitted');     
+            c=response;
+            console.log(c.data.file);
+            alert(c.data.file);
+          },
+          error:function(err){
+            console.log(err);
+            alert(err);
+          }
+      });
+    return false;
+});
+
   $('#firstname').val(client.data.user.username);
   $('#lastname').val('Filemon');
   $('#address_street').val('Rua del Percebe 13');

@@ -470,13 +470,14 @@ app.post('/upload_img', upload, function (req, res) {
   // client
   // return client 
   // client.data.file
-  var js = {};
+  var js = {};js.client={};
   //  js.client =JSON.parse(req.body.client);//It is special  
   console.log(req.body);
-  js.client = req.body //It is special
-  console.log('Uploade Successful ', req.file, js.client);
+  js.file = req.body //It is special
+  console.log('Uploade Successful ', js.file);
   js.client.data = {};
   js.client.data.message = "OK file uploaded";
+
   js.client.data.file = '/images/' + req.file.filename; // client remove /images/ then save 
   js.resp.send(js.client);
 });
